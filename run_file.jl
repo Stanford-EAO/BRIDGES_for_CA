@@ -1,33 +1,22 @@
-
 import Pkg
-# Pkg.add("DataFrames")
-# Pkg.add("CSV")
-# Pkg.add("Clustering")
-# # Pkg.add("JuMP")
-# Pkg.add("Distances")
-# Pkg.add("Gurobi")
-# Pkg.add("Tables")
-# Pkg.add("DelimitedFiles")
-# Pkg.add("Dates")
+Pkg.add("DataFrames")
+Pkg.add("CSV")
+Pkg.add("Clustering")
+Pkg.add("Distances")
+Pkg.add("Gurobi")
+Pkg.add("Tables")
+Pkg.add("DelimitedFiles")
+Pkg.add("Dates")
+Pkg.add("Grisu")
 using DataFrames, CSV, Tables, Clustering, Distances, Gurobi, Dates
-################## NEW ADDITIONS - April23
-# Pkg.add("NBInclude")
-# Pkg.add("Plots")
-using NBInclude, Plots
 
-# if isdefined(Base, :Grisu)
-#     import Base.Grisu
-# else
-#     import Grisu
-# end
+if isdefined(Base, :Grisu)
+    import Base.Grisu
+else
+    import Grisu
+end
 
-# Pkg.build()
-# Pkg.add("JuMP")
-# Pkg.rm("JuMP")
-# Pkg.update("JuMP")
 Pkg.add(Pkg.PackageSpec(;name="JuMP", version="1.7.0"))
-Pkg.precompile()
-
 using JuMP
 
 foldername = "Data"
@@ -45,7 +34,7 @@ TRANSMISSION_EXPANSION = 0
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
-LINKED_PERIODS_STORAGE = 1
+LINKED_PERIODS_STORAGE = 0
 # for generator operations such as min up/down times and ramp rates (if = 0, constraints only apply within each rep. period)
 LINKED_PERIODS_GENOPS = 0
 
@@ -60,7 +49,7 @@ liquids_allowed = 0
 
 
 # Clustering parameters
-T_inv = 1               # Number of investment time periods modeled
+T_inv = 5               # Number of investment time periods modeled
 N_Periods = 5           # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 # Clustering technique to use for generating representative days
@@ -103,7 +92,7 @@ maxOffsets = 1.0*ones(T_inv)                  # % of gross emissions
 NETSCost = "Mid"
 
 #offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
-offsets_Cost = [1400, 1200, 1000, 900, 800]   
+offsets_Cost = [1500, 1400, 1300, 1200, 1100]   
 if NETSCost == "High"
     global offsets_Cost = [650, 600, 550, 500, 450]                        # $/tCO2e
 end
@@ -609,9 +598,6 @@ Lifetime_STORAGE_GAS = GasStorage[:,14]                         # [years]
 CRF_STORAGE_GAS = (WACC.*(1+WACC).^EconomicLifetime_STORAGE_GAS)./((1+WACC).^EconomicLifetime_STORAGE_GAS .- 1)
 RetirementYear_STORAGE_GAS = min.(GasStorage[:,15]+Lifetime_STORAGE_GAS,GasStorage[:,16])
 MoleFracs_STORAGE = Matrix(GasStorage[:,17:18])
-################## NEW ADDITIONS - April16
-# initialStorage_GAS = GasStorage[:,19]                         # [MWh]
-
 
 # Gas storage facilities are assumed to be maintained regardless of decisions made in optimization
 CAPEX_STORAGE_GAS = 0*ones(T_inv,STORAGE_GAS)                   # [$]
@@ -781,23 +767,10 @@ end
 # Separately specify the cost of commodity natural gas for core demands
 # using the same assumption applied to gas-fired electricity generators from FuelCosts.csv
 ################################################################################
-# CommodityCost_NG = 0.0*ones(T_inv,1)      # $/MWh NG
-# for i = 1:T_inv
-#     CommodityCost_NG[i] = sum(FuelCosts[i,:].*NG_fueled)/sum(NG_fueled)/MWh_PER_MMBTU
-# end
-
-
-
-PrimeMover_APPLIANCES
-
-a = collect(1:16)
-b = collect(33:48)
-c = collect(65:80)
-d = cat(a, b, dims =(1))
-gasApps = cat(d, c, dims =(1))
-
-println(PrimeMover_APPLIANCES[gasApps])
-
+CommodityCost_NG = 0.0*ones(T_inv,1)      # $/MWh NG
+for i = 1:T_inv
+    CommodityCost_NG[i] = sum(FuelCosts[i,:].*NG_fueled)/sum(NG_fueled)/MWh_PER_MMBTU
+end
 
 ################################################################################
 ### Clustering time series data for operational simulations
@@ -816,7 +789,7 @@ DemandClustering = (DemandClustering.- minimum(DemandClustering))./(maximum(Dema
 LOAD_ELEC = reshape(DemandClustering, (HOURS_PER_PERIOD, Periods_Per_Year))
 DemandClustering = copy(D_Gas)
 for n = 1:NODES_GAS
-    DemandClustering[:,n] = DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_GAS[n,a]*ApplianceProfilesGAS[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES)
+    DemandClustering[:,n] =DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_GAS[n,a]*ApplianceProfilesGAS[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES)
 end
 DemandClustering = sum(DemandClustering, dims = 2)
 DemandClustering = (DemandClustering.- minimum(DemandClustering))./(maximum(DemandClustering) - minimum(DemandClustering))
@@ -827,54 +800,6 @@ global ClusteringData = vcat(LOAD_ELEC,  LOAD_GAS)
 for x = 1:length(ProfilesClustering[1,:])
     global ClusteringData = vcat(ClusteringData, HourlyVREProfilesClustering[:,:,x])
 end
-
-
-################## NEW ADDITIONS - April17
-#
-# toggle_variableNatGasPrice = false
-# ClustNatgas_mat = zeros(1,365)
-# # remove the magic numbers
-# NGprices_timeSeries = zeros(8760,5)
-# # if yes
-# if toggle_variableNatGasPrice  
-#     # read NatgasPrice_perSector_2019.csv
-#     price_Natgas = CSV.read("$(foldername)/NatgasPrice_perSector_2019.csv",DataFrame)
-#     # concatenate NG data into clustering Data
-#     for i = 3:length(price_Natgas[1,:])
-#         localClustNatgas_vector = transpose( price_Natgas[:,i] )
-#         localClustNatgas_mat = localClustNatgas_vector
-#         for j = 1:23
-#             localClustNatgas_mat = vcat(localClustNatgas_mat, localClustNatgas_vector)
-#         end
-#         # save to time series
-#         print(size(reshape(localClustNatgas_mat, (8760,1))))
-#         NGprices_timeSeries[:,i-2] = reshape(localClustNatgas_mat, (8760,1))
-#         global ClustNatgas_mat = vcat(ClustNatgas_mat, localClustNatgas_mat)
-#     end    
-# end
-# # else
-# if toggle_variableNatGasPrice == false
-#     price_Natgas = CSV.read("$(foldername)/NatgasPrice_perSector_2019.csv",DataFrame)
-#     # concatenate NG data into clustering Data
-#     for i = 3:length(price_Natgas[1,:])
-#         i_fixed = 3
-#         priceNatGas_fixed = 7
-#         localClustNatgas_vector = transpose( priceNatGas_fixed * ones(365,1) )
-#         localClustNatgas_mat = localClustNatgas_vector
-#         for j = 1:23
-#             localClustNatgas_mat = vcat(localClustNatgas_mat, localClustNatgas_vector)
-#         end
-#         global ClustNatgas_mat = vcat(ClustNatgas_mat, localClustNatgas_mat)
-#     end    
-# end
-
-# ClustNatgas_mat = (ClustNatgas_mat.- minimum(ClustNatgas_mat))./(maximum(ClustNatgas_mat) - minimum(ClustNatgas_mat))
-# ClustNatgas_mat = ClustNatgas_mat[1:size(ClustNatgas_mat,1) .!= 2,: ]
-# ClusteringData = vcat(ClusteringData, ClustNatgas_mat)
-
-#
-################## NEW ADDITIONS - April17
-
 
 medoids = zeros(T_inv, T_ops)
 RepDays = zeros(T_inv, Periods_Per_Year)
@@ -917,13 +842,6 @@ HourlyVRE = zeros(T_ops, t_ops, GEN)
 ApplianceProfiles_GAS = zeros(T_ops, t_ops, APPLIANCES)
 ApplianceProfiles_ELEC = zeros(T_ops, t_ops, APPLIANCES)
 #ApplianceProfiles_LPG = zeros(T_ops, t_ops, APPLIANCES)
-################## NEW ADDITIONS - April23
-# residential
-fuelPrice_res_GAS = zeros(T_inv, T_ops, t_ops)
-# commercial
-fuelPrice_com_GAS = zeros(T_inv, T_ops, t_ops)
-################## NEW ADDITIONS - April23
-#
 for t = 1:T_inv
     for i = 1:T_ops
         start_hour = Int((medoids[1,i]-1)*HOURS_PER_PERIOD+1)
@@ -942,14 +860,8 @@ for t = 1:T_inv
             ApplianceProfiles_GAS[i,:,a] = round.(ApplianceProfilesGAS[start_hour:end_hour,a], digits = 8)
 #            ApplianceProfiles_LPG[i,:,a] = round.(ApplianceProfilesLIQ[start_hour:end_hour,a], digits = 8)
         end
-        ################## NEW ADDITIONS - April23
-#         fuelPrice_res_GAS[t,i,:] = NGprices_timeSeries[start_hour:end_hour,1]
-        ################## NEW ADDITIONS - April23
     end
 end
-
-
-
 
 ################################################################################
 ### Produce residence matrices to identify which nodes contain which resources
@@ -1030,32 +942,6 @@ end
 maxBiomethane = max_biomethane_share*sum(sum(sum(APPLIANCES_NodalLoc_GAS[n,a]*ApplianceProfilesGAS[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES) + D_Gas[:,n] for n = 1:NODES_GAS))*ones(T_inv)               # MWh/yr
 # The more generic use of sustainable biomass allows for eventual incorporation of bio-LPG which competes with biomethane for access to limited bioenergy feedstocks
 maxSustainableBiomass = max_biomethane_share*sum(sum(sum(APPLIANCES_NodalLoc_GAS[n,a]*ApplianceProfilesGAS[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES) + D_Gas[:,n] for n = 1:NODES_GAS))*ones(T_inv)               # MWh/yr
-
-
-################## NEW ADDITIONS - April23
-CommodityCost_NG = 0.0*ones(T_inv,T_ops)      # $/MWh NG
-for i = 1:T_inv
-    for T = 1:T_ops
-        scaleForRepDay_NGprice = fuelPrice_res_GAS[i,T,1] / 3.5
-#         CommodityCost_NG[i,T] = sum(FuelCosts[i,:].*NG_fueled)/sum(NG_fueled)/MWh_PER_MMBTU * scaleForRepDay_NGprice
-        CommodityCost_NG[i,T] = sum(FuelCosts[i,:].*NG_fueled)/sum(NG_fueled)/MWh_PER_MMBTU        
-    end
-end
-################## NEW ADDITIONS - April23
-
-
-# # print(RepDays[1,:])
-# # GasStorage[:,19]                         # [MWh]
-# # print(RepDays)
-# # storedEnergy_GAS[1,Int(RepDays[1,1]),1,:]
-# ClusteringData
-# price_Natgas
-
-# # NGprices_timeSeries[25:48,1]
-# # fuelPrice_res_GAS[1,1,:] = NGprices_timeSeries[25:48,1]
-# # fuelPrice_res_GAS[1,4,1]
-# CommodityCost_NG
-weights
 
 ################################################################################
 ################################################################################
@@ -1321,7 +1207,16 @@ end
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops-1, s = 1:STORAGE_GAS], discharging_GAS[I,T,t,s] == discharging_GAS[I,T,t+1,s])
 
 
-
+#@variable(m, storedEnergy_GAS[I = 1:T_inv, T = 1:T_ops, t = 1:2, s = 1:STORAGE_GAS] >= 0)
+#@variable(m, charging_GAS[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS] >= 0)
+#@variable(m, discharging_GAS[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS] >= 0)
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], storedEnergy_GAS[I,T,t+1,s] == storedEnergy_GAS[I,T,t,s] + t_ops*eta_charging_GAS[s]*charging_GAS[I,T,s] - t_ops*(1/eta_discharging_GAS[s])*discharging_GAS[I,T,s]-eta_loss_GAS[s]*storedEnergy_GAS[I,T,t,s])
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:2, s = 1:STORAGE_GAS], storedEnergy_GAS[I,T,t,s] <= UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s] for i = 1:I))*duration_GAS[s])
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], charging_GAS[I,T,s] <= (1/eta_charging_GAS[s])*UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I)))
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], charging_GAS[I,T,s] <= duration_GAS[s]*UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I)) - storedEnergy_GAS[I,T,t,s])
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], discharging_GAS[I,T,s] <= eta_discharging_GAS[s]*UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I)))
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], discharging_GAS[I,T,s] <= storedEnergy_GAS[I,T,t,s])
+#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1, s = 1:STORAGE_GAS], discharging_GAS[I,T,s]/eta_discharging_GAS[s] + eta_charging_GAS[s]*charging_GAS[I,T,s] <= UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I)))
 
 
 ### Constraints for linking energy storage across representative periods
@@ -1330,6 +1225,7 @@ end
 if LINKED_PERIODS_STORAGE == 0
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_ELEC], storedEnergy_ELEC[I,T,1,s] == storedEnergy_ELEC[I,T,t_ops+1,s])       # [MWh]
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS], storedEnergy_GAS[I,T,1,s] == storedEnergy_GAS[I,T,t_ops+1,s])       # [MWh]
+#    @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS], storedEnergy_GAS[I,T,1,s] == storedEnergy_GAS[I,T,2,s])       # [MWh]
 end
 if LINKED_PERIODS_STORAGE == 1
     @variable(m, MinSOC_ELEC[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_ELEC] >= 0)
@@ -1357,10 +1253,10 @@ if LINKED_PERIODS_STORAGE == 1
     @constraint(m, [I = 1:T_inv, d = 1:Int(Periods_Per_Year), s = 1:STORAGE_GAS], SOCTracked_GAS[I, d, s] <= UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I))*duration_GAS[s])
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_GAS], MinSOC_GAS[I,T,s] <= storedEnergy_GAS[I,T,t,s])
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_GAS], MaxSOC_GAS[I,T,s] >= storedEnergy_GAS[I,T,t,s])
-
-    
+#    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:2, s = 1:STORAGE_GAS], MinSOC_GAS[I,T,s] <= storedEnergy_GAS[I,T,t,s])
+#    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:2, s = 1:STORAGE_GAS], MaxSOC_GAS[I,T,s] >= storedEnergy_GAS[I,T,t,s])
     for i = 1:Int(Periods_Per_Year)
-    #
+#        @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,i,s] == storedEnergy_GAS[I,Int(RepDays[I,1]),1,s] + sum(storedEnergy_GAS[I,Int(RepDays[I,t]),2,s] - storedEnergy_GAS[I,Int(RepDays[I,t]),1,s] for t = 1:i))
         @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,i,s] == storedEnergy_GAS[I,Int(RepDays[I,1]),1,s] + sum(storedEnergy_GAS[I,Int(RepDays[I,t]),t_ops+1,s] - storedEnergy_GAS[I,Int(RepDays[I,t]),1,s] for t = 1:i))
         if i < Periods_Per_Year
             @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,i,s] + (MaxSOC_GAS[I,Int(RepDays[I,i+1]),s] - storedEnergy_GAS[I,Int(RepDays[I,i+1]),1,s]) <=  UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s] for i0 = 1:I))*duration_GAS[s])
@@ -1371,10 +1267,6 @@ if LINKED_PERIODS_STORAGE == 1
 end
 
 
-################## NEW ADDITIONS - April23
-# @constraint(m, [I = 1, t = 1, s = 1:STORAGE_GAS], storedEnergy_GAS[I,Int(RepDays[I,t]),t,s] == initialStorage_GAS[s])
-# @constraint(m, [I = 1, d = 1, s = 1:STORAGE_GAS], SOCTracked_GAS[I,d,s] == initialStorage_GAS[s])
-################## NEW ADDITIONS - April23
 
 
 ###############################################################################
@@ -1787,218 +1679,193 @@ end
 ###############################################################################
 @objective(m, Min, sum(discountfactor[i]*(sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*CRF_GEN[g]*CAPEX_GEN[i0,g] for i0 = 1:i) + UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*FOM_GEN[i,g] for g = 1:GEN) +  sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])/1000*generation[i,T,t,g] for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])/1000*sum(startup_GEN[i,T,t,g] for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s]-unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC) + sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[i],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + applianceInfrastructureCosts[i0,a])  for i0 =1:i)/1000 for a = 1:APPLIANCES) + sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*max(min((Years[i0]+EconomicLifetime_P2G[d])-Years[i],1),0)*CRF_P2G[d]*CAPEX_P2G[i0,d] for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d]-unitsretired_P2G[i0,d] for i0 = 1:i))*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum(VOM_P2G[i,d]/1000*P2G_dispatch[i,T,t,d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops) + sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_GAS[s])-Years[i],1),0)*CRF_STORAGE_GAS[s]*CAPEX_STORAGE_GAS[i0,s] for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s]-unitsretired_STORAGE_GAS[i0,s] for i0 = 1:i))*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS) +  Cost_DistributionInfrastructure*sum(PeakDistDemandInc[i,n] for n = 1:NODES_ELEC) + sum(weights[i,T]*8760/t_ops*CommodityCost_NG[i]/1000*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - CommodityCost_NG[i]*(CleanGas_gassector[i] + CleanGas_powersector[i])/1000 + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i])) for i = 1:T_inv))
 
-################## NEW ADDITIONS - April23
-# @objective(m, Min, sum(discountfactor[i]*(sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*CRF_GEN[g]*CAPEX_GEN[i0,g] for i0 = 1:i) + UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*FOM_GEN[i,g] for g = 1:GEN) +  sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])/1000*generation[i,T,t,g] for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])/1000*sum(startup_GEN[i,T,t,g] for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s]-unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC) + sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[i],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + applianceInfrastructureCosts[i0,a])  for i0 =1:i)/1000 for a = 1:APPLIANCES) + sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*max(min((Years[i0]+EconomicLifetime_P2G[d])-Years[i],1),0)*CRF_P2G[d]*CAPEX_P2G[i0,d] for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d]-unitsretired_P2G[i0,d] for i0 = 1:i))*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum(VOM_P2G[i,d]/1000*P2G_dispatch[i,T,t,d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops) + sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_GAS[s])-Years[i],1),0)*CRF_STORAGE_GAS[s]*CAPEX_STORAGE_GAS[i0,s] for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s]-unitsretired_STORAGE_GAS[i0,s] for i0 = 1:i))*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS) +  Cost_DistributionInfrastructure*sum(PeakDistDemandInc[i,n] for n = 1:NODES_ELEC) + sum(weights[i,T]*8760/t_ops*sum(CommodityCost_NG[i,T]/1000*sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - CommodityCost_NG[i,1]*(CleanGas_gassector[i] + CleanGas_powersector[i])/1000 + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i])) for i = 1:T_inv))
-################## NEW ADDITIONS - April23
 
-
-
-
-
-# set_optimizer_attribute(m, "print_level", 7)
 status = optimize!(m)
 
-# (JuMP.value.(storedEnergy_GAS))
-# JuMP.value.(SOCTracked_ELEC)
-# (JuMP.value.(SOCTracked_GAS))
-JuMP.value.(charging_GAS)
-# UnitSize_STORAGE_GAS
-
-# ################################################################################
-# ################################################################################
-# ## Export results for visualization
-# ################################################################################
-# ################################################################################
-# unitsbuilt_GEN = JuMP.value.(unitsbuilt_GEN)
-# unitsretired_GEN = JuMP.value.(unitsretired_GEN)
-# unitsbuilt_STORAGE_ELEC = JuMP.value.(unitsbuilt_STORAGE_ELEC)
-# unitsretired_STORAGE_ELEC = JuMP.value.(unitsretired_STORAGE_ELEC)
-# unitsbuilt_P2G = JuMP.value.(unitsbuilt_P2G)
-# unitsretired_P2G = JuMP.value.(unitsretired_P2G)
-# unitsbuilt_STORAGE_GAS = JuMP.value.(unitsbuilt_STORAGE_GAS)
-# unitsretired_STORAGE_GAS = JuMP.value.(unitsretired_STORAGE_GAS)
-# unitsbuilt_TRANS_GAS = JuMP.value.(unitsbuilt_TRANS_GAS)
-# unitsretired_TRANS_GAS = JuMP.value.(unitsretired_TRANS_GAS)
-# unitsbuilt_TRANS_ELEC = JuMP.value.(unitsbuilt_TRANS_ELEC)
-# unitsretired_TRANS_ELEC = JuMP.value.(unitsretired_TRANS_ELEC)
+################################################################################
+################################################################################
+## Export results for visualization
+################################################################################
+################################################################################
+unitsbuilt_GEN = JuMP.value.(unitsbuilt_GEN)
+unitsretired_GEN = JuMP.value.(unitsretired_GEN)
+unitsbuilt_STORAGE_ELEC = JuMP.value.(unitsbuilt_STORAGE_ELEC)
+unitsretired_STORAGE_ELEC = JuMP.value.(unitsretired_STORAGE_ELEC)
+unitsbuilt_P2G = JuMP.value.(unitsbuilt_P2G)
+unitsretired_P2G = JuMP.value.(unitsretired_P2G)
+unitsbuilt_STORAGE_GAS = JuMP.value.(unitsbuilt_STORAGE_GAS)
+unitsretired_STORAGE_GAS = JuMP.value.(unitsretired_STORAGE_GAS)
+unitsbuilt_TRANS_GAS = JuMP.value.(unitsbuilt_TRANS_GAS)
+unitsretired_TRANS_GAS = JuMP.value.(unitsretired_TRANS_GAS)
+unitsbuilt_TRANS_ELEC = JuMP.value.(unitsbuilt_TRANS_ELEC)
+unitsretired_TRANS_ELEC = JuMP.value.(unitsretired_TRANS_ELEC)
 
 
-# Demand_GAS = JuMP.value.(Demand_GAS)
-# Demand_ELEC = JuMP.value.(Demand_ELEC)
+Demand_GAS = JuMP.value.(Demand_GAS)
+Demand_ELEC = JuMP.value.(Demand_ELEC)
 
-# if gasdistretirement_allowed == 1
-#     distSysRetirement_GAS = JuMP.value.(distSysRetirement_GAS)
-# end
+if gasdistretirement_allowed == 1
+    distSysRetirement_GAS = JuMP.value.(distSysRetirement_GAS)
+end
 
-# CleanGas_gassector = JuMP.value.(CleanGas_gassector)
-# CleanGas_powersector = JuMP.value.(CleanGas_powersector)
-# unitsbuilt_APPS= JuMP.value.(unitsbuilt_APPS)
+CleanGas_gassector = JuMP.value.(CleanGas_gassector)
+CleanGas_powersector = JuMP.value.(CleanGas_powersector)
+unitsbuilt_APPS= JuMP.value.(unitsbuilt_APPS)
 
-# EmissionsAndCosts = zeros(19,T_inv)
-# for i = 1:T_inv
-#     # Terms for computing average electricity and gas rates
-#     xA = sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*CRF_GEN[g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*1000*CAPEX_GEN[i0,g] for i0 = 1:i) + UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*1000*FOM_GEN[i,g] for g = 1:GEN) +  sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*1000*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s] - unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*1000*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC) + Cost_DistributionInfrastructure*1000*sum(JuMP.value.(PeakDistDemand[i,n]) for n = 1:NODES_ELEC) + offsets_Cost[i]*JuMP.value.(excess_powerEmissions[i]) - CommodityCost_NG[i]*CleanGas_powersector[i]
-#     xB = CleanGas_powersector[i]
-#     xC = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
-#     xD = sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*CRF_P2G[d]*1000*CAPEX_P2G[i0,d]  for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d] - unitsretired_P2G[i0,d] for i0 = 1:i))*1000*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum(VOM_P2G[i,d]*JuMP.value.(P2G_dispatch[i,T,t,d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
-#     xE = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(P2G_dispatch[i,T,t,d])*(1-ISBIOMETHANE[d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
-#     xF = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(P2G_dispatch[i,T,t,d])*eta_P2G[d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
-#     xG = CommodityCost_NG[i]*(sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)) + JuMP.value.(gasdistsyst_Cost[i])*1000 + sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*CRF_STORAGE_GAS[s]*1000*CAPEX_STORAGE_GAS[i0,s]  for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:i))*1000*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS) + offsets_Cost[i]*JuMP.value.(excess_gasEmissions[i])  - CommodityCost_NG[i]*CleanGas_gassector[i]
-#     xH = CleanGas_gassector[i]
-#     xI = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
-#     xJ = sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + offsets_Cost[i]*JuMP.value.(excess_powerEmissions[i]) - CommodityCost_NG[i]*CleanGas_powersector[i]
+EmissionsAndCosts = zeros(19,T_inv)
+for i = 1:T_inv
+    # Terms for computing average electricity and gas rates
+    xA = sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*CRF_GEN[g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*1000*CAPEX_GEN[i0,g] for i0 = 1:i) + UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*1000*FOM_GEN[i,g] for g = 1:GEN) +  sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*1000*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s] - unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*1000*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC) + Cost_DistributionInfrastructure*1000*sum(JuMP.value.(PeakDistDemand[i,n]) for n = 1:NODES_ELEC) + offsets_Cost[i]*JuMP.value.(excess_powerEmissions[i]) - CommodityCost_NG[i]*CleanGas_powersector[i]
+    xB = CleanGas_powersector[i]
+    xC = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
+    xD = sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*CRF_P2G[d]*1000*CAPEX_P2G[i0,d]  for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d] - unitsretired_P2G[i0,d] for i0 = 1:i))*1000*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum(VOM_P2G[i,d]*JuMP.value.(P2G_dispatch[i,T,t,d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
+    xE = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(P2G_dispatch[i,T,t,d])*(1-ISBIOMETHANE[d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
+    xF = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(P2G_dispatch[i,T,t,d])*eta_P2G[d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
+    xG = CommodityCost_NG[i]*(sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)) + JuMP.value.(gasdistsyst_Cost[i])*1000 + sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*CRF_STORAGE_GAS[s]*1000*CAPEX_STORAGE_GAS[i0,s]  for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:i))*1000*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS) + offsets_Cost[i]*JuMP.value.(excess_gasEmissions[i])  - CommodityCost_NG[i]*CleanGas_gassector[i]
+    xH = CleanGas_gassector[i]
+    xI = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
+    xJ = sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + offsets_Cost[i]*JuMP.value.(excess_powerEmissions[i]) - CommodityCost_NG[i]*CleanGas_powersector[i]
     
-#     # Average electricity rate
-#     EmissionsAndCosts[1,i] = (xA*xF+xB*xD)/(xF*xC-xB*xE)
-#     # Average cost of zero-emission gas
-#     EmissionsAndCosts[3,i] = (xD+xE*EmissionsAndCosts[1,i])/xF
-#     # Average gas rate
-#     EmissionsAndCosts[2,i] = (xG+xH*EmissionsAndCosts[3,i])/xI
+    # Average electricity rate
+    EmissionsAndCosts[1,i] = (xA*xF+xB*xD)/(xF*xC-xB*xE)
+    # Average cost of zero-emission gas
+    EmissionsAndCosts[3,i] = (xD+xE*EmissionsAndCosts[1,i])/xF
+    # Average gas rate
+    EmissionsAndCosts[2,i] = (xG+xH*EmissionsAndCosts[3,i])/xI
 
-#     # Average cost of zero-emission gas (exposed to marginal cost of electricity)
-#     EmissionsAndCosts[19,i] =  (xC*xD+xE*xJ)/(xF*xC-xB*xE)
-#     # Average electricity rate (assessed w.r.t remaining electricity (not used for P2G) and after the revenues provided by P2G)
-#     EmissionsAndCosts[17,i] = (xA + xB*EmissionsAndCosts[19,i] - xE*(xJ+xB*EmissionsAndCosts[19,i])/xC)/(xC-xE)
-#     # Average gas rate
-#     EmissionsAndCosts[18,i] = (xG+xH*EmissionsAndCosts[19,i])/xI
+    # Average cost of zero-emission gas (exposed to marginal cost of electricity)
+    EmissionsAndCosts[19,i] =  (xC*xD+xE*xJ)/(xF*xC-xB*xE)
+    # Average electricity rate (assessed w.r.t remaining electricity (not used for P2G) and after the revenues provided by P2G)
+    EmissionsAndCosts[17,i] = (xA + xB*EmissionsAndCosts[19,i] - xE*(xJ+xB*EmissionsAndCosts[19,i])/xC)/(xC-xE)
+    # Average gas rate
+    EmissionsAndCosts[18,i] = (xG+xH*EmissionsAndCosts[19,i])/xI
         
-#     # Gen Capex
-#     EmissionsAndCosts[4,i] = sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*CRF_GEN[g]*1000*CAPEX_GEN[i0,g] for i0 = 1:i) for g = 1:GEN)
-#     # Gen FOM
-#     EmissionsAndCosts[5,i] = sum(UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*1000*FOM_GEN[i,g] for g = 1:GEN)
-#     # Gen VOM and fuel
-#     EmissionsAndCosts[6,i] = sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) - (CommodityCost_NG[i])*CleanGas_powersector[i]
-#     # Storage ELEC
-#     EmissionsAndCosts[7,i] = sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*1000*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s] - unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*1000*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC)
-#     # T&D
-#     EmissionsAndCosts[8,i] = Cost_DistributionInfrastructure*1000*sum(JuMP.value.(PeakDistDemand[i,n]) for n = 1:NODES_ELEC)
+    # Gen Capex
+    EmissionsAndCosts[4,i] = sum(UnitSize_GEN[g]*sum(unitsbuilt_GEN[i0,g]*max(min((Years[i0]+EconomicLifetime_GEN[g])-Years[i],1),0)*CRF_GEN[g]*1000*CAPEX_GEN[i0,g] for i0 = 1:i) for g = 1:GEN)
+    # Gen FOM
+    EmissionsAndCosts[5,i] = sum(UnitSize_GEN[g]*(NumUnits_GEN[g]+sum(unitsbuilt_GEN[i0,g]-unitsretired_GEN[i0,g] for i0 = 1:i))*1000*FOM_GEN[i,g] for g = 1:GEN)
+    # Gen VOM and fuel
+    EmissionsAndCosts[6,i] = sum(weights[i,T]*8760/t_ops*sum(sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,T,t,g]) for t = 1:t_ops) for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) - (CommodityCost_NG[i])*CleanGas_powersector[i]
+    # Storage ELEC
+    EmissionsAndCosts[7,i] = sum(UnitSize_STORAGE_ELEC[s]*sum(unitsbuilt_STORAGE_ELEC[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_ELEC[s])-Years[i],1),0)*CRF_STORAGE_ELEC[s]*1000*CAPEX_STORAGE_ELEC[i0,s] for i0 = 1:i)  + UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s] - unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:i))*1000*FOM_STORAGE_ELEC[i,s] for s = 1:STORAGE_ELEC)
+    # T&D
+    EmissionsAndCosts[8,i] = Cost_DistributionInfrastructure*1000*sum(JuMP.value.(PeakDistDemand[i,n]) for n = 1:NODES_ELEC)
 
-#     # Gas sector costs
-#     # Commodity
-#     EmissionsAndCosts[9,i] = CommodityCost_NG[i]*(sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)) - CommodityCost_NG[i]*CleanGas_gassector[i]
-#     # Distribution systems
-#     EmissionsAndCosts[10,i] = JuMP.value.(gasdistsyst_Cost[i])*1000
-#     # Storage GAS
-#     EmissionsAndCosts[11,i] = sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_GAS[s])-Years[i],1),0)*CRF_STORAGE_GAS[s]*1000*CAPEX_STORAGE_GAS[i0,s]  for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:i))*1000*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS)
+    # Gas sector costs
+    # Commodity
+    EmissionsAndCosts[9,i] = CommodityCost_NG[i]*(sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(Demand_GAS[i,T,t,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)) - CommodityCost_NG[i]*CleanGas_gassector[i]
+    # Distribution systems
+    EmissionsAndCosts[10,i] = JuMP.value.(gasdistsyst_Cost[i])*1000
+    # Storage GAS
+    EmissionsAndCosts[11,i] = sum(UnitSize_STORAGE_GAS[s]*sum(unitsbuilt_STORAGE_GAS[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_GAS[s])-Years[i],1),0)*CRF_STORAGE_GAS[s]*1000*CAPEX_STORAGE_GAS[i0,s]  for i0 = 1:i) + UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:i))*1000*FOM_STORAGE_GAS[i,s] for s = 1:STORAGE_GAS)
 
-#     # Appliances
-#     EmissionsAndCosts[12,i] = sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[i],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + JuMP.value.(applianceInfrastructureCosts[i0,a])) for i0 =1:i) for a = 1:APPLIANCES)
+    # Appliances
+    EmissionsAndCosts[12,i] = sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[i],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + JuMP.value.(applianceInfrastructureCosts[i0,a])) for i0 =1:i) for a = 1:APPLIANCES)
 
-#     # P2G costs (without electricity costs, these are included in the electricity generation sectoral costs)
-#     EmissionsAndCosts[13,i] = sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*max(min((Years[i0]+EconomicLifetime_P2G[d])-Years[i],1),0)*CRF_P2G[d]*1000*CAPEX_P2G[i0,d] for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d] - unitsretired_P2G[i0,d] for i0 = 1:i))*1000*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum((VOM_P2G[i,d])*JuMP.value.(P2G_dispatch[i,T,t,d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
+    # P2G costs (without electricity costs, these are included in the electricity generation sectoral costs)
+    EmissionsAndCosts[13,i] = sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*max(min((Years[i0]+EconomicLifetime_P2G[d])-Years[i],1),0)*CRF_P2G[d]*1000*CAPEX_P2G[i0,d] for i0 = 1:i) + UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d] - unitsretired_P2G[i0,d] for i0 = 1:i))*1000*FOM_P2G[i,d] for d = 1:P2G) + sum(weights[i,T]*8760/t_ops*sum(sum((VOM_P2G[i,d])*JuMP.value.(P2G_dispatch[i,T,t,d]) for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops)
 
-#     # Negative emissions offsets
-#     EmissionsAndCosts[14,i] = offsets_Cost[i]*(JuMP.value.(excess_powerEmissions[i]) + JuMP.value.(excess_gasEmissions[i]))
+    # Negative emissions offsets
+    EmissionsAndCosts[14,i] = offsets_Cost[i]*(JuMP.value.(excess_powerEmissions[i]) + JuMP.value.(excess_gasEmissions[i]))
     
-#     # Emissions intensity of electricity generated and gas delivered (check to make sure constraint is satisfied)
-#     EmissionsAndCosts[15,i] = (sum(weights[i,T]*8760/t_ops*sum(StartupFuel[g]*emissions_factors[g]*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g])*HeatRate[g]*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[i])/sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
-#     EmissionsAndCosts[16,i] = (sum(weights[i,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[i])/sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
-# end
+    # Emissions intensity of electricity generated and gas delivered (check to make sure constraint is satisfied)
+    EmissionsAndCosts[15,i] = (sum(weights[i,T]*8760/t_ops*sum(StartupFuel[g]*emissions_factors[g]*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g])*HeatRate[g]*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[i])/sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
+    EmissionsAndCosts[16,i] = (sum(weights[i,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[i])/sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
+end
 
-# CapacityBuilt = zeros(T_inv,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1)
-# for i = 1:T_inv
-#     CapacityBuilt[i,1:GEN] = unitsbuilt_GEN[i,:].*UnitSize_GEN
-#     CapacityBuilt[i,GEN+1:GEN+STORAGE_ELEC] = unitsbuilt_STORAGE_ELEC[i,:].*UnitSize_STORAGE_ELEC
-#     CapacityBuilt[i,GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = unitsbuilt_P2G[i,:].*UnitSize_P2G
-#     CapacityBuilt[i,GEN+STORAGE_ELEC+P2G+1:GEN+STORAGE_ELEC+P2G+STORAGE_GAS] = unitsbuilt_STORAGE_GAS[i,:].*UnitSize_STORAGE_GAS
-#     CapacityBuilt[i,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1] = sum(distSysRetirement_GAS[i,d] for d = 1:DIST_GAS)
-# end
+CapacityBuilt = zeros(T_inv,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1)
+for i = 1:T_inv
+    CapacityBuilt[i,1:GEN] = unitsbuilt_GEN[i,:].*UnitSize_GEN
+    CapacityBuilt[i,GEN+1:GEN+STORAGE_ELEC] = unitsbuilt_STORAGE_ELEC[i,:].*UnitSize_STORAGE_ELEC
+    CapacityBuilt[i,GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = unitsbuilt_P2G[i,:].*UnitSize_P2G
+    CapacityBuilt[i,GEN+STORAGE_ELEC+P2G+1:GEN+STORAGE_ELEC+P2G+STORAGE_GAS] = unitsbuilt_STORAGE_GAS[i,:].*UnitSize_STORAGE_GAS
+    CapacityBuilt[i,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1] = sum(distSysRetirement_GAS[i,d] for d = 1:DIST_GAS)
+end
 
-# CapacityRetired = zeros(T_inv,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1)
-# for i = 1:T_inv
-#     CapacityRetired[i,1:GEN] = unitsretired_GEN[i,:].*UnitSize_GEN
-#     CapacityRetired[i,GEN+1:GEN+STORAGE_ELEC] = unitsretired_STORAGE_ELEC[i,:].*UnitSize_STORAGE_ELEC
-#     CapacityRetired[i,GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = unitsretired_P2G[i,:].*UnitSize_P2G
-#     CapacityRetired[i,GEN+STORAGE_ELEC+P2G+1:GEN+STORAGE_ELEC+P2G+STORAGE_GAS] = unitsretired_STORAGE_GAS[i,:].*UnitSize_STORAGE_GAS
-#     CapacityRetired[i,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1] = sum(distSysRetirement_GAS[i,d] for d = 1:DIST_GAS)
-# end
+CapacityRetired = zeros(T_inv,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1)
+for i = 1:T_inv
+    CapacityRetired[i,1:GEN] = unitsretired_GEN[i,:].*UnitSize_GEN
+    CapacityRetired[i,GEN+1:GEN+STORAGE_ELEC] = unitsretired_STORAGE_ELEC[i,:].*UnitSize_STORAGE_ELEC
+    CapacityRetired[i,GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = unitsretired_P2G[i,:].*UnitSize_P2G
+    CapacityRetired[i,GEN+STORAGE_ELEC+P2G+1:GEN+STORAGE_ELEC+P2G+STORAGE_GAS] = unitsretired_STORAGE_GAS[i,:].*UnitSize_STORAGE_GAS
+    CapacityRetired[i,GEN+STORAGE_ELEC+P2G+STORAGE_GAS+1] = sum(distSysRetirement_GAS[i,d] for d = 1:DIST_GAS)
+end
 
-# GenerationSave = zeros(T_inv,GEN+P2G+8)
-# for i = 1:T_inv
-#      GenerationSave[i,1:GEN] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(generation[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+1:GEN+P2G] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(P2G_dispatch[i,T,t,:]).*eta_P2G for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+1] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_GAS[T,t,:]) + sum(BaselineDemand_GAS[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+2] = sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+3] = CleanGas_powersector[i]
-#      GenerationSave[i,GEN+P2G+4] = CleanGas_gassector[i]
-#      GenerationSave[i,GEN+P2G+5] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_ELEC[T,t,:]) + sum(BaselineDemand_ELEC[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+6] = sum(weights[i,T]*8760/t_ops*sum(sum(Demand_ELEC[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+7] = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(SUPPLY_GAS_slack[i,T,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
-#      GenerationSave[i,GEN+P2G+8] = sum(weights[i,T]*8760/t_ops*sum(sum(sum(GEN_NodalLoc_ELEC[n,g]*JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) + sum(-1*A_ELEC[n,e]*JuMP.value.(Flows_Elec[i,T,t,e]) for e = 1:EDGES_ELEC) - sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(JuMP.value.(charging_ELEC[i,T,t,s])-JuMP.value.(discharging_ELEC[i,T,t,s])) for s = 1:STORAGE_ELEC) - Demand_ELEC[i,T,t,n] - sum(P2G_NodalLoc_ELEC[n,d]*JuMP.value.(P2G_dispatch[i,T,t,d])*(1-ISBIOMETHANE[d]) for d = 1:P2G) for n = 1:NODES_ELEC)  for t = 1:t_ops) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(curtailmentRE[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
-# end
+GenerationSave = zeros(T_inv,GEN+P2G+8)
+for i = 1:T_inv
+     GenerationSave[i,1:GEN] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(generation[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+1:GEN+P2G] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(P2G_dispatch[i,T,t,:]).*eta_P2G for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+1] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_GAS[T,t,:]) + sum(BaselineDemand_GAS[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+2] = sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+3] = CleanGas_powersector[i]
+     GenerationSave[i,GEN+P2G+4] = CleanGas_gassector[i]
+     GenerationSave[i,GEN+P2G+5] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_ELEC[T,t,:]) + sum(BaselineDemand_ELEC[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+6] = sum(weights[i,T]*8760/t_ops*sum(sum(Demand_ELEC[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+7] = sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(SUPPLY_GAS_slack[i,T,n]) for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)
+     GenerationSave[i,GEN+P2G+8] = sum(weights[i,T]*8760/t_ops*sum(sum(sum(GEN_NodalLoc_ELEC[n,g]*JuMP.value.(generation[i,T,t,g]) for g = 1:GEN) + sum(-1*A_ELEC[n,e]*JuMP.value.(Flows_Elec[i,T,t,e]) for e = 1:EDGES_ELEC) - sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(JuMP.value.(charging_ELEC[i,T,t,s])-JuMP.value.(discharging_ELEC[i,T,t,s])) for s = 1:STORAGE_ELEC) - Demand_ELEC[i,T,t,n] - sum(P2G_NodalLoc_ELEC[n,d]*JuMP.value.(P2G_dispatch[i,T,t,d])*(1-ISBIOMETHANE[d]) for d = 1:P2G) for n = 1:NODES_ELEC)  for t = 1:t_ops) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(curtailmentRE[i,T,t,g]) for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
+end
 
-# HourlyGenFullSave = zeros(T_inv*8760,GEN+STORAGE_ELEC+P2G+1)
-# HourlyLoadFullSave = zeros(T_inv*8760,4)
-# HourlySOCFullSave = zeros(T_inv*8760,STORAGE_ELEC)
-# HourlyTransmissionFullSave = zeros(T_inv*8760,EDGES_ELEC)
-# HourlyGasSOCFullSave = zeros(T_inv*8760,STORAGE_GAS)
-# DailyGasTransmissionFullSave = zeros(T_inv*Periods_Per_Year,EDGES_GAS)
-# for i = 1:T_inv
-#     for c = 1:Periods_Per_Year
-#         j = Int(RepDays[i,c])
-#         count = Int((i-1)*8760+(c-1)*t_ops)+1
-#         HourlyGenFullSave[count:count+t_ops-1,1:GEN] = JuMP.value.(generation[i,j,:,:])
-#         HourlyGenFullSave[count:count+t_ops-1, GEN+1:GEN+STORAGE_ELEC] = (JuMP.value.(charging_ELEC[i,j,:,:])-JuMP.value.(discharging_ELEC[i,j,:,:]))
-#         HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = JuMP.value.(P2G_dispatch[i,j,:,:].*transpose(ones(P2G)-ISBIOMETHANE))
-#         HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+P2G+1] = sum(JuMP.value.(curtailmentRE[i,j,:,:]), dims = 2)
-#         HourlyLoadFullSave[count:count+t_ops-1, 1] = sum(Demand_ELEC[i,j,:,:], dims = 2)
-#         HourlyLoadFullSave[count:count+t_ops-1, 2] = sum(Demand_GAS[i,j,:,:], dims = 2)
-#         HourlyLoadFullSave[count:count+t_ops-1, 3] = sum(BaselineDemand_ELEC[i,j,:,:], dims = 2)
-#         HourlyLoadFullSave[count:count+t_ops-1, 4] = sum(BaselineDemand_GAS[i,j,:,:], dims = 2)
-#         HourlySOCFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_ELEC[i,j,1:t_ops,:])
-#         HourlyGasSOCFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_GAS[i,j,1:t_ops,:])
-#         HourlyTransmissionFullSave[count:count+t_ops-1,:] = JuMP.value.(Flows_Elec[i,j,:,:])
-#         DailyGasTransmissionFullSave[Int((i-1)*Periods_Per_Year + c),:] = JuMP.value.(Flows_Gas[i,j,:])
-#     end
-# end
+HourlyGenFullSave = zeros(T_inv*8760,GEN+STORAGE_ELEC+P2G+1)
+HourlyLoadFullSave = zeros(T_inv*8760,4)
+HourlySOCFullSave = zeros(T_inv*8760,STORAGE_ELEC)
+HourlyTransmissionFullSave = zeros(T_inv*8760,EDGES_ELEC)
+HourlyGasSOCFullSave = zeros(T_inv*8760,STORAGE_GAS)
+DailyGasTransmissionFullSave = zeros(T_inv*Periods_Per_Year,EDGES_GAS)
+for i = 1:T_inv
+    for c = 1:Periods_Per_Year
+        j = Int(RepDays[i,c])
+        count = Int((i-1)*8760+(c-1)*t_ops)+1
+        HourlyGenFullSave[count:count+t_ops-1,1:GEN] = JuMP.value.(generation[i,j,:,:])
+        HourlyGenFullSave[count:count+t_ops-1, GEN+1:GEN+STORAGE_ELEC] = (JuMP.value.(charging_ELEC[i,j,:,:])-JuMP.value.(discharging_ELEC[i,j,:,:]))
+        HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = JuMP.value.(P2G_dispatch[i,j,:,:].*transpose(ones(P2G)-ISBIOMETHANE))
+        HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+P2G+1] = sum(JuMP.value.(curtailmentRE[i,j,:,:]), dims = 2)
+        HourlyLoadFullSave[count:count+t_ops-1, 1] = sum(Demand_ELEC[i,j,:,:], dims = 2)
+        HourlyLoadFullSave[count:count+t_ops-1, 2] = sum(Demand_GAS[i,j,:,:], dims = 2)
+        HourlyLoadFullSave[count:count+t_ops-1, 3] = sum(BaselineDemand_ELEC[i,j,:,:], dims = 2)
+        HourlyLoadFullSave[count:count+t_ops-1, 4] = sum(BaselineDemand_GAS[i,j,:,:], dims = 2)
+        HourlySOCFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_ELEC[i,j,1:t_ops,:])
+        HourlyGasSOCFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_GAS[i,j,1:t_ops,:])
+        HourlyTransmissionFullSave[count:count+t_ops-1,:] = JuMP.value.(Flows_Elec[i,j,:,:])
+        DailyGasTransmissionFullSave[Int((i-1)*Periods_Per_Year + c),:] = JuMP.value.(Flows_Gas[i,j,:])
+    end
+end
 
-# ApplianceDecisions = zeros(3*T_inv,APPLIANCES)
-# for i = 1:T_inv
-#     count = (3*i-2)
-#     ApplianceDecisions[count,:] = unitsbuilt_APPS[i,:]
-#     ApplianceDecisions[count+1,:] = JuMP.value.(unitsretired_APPS[i,:])
-#     ApplianceDecisions[count+2,:] = JuMP.value.(unitsremaining_APPS[i,:])
-# end
-
-
-# # Creates output folder autmatically
-
-# function mk_output_dir()
-#     timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
-#     dir_name = joinpath(@__DIR__, "Output", "$timestamp")
-#     @assert !ispath(dir_name) "File name already taken"
-#     mkpath(dir_name)
-#     return dir_name
-# end
-# top_dir = mk_output_dir()
+ApplianceDecisions = zeros(3*T_inv,APPLIANCES)
+for i = 1:T_inv
+    count = (3*i-2)
+    ApplianceDecisions[count,:] = unitsbuilt_APPS[i,:]
+    ApplianceDecisions[count+1,:] = JuMP.value.(unitsretired_APPS[i,:])
+    ApplianceDecisions[count+2,:] = JuMP.value.(unitsremaining_APPS[i,:])
+end
 
 
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityApplianceResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(ApplianceDecisions'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityEmissionsandCostResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(EmissionsAndCosts'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityCapacityBuildResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(CapacityBuilt'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityCapacityRetiredResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(CapacityRetired'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityGenerationResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(GenerationSave'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyGensFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyGenFullSave'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyLoadFullBaseline_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyLoadFullSave'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyTransmissionFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyTransmissionFullSave'), writeheader = true)
+# Creates output folder autmatically
 
-# # CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyGasSOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyGasSOCFullSave'), writeheader = true)
-# # CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlySOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlySOCFullSave'), writeheader = true)
-# CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityDailyGasTransmissionFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
+function mk_output_dir()
+    timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
+    dir_name = joinpath(@__DIR__, "Output", "$timestamp")
+    @assert !ispath(dir_name) "File name already taken"
+    mkpath(dir_name)
+    return dir_name
+end
+top_dir = mk_output_dir()
 
 
-
-# println("Success!")
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityApplianceResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(ApplianceDecisions'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityEmissionsandCostResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(EmissionsAndCosts'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityCapacityBuildResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(CapacityBuilt'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityCapacityRetiredResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(CapacityRetired'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityGenerationResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(GenerationSave'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyGensFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyGenFullSave'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyLoadFullBaseline_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyLoadFullSave'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyTransmissionFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyTransmissionFullSave'), writeheader = true)
 
 # CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyGasSOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyGasSOCFullSave'), writeheader = true)
 # CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlySOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlySOCFullSave'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityDailyGasTransmissionFullResults_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
 
-# validdays = collect(Date("2022-01-07"):Day(7):Date("2022-12-30"))
-# validstor = validData[:,3]
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlyGasSOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlyGasSOCFullSave'), writeheader = true)
+CSV.write("$(top_dir)/$(system)$(region)$(num)$(biomethane)biomethane$(industrials)industrials$(buildingretrofits)buildingretrofits$(GasQuality)GasQualityHourlySOC_$(case)$(offsets_case)$(retirements_case)$(CleanElecCosts)CostElec$(CleanGasCosts)CostGas$(NETSCost)NETsCost.csv",Tables.table(HourlySOCFullSave'), writeheader = true)
 
-
-
-
-# %run BRIDGES/California/livePyPlot.
-@nbinclude("livePlot.ipynb")
+println("Success!")
 
