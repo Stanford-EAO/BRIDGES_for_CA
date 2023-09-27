@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#SBATCH --job-name=BRIDGES
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jarupas@stanford.edu
+
+#SBATCH --time=0:50:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=40GB
+#SBATCH --cpus-per-task=24
+#SBATCH --partition=serc
+
+
+# Load modules here
+ml load julia
+ml load gurobi
+
+# Run your script
+srun julia run_file.jl
