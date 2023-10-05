@@ -248,6 +248,13 @@ GasTransmissionCapitalCosts = 0 # $/km
 GasTransmissionOperatingCosts = 0 # $/km
 
 
+################################################################################
+#### STORAGE OPTIONS ####
+
+### Options: FormEnergy and PumpedHydroStorage
+FormEnergy_allowed = 0
+PHS_allowed = 0
+
 
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
@@ -274,3 +281,6 @@ println("EI trajectory gas: ", EI_GasSector)
 
 println("Electric transmission expansion: ", TRANSMISSION_EXPANSION_ELEC)
 println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, " \$/MW-m")
+
+println("Multi-day Storage: ", FormEnergy_allowed)
+println("Pumped Hydro Storage: ", PHS_allowed)
