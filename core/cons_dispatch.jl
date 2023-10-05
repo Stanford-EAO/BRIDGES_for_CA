@@ -146,6 +146,7 @@ if LINKED_PERIODS_STORAGE == 0
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS], storedEnergy_GAS[I,T,1,s] == storedEnergy_GAS[I,T,t_ops+1,s])       # [MWh]
 end
 if LINKED_PERIODS_STORAGE == 1
+    # ELECTRIC
     @variable(m, MinSOC_ELEC[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_ELEC] >= 0)
     @variable(m, MaxSOC_ELEC[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_ELEC] >= 0)
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_ELEC], MinSOC_ELEC[I,T,s] <= UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i,s] - unitsretired_STORAGE_ELEC[i,s] for i = 1:I))*duration_ELEC[s])
@@ -163,6 +164,7 @@ if LINKED_PERIODS_STORAGE == 1
     end
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,Int(Periods_Per_Year),s] == storedEnergy_ELEC[I,Int(RepDays[I,1]),1,s])
     
+    # GAS
     @variable(m, MinSOC_GAS[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS] >= 0)
     @variable(m, MaxSOC_GAS[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS] >= 0)
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_GAS], MinSOC_GAS[I,T,s] <= UnitSize_STORAGE_GAS[s]*(NumUnits_STORAGE_GAS[s]+sum(unitsbuilt_STORAGE_GAS[i,s] - unitsretired_STORAGE_GAS[i,s]  for i = 1:I))*duration_GAS[s])
@@ -179,10 +181,15 @@ if LINKED_PERIODS_STORAGE == 1
             @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,i,s] - (storedEnergy_GAS[I,Int(RepDays[I,i+1]),1,s] - MinSOC_GAS[I,Int(RepDays[I,i+1]),s]) >= 0)
         end
     end
+    # end of year == beginning of year
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,Int(Periods_Per_Year),s] == storedEnergy_GAS[I,Int(RepDays[I,1]),1,s])
 
-    # Set initial condition for gas storage based on specified in input file
-    # @constraint(m, [I = 1, t = 1, s = 1:STORAGE_GAS], storedEnergy_GAS[I,Int(RepDays[I,t]),t,s] == initialStorage_GAS[s])
-    @constraint(m, [I = 1:T_inv, d = 1, s = 1:STORAGE_GAS], SOCTracked_GAS[I,d,s] == initialStorage_GAS[s])
+    # define initial conditions for storage
+    # gas: for day 1 in investment period 1, start with that
+    @constraint(m, [I = 1, d = 1, s = 1:STORAGE_GAS], SOCTracked_GAS[I,d,s] == initialStorage_GAS[s])
+
+    # electric: start at zero or at max capacity
+    @constraint(m, [I = 1, d = 1, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,d,s] == 0)
+    # @constraint(m, [I = 1, d = 1, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,d,s] == (UnitSize_STORAGE_ELEC .* duration_ELEC)[s])
 
 end

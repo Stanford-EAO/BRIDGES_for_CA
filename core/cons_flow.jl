@@ -131,6 +131,26 @@ end
 # See Eq. 2.47 in Von Wald thesis
 ###############################################################################
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, n = 1:NODES_GAS], sum(sum(-1*A_GAS[n,e]*LHV[g]*MolarMass[g]*NominalGasFlows[I,T,e,g] for e = 1:EDGES_GAS) for g = 1:GAS_COMPONENTS) + SUPPLY_GAS_slack[I,T,n]  - sum(sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,t,s]-discharging_GAS[I,T,t,s]) for s = 1:STORAGE_GAS) for t = 1:t_ops)/t_ops - sum(Demand_GAS[I,T,t,n] + sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) - sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G) for t = 1:t_ops)/t_ops == 0)
+## to track energy balances:
+# P2G
+@variable(m, GAS_energy_P2G[I = 1:T_inv, T = 1:T_ops])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops], GAS_energy_P2G[I,T] == sum(sum(P2G_dispatch[I,T,t,d]*eta_P2G[d] for d=1:P2G) for t=1:t_ops) )
+# Imports
+@variable(m, GAS_energy_Imports[I = 1:T_inv, T = 1:T_ops])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops], GAS_energy_Imports[I,T] == t_ops * sum(SUPPLY_GAS_slack[I,T,n] for n=1:NODES_GAS) )
+# Charging
+@variable(m, GAS_energy_Charging[I = 1:T_inv, T = 1:T_ops])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops], GAS_energy_Charging[I,T] == sum(sum(charging_GAS[I,T,t,s] for s = 1:STORAGE_GAS) for t = 1:t_ops) )
+# Discharging
+@variable(m, GAS_energy_Discharging[I = 1:T_inv, T = 1:T_ops])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops], GAS_energy_Discharging[I,T] == sum(sum(discharging_GAS[I,T,t,s] for s = 1:STORAGE_GAS) for t = 1:t_ops) )
+# Demand
+@variable(m, GAS_energy_Demand[I = 1:T_inv, T = 1:T_ops])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops], GAS_energy_Demand[I,T] == sum(sum(sum(NominalGasOfftakes[I,T,t,n,g]*LHV[g]*MolarMass[g] for g=1:GAS_COMPONENTS) for n=1:NODES_GAS) for t = 1:t_ops) )
+
+
+
+
 
 
 ################################################################################
