@@ -11,5 +11,4 @@
             + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i])
             + sum(sum(max(min((Years[i0]+EconomicLifetime_ELECTrans)-Years[i],1),0)*CRF_ELECTrans*CAPEX_ELECTrans[e]*addflow_TRANS_ELEC[i0,e] for i0 = 1:i) for e = 1:EDGES_ELEC)) for i = 1:T_inv))
 
-
 status = optimize!(m)

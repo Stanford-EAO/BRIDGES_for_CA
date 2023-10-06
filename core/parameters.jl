@@ -17,13 +17,13 @@ TRANSMISSION_EXPANSION_ELEC = 0
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
-LINKED_PERIODS_STORAGE = 0
+LINKED_PERIODS_STORAGE = 1
 # for generator operations such as min up/down times and ramp rates (if = 0, constraints only apply within each rep. period)
 LINKED_PERIODS_GENOPS = 0
 
 # Indicate whether steady-state physics should be simulated for the electric and gas systems
 # If = 0, the flows of power and gas will be governed by simple transport models
-STEADYSTATE_ELEC = 0
+STEADYSTATE_ELEC = 1
 STEADYSTATE_GAS = 0
 
 appliance_decisions = 1
@@ -35,7 +35,7 @@ toggle_variableNatGasPrice = true
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 1               # Number of investment time periods modeled
-N_Periods = 1          # Number of representative operational time slices modeled for each investment period
+N_Periods = 6          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
@@ -48,9 +48,10 @@ Periods_Per_Year = Int(HOURS_PER_YEAR/HOURS_PER_PERIOD)     # Number of rep. ope
 # (a) "average",
 # (b) "ward",
 # (c) "kmeans"
-clustering_case = "kmeans"  
-seed_no = 1234
-Random.seed!(seed_no) 
+clustering_case = "ward"
+# clustering_case = "kmeans"  
+# seed_no = 1234
+# Random.seed!(seed_no) 
 
 BaseYear = 2021                             # Initial year
 Years = [2025,2030,2035,2040,2045]          # Modeled investment years
@@ -119,8 +120,8 @@ gasdistretirement_forced = [0,0,0,0,0]
 
 ### Offsets
 offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
-maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 0.0*ones(T_inv)
+maxOffsets_elec = 1.0*ones(T_inv)                  # % of gross emissions
+maxOffsets_gas = 1.0*ones(T_inv)
 
 offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
 # offsets_Cost = [1600, 1400, 1200, 1000, 800]   
@@ -150,7 +151,7 @@ if EITrajectory == "FastEI"
     global EI_GasSector = [200,100,20,2,0.0]    # kg/MWh gas delivered (to core customers)
 end
 
-H2molfrac_max = 0.0
+H2molfrac_max = 0.2
 ADDITIONAL_SLACK_NODE = 18
 SLACK_GAS = 100000000000 # MW
 
@@ -246,7 +247,13 @@ ElecTransmissionOperatingCosts = 0 # $/MW
 GasTransmissionCapitalCosts = 0 # $/km
 GasTransmissionOperatingCosts = 0 # $/km
 
-costOfGasStorage = 0.5 / MWh_PER_MMBTU
+
+################################################################################
+#### STORAGE OPTIONS ####
+
+### Options: FormEnergy and PumpedHydroStorage
+FormEnergy_allowed = 0
+PHS_allowed = 0
 
 
 ################################################################################
@@ -274,3 +281,6 @@ println("EI trajectory gas: ", EI_GasSector)
 
 println("Electric transmission expansion: ", TRANSMISSION_EXPANSION_ELEC)
 println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, " \$/MW-m")
+
+println("Multi-day Storage: ", FormEnergy_allowed)
+println("Pumped Hydro Storage: ", PHS_allowed)

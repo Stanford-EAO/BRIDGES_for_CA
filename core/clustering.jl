@@ -30,9 +30,11 @@ end
 
 ClustNatgas_mat = zeros(1,Periods_Per_Year)
 # remove the magic numbers
-price_Natgas = CSV.read("$(foldername)/NatgasPrice_perSector_2019.csv",DataFrame)
-NGprices_timeSeries = zeros(HOURS_PER_YEAR,length(price_Natgas[1,:])-2)
+NGprices_timeSeries = zeros(HOURS_PER_YEAR,1)
 if toggle_variableNatGasPrice ==  true
+    # read different file
+    price_Natgas = CSV.read("$(foldername)/NatgasPrice_Daily_electricPower_2019.csv",DataFrame)
+    # concatenate NG data into clustering Data
     for i = 3:length(price_Natgas[1,:])
         localClustNatgas_vector = transpose(price_Natgas[:,i])
         localClustNatgas_mat = localClustNatgas_vector
@@ -44,6 +46,8 @@ if toggle_variableNatGasPrice ==  true
         global ClustNatgas_mat = vcat(ClustNatgas_mat, localClustNatgas_mat)
     end    
 elseif toggle_variableNatGasPrice == false
+    price_Natgas = CSV.read("$(foldername)/NatgasPrice_perSector_2019.csv",DataFrame)
+    # concatenate NG data into clustering Data
     for i = 3:length(price_Natgas[1,:])
         i_fixed = 3
         priceNatGas_fixed = 7
