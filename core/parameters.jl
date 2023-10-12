@@ -17,7 +17,7 @@ TRANSMISSION_EXPANSION_ELEC = 2
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
-LINKED_PERIODS_STORAGE = 1
+LINKED_PERIODS_STORAGE = 0
 # for generator operations such as min up/down times and ramp rates (if = 0, constraints only apply within each rep. period)
 LINKED_PERIODS_GENOPS = 0
 
@@ -35,7 +35,7 @@ toggle_variableNatGasPrice = true
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-N_Periods = 8          # Number of representative operational time slices modeled for each investment period
+N_Periods = 1          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year

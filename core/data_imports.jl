@@ -274,8 +274,7 @@ MoleFracs_P2G = Matrix(PowerToGas[:,23:24])             # [%]
 CRF_P2G = (WACC.*(1+WACC).^EconomicLifetime_P2G)./((1+WACC).^EconomicLifetime_P2G .- 1)
 RetirementYear_P2G = min.(PowerToGas[:,21]+Lifetime_P2G, PowerToGas[:,22])
 
-ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wFormEnergy+PHS_August2023.csv",DataFrame)
-ElectricalStorage = ElectricalStorage[:,2:size(ElectricalStorage,2)]                 # remove useless cols for some reason
+ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
 ### choose storage options
 # formEnergy
 if FormEnergy_allowed == 0
@@ -308,8 +307,7 @@ CRF_STORAGE_ELEC = (WACC.*(1+WACC).^EconomicLifetime_STORAGE_ELEC)./((1+WACC).^E
 RetirementYear_STORAGE_ELEC = min.(ElectricalStorage[:,15]+Lifetime_STORAGE_ELEC,ElectricalStorage[:,16])
 
 
-GasStorage = CSV.read("$(foldername)/Storage_GAS$(system)_2022initialStorage.csv",DataFrame)
-GasStorage = GasStorage[:,3:size(GasStorage,2)]                 # remove useless cols for some reason
+GasStorage = CSV.read("$(foldername)/Storage_GAS$(system).csv",DataFrame)
 STORAGE_GAS = length(GasStorage[:, :1])
 PrimeMover_STORAGE_GAS = GasStorage[:,4]
 NumUnits_STORAGE_GAS = GasStorage[:,5]                          # [units]
@@ -361,8 +359,8 @@ LHV_P2G = sum(MoleFracs_P2G.*transpose(MolarMass.*LHV), dims = 2)./MolarMass_P2G
 ################################################################################
 ### CAPEX, FOM, VOM, and fuel costs
 ################################################################################
-CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_wFormEnergy+PHS.csv",DataFrame)
-FOMLookup = CSV.read("$(foldername)/FOMLookup_wFormEnergy+PHS.csv",DataFrame)
+CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup.csv",DataFrame)
+FOMLookup = CSV.read("$(foldername)/FOMLookup.csv",DataFrame)
 VOMLookup = CSV.read("$(foldername)/VOMLookup.csv",DataFrame)
 FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp.csv",DataFrame)
 
@@ -380,7 +378,7 @@ FOM_APPLIANCES = zeros(T_inv, APPLIANCES)
 
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
-CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
+CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
 if CleanElecCosts =="High"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
@@ -413,7 +411,7 @@ if CleanElecCosts =="Mid"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecHighGas.csv",DataFrame)
     end
     if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
+        global CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
     end
 end
 
