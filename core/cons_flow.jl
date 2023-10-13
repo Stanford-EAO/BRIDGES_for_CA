@@ -19,6 +19,11 @@ elseif TRANSMISSION_EXPANSION_ELEC == 2
     unitsbuilt_TRANS_ELEC = zeros(T_inv,EDGES_ELEC)
     unitsretired_TRANS_ELEC = zeros(T_inv,EDGES_ELEC)
     @variable(m, addflow_TRANS_ELEC[I = 1:T_inv,e = 1:EDGES_ELEC] >= 0)        # MW
+elseif TRANSMISSION_EXPANSION_ELEC == 3
+    unitsbuilt_TRANS_ELEC = zeros(T_inv,EDGES_ELEC)
+    unitsretired_TRANS_ELEC = zeros(T_inv,EDGES_ELEC)
+    @variable(m, addflow_TRANS_ELEC[I = 1:T_inv,e = 1:EDGES_ELEC] >= 0)        # MW
+    @constraint(m, [I = 1:T_inv, e = 1:EDGES_ELEC-2], addflow_TRANS_ELEC[I,e] ==  0)
 end
 
 ## If not simulating steady-state power flows, flows are only bound by the maximum power flow specified for the line (i.e., simple transport model)

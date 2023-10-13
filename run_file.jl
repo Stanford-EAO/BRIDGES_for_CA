@@ -28,8 +28,8 @@ include("core/data_imports.jl")
 include("core/clustering.jl")
 
 # Define optimization program
-m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 46,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
-    "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0, "NumericFocus"=>2, "Presolve"=>2))
+m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 8,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
+    "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) # "NumericFocus"=>2, "Presolve"=>2))
 
 # Read constraint and optimize file
 include("core/cons_capacity.jl")
