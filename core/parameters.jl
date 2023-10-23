@@ -11,7 +11,7 @@ GASFLOW_DIRECTIONS = 0
 gasdistretirement_allowed = 0
 
 # Indicate whether transmission expansion/retirement should be explicitly considered
-# 0 = No, 1 = Binary Yes, 2 = Continuous Yes Expansion Only (supports for elec-side expansion only), 3 = Only Expansion on OSW
+# 0 = No, 1 = Binary Yes, 2 = Continuous Yes Expansion Only (supports for elec-side expansion only)
 TRANSMISSION_EXPANSION_GAS = 0
 TRANSMISSION_EXPANSION_ELEC = 2
 
