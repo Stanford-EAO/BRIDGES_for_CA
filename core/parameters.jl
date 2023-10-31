@@ -35,7 +35,7 @@ toggle_variableNatGasPrice = true
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-N_Periods = 8          # Number of representative operational time slices modeled for each investment period
+N_Periods = 10          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
@@ -130,7 +130,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 2    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.5    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################
@@ -140,7 +140,7 @@ EITrajectory = "MidEI"
 
 # Specify emissions intensity targets for the electricity sector and gas sector with Slow and Fast sensitivity scenarios possible.
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
-EI_ElecSector = [400,200,100,50,0] #[500,250,75,50,0]  # kg/MWh electricity generated
+EI_ElecSector = [200,150,100,50,0] #[500,250,75,50,0]  # kg/MWh electricity generated
 EI_GasSector = [200,150,100,50,0] #[200,150,50,15,0]   # kg/MWh gas delivered (to core customers)
 if EITrajectory == "SlowEI"
     global EI_ElecSector = [500,500,250,250,0]  # kg/MWh electricity generated

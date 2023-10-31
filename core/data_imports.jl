@@ -379,41 +379,20 @@ FOM_APPLIANCES = zeros(T_inv, APPLIANCES)
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
 CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
-if CleanElecCosts =="High"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecMidGas.csv",DataFrame)
-    end
+if CleanGasCosts == "Low"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosLow.csv",DataFrame)
+end
+if CleanGasCosts == "High"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosHigh.csv",DataFrame)
 end
 
-if CleanElecCosts =="Low"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecMidGas.csv",DataFrame)
-    end
+if CleanElecCosts == "Low"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosLow.csv",DataFrame)
+end
+if CleanElecCosts == "High"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosHigh.csv",DataFrame)
 end
 
-if CleanElecCosts =="Mid"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
-    end
-end
 
 # Look up each technology, the associated calendar year in the data tables and assign
 # it a cost value
