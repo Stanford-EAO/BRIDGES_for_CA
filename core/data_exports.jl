@@ -175,20 +175,631 @@ end
 top_dir = mk_output_dir()
 println("Saving to: ",last(top_dir, 15))
 
-CSV.write("$(top_dir)/APPLIANCE_DECISIONS.csv",Tables.table(ApplianceDecisions'), writeheader = true)
-CSV.write("$(top_dir)/EMISSIONS_COSTS.csv",Tables.table(EmissionsAndCosts'), writeheader = true)
-CSV.write("$(top_dir)/CAPACITY_BUILT.csv",Tables.table(CapacityBuilt'), writeheader = true)
-CSV.write("$(top_dir)/CAPACITY_RETIRED.csv",Tables.table(CapacityRetired'), writeheader = true)
-CSV.write("$(top_dir)/GENERATION.csv",Tables.table(GenerationSave'), writeheader = true)
-CSV.write("$(top_dir)/HOURLY_GENERATION.csv",Tables.table(HourlyGenFullSave'), writeheader = true)
-CSV.write("$(top_dir)/HOURLY_LOAD.csv",Tables.table(HourlyLoadFullSave'), writeheader = true)
-CSV.write("$(top_dir)/HOURLY_ELECTRIC_TRANSMISSION.csv",Tables.table(HourlyTransmissionFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/APPLIANCE_DECISIONS.csv",Tables.table(ApplianceDecisions'), writeheader = true)
+# CSV.write("$(top_dir)/EMISSIONS_COSTS.csv",Tables.table(EmissionsAndCosts'), writeheader = true)
+# CSV.write("$(top_dir)/CAPACITY_BUILT.csv",Tables.table(CapacityBuilt'), writeheader = true)
+# CSV.write("$(top_dir)/CAPACITY_RETIRED.csv",Tables.table(CapacityRetired'), writeheader = true)
+# CSV.write("$(top_dir)/GENERATION.csv",Tables.table(GenerationSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_GENERATION.csv",Tables.table(HourlyGenFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_LOAD.csv",Tables.table(HourlyLoadFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_ELECTRIC_TRANSMISSION.csv",Tables.table(HourlyTransmissionFullSave'), writeheader = true)
 
-CSV.write("$(top_dir)/HOURLY_GAS_STOREDENERGY.csv",Tables.table(HourlyStoredGasEnergyFullSave'), writeheader = true)
-CSV.write("$(top_dir)/DAILY_GAS_SOC.csv",Tables.table(DailyGasSOCFullSave'), writeheader = true)
-CSV.write("$(top_dir)/HOURLY_ELEC_STOREDENERGY.csv",Tables.table(HourlyStoredElecFullSave'), writeheader = true)
-CSV.write("$(top_dir)/DAILY_GAS_TRANSMISSION.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_GAS_STOREDENERGY.csv",Tables.table(HourlyStoredGasEnergyFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/DAILY_GAS_SOC.csv",Tables.table(DailyGasSOCFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_ELEC_STOREDENERGY.csv",Tables.table(HourlyStoredElecFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/DAILY_GAS_TRANSMISSION.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
 
-CSV.write("$(top_dir)/REPDAYS.csv",Tables.table(RepDays[1,:]), writeheader = true)
-CSV.write("$(top_dir)/ADDELECFLOW.csv",Tables.table(addflow_TRANS_ELEC), writeheader = true)
+# CSV.write("$(top_dir)/REPDAYS.csv",Tables.table(RepDays[1,:]), writeheader = true)
+# CSV.write("$(top_dir)/ADDELECFLOW.csv",Tables.table(addflow_TRANS_ELEC), writeheader = true)
 
+
+##########################################################################
+#################### ENERGY STORAGE CAPACITY EXPORTS #####################
+##########################################################################
+#
+### P2G [MW]
+# check heat rate: 
+# print(HeatRate[Fuel_GEN.=="Natural Gas"])
+preCapacity_P2G = NumUnits_P2G .* UnitSize_P2G .* eta_P2G .* 0.4
+# define array based on inv periods
+invCapacity_P2G = zeros(T_inv, length(preCapacity_P2G))
+# loop
+for i=1:T_inv
+    #
+    netForInvP = UnitSize_P2G .* eta_P2G .* 0.4 .* sum( JuMP.value.(unitsbuilt_P2G[invP,:]) - JuMP.value.(unitsretired_P2G[invP,:]) for invP = 1:i)
+    invCapacity_P2G[i,:] = preCapacity_P2G[:] + netForInvP[:]
+end
+
+## then let's find the indeces of the different P2G
+idx_PowerToCH4  = PrimeMover_P2G .!= fill("Electrolysis", length(PrimeMover_P2G))
+idx_PowerToH2   = PrimeMover_P2G .== fill("Electrolysis", length(PrimeMover_P2G))
+
+# concatenate
+capPowerToCH4_array  = vcat(transpose(preCapacity_P2G[idx_PowerToCH4]), invCapacity_P2G[:,idx_PowerToCH4])
+capPowerToH2_array   = vcat(transpose(preCapacity_P2G[idx_PowerToH2]), invCapacity_P2G[:,idx_PowerToH2])
+
+# find sum
+capPowerToCH4 = sum(capPowerToCH4_array, dims=2)
+capPowerToH2  = sum(capPowerToH2_array, dims=2)
+
+# Specify column names as strings
+column_names_P2G = ["Power-to-CH4", "Power-to-H2"]
+
+# Convert data to 1-dimensional arrays
+capPowerToCH4  = vec(capPowerToCH4)
+capPowerToH2   = vec(capPowerToH2)
+
+
+
+
+
+
+
+#### Storage Capacity in MWh
+preCapacity_ELEC = (NumUnits_STORAGE_ELEC .* UnitSize_STORAGE_ELEC .* duration_ELEC)
+# define array based on inv periods
+invCapacity_ELEC = zeros(T_inv, length(preCapacity_ELEC))
+# loop
+for i=1:T_inv
+    #
+    netForInvP = UnitSize_STORAGE_ELEC .* duration_ELEC .* sum( JuMP.value.(unitsbuilt_STORAGE_ELEC[invP,:]) - JuMP.value.(unitsretired_STORAGE_ELEC[invP,:]) for invP = 1:i)
+    invCapacity_ELEC[i,:] = preCapacity_ELEC[:] + netForInvP[:]
+end
+# gas
+preCapacity_GAS = UnitSize_STORAGE_GAS .* duration_GAS
+
+## then let's find the indeces of the different storage mechanisms
+idx_PHS       = PrimeMover_STORAGE_ELEC .== fill("Pumped hydro storage", length(PrimeMover_STORAGE_ELEC))
+idx_LiBattery = PrimeMover_STORAGE_ELEC .== fill("Li-ion battery", length(PrimeMover_STORAGE_ELEC))
+idx_H2Storage = PrimeMover_STORAGE_ELEC .== fill("Long-duration storage", length(PrimeMover_STORAGE_ELEC))
+idx_FeBattery = PrimeMover_STORAGE_ELEC .== fill("Multi-day storage", length(PrimeMover_STORAGE_ELEC))
+
+# concatenate
+capPHS_array       = vcat(transpose(preCapacity_ELEC[idx_PHS]), invCapacity_ELEC[:,idx_PHS])
+capLiBattery_array = vcat(transpose(preCapacity_ELEC[idx_LiBattery]), invCapacity_ELEC[:,idx_LiBattery])
+capH2Storage_array = vcat(transpose(preCapacity_ELEC[idx_H2Storage]), invCapacity_ELEC[:,idx_H2Storage])
+capFeBattery_array = vcat(transpose(preCapacity_ELEC[idx_FeBattery]), invCapacity_ELEC[:,idx_FeBattery])
+
+# find sum
+capPHS       = sum(capPHS_array, dims=2)
+capLiBattery = sum(capLiBattery_array, dims=2)
+capH2Storage = sum(capH2Storage_array, dims=2)
+capFeBattery = sum(capFeBattery_array, dims=2)
+
+# Specify column names as strings
+column_names = ["Li-ion battery", "Pumped hydro storage", "Hydrogen Storage", "Fe-air Battery"]
+
+# Convert data to 1-dimensional arrays
+capPHS       = vec(capPHS)
+capLiBattery = vec(capLiBattery)
+capH2Storage = vec(capH2Storage)
+capFeBattery = vec(capFeBattery)
+
+# Create a DataFrame with column names and data
+df = DataFrame(column_names[1] => capLiBattery, column_names[2] => capPHS, column_names[3] => capH2Storage, column_names[4] => capFeBattery)
+
+#
+resultName   = "$(top_dir)/STORAGE_ENERGY_CAPACITIES"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName ,temporalName, scenarioName,".csv")
+#
+CSV.write(outputName, df, writeheader = true)
+
+
+
+
+#
+#### Storage Capacity in MW
+preCapacity_ELEC = (NumUnits_STORAGE_ELEC .* UnitSize_STORAGE_ELEC)
+# define array based on inv periods
+invCapacity_ELEC = zeros(T_inv, length(preCapacity_ELEC))
+# loop
+for i=1:T_inv
+    #
+    netForInvP = UnitSize_STORAGE_ELEC .* sum( JuMP.value.(unitsbuilt_STORAGE_ELEC[invP,:]) - JuMP.value.(unitsretired_STORAGE_ELEC[invP,:]) for invP = 1:i)
+    invCapacity_ELEC[i,:] = preCapacity_ELEC[:] + netForInvP[:]
+end
+# gas
+preCapacity_GAS = UnitSize_STORAGE_GAS
+
+## then let's find the indeces of the different storage mechanisms
+idx_PHS       = PrimeMover_STORAGE_ELEC .== fill("Pumped hydro storage", length(PrimeMover_STORAGE_ELEC))
+idx_LiBattery = PrimeMover_STORAGE_ELEC .== fill("Li-ion battery", length(PrimeMover_STORAGE_ELEC))
+idx_H2Storage = PrimeMover_STORAGE_ELEC .== fill("Long-duration storage", length(PrimeMover_STORAGE_ELEC))
+idx_FeBattery = PrimeMover_STORAGE_ELEC .== fill("Multi-day storage", length(PrimeMover_STORAGE_ELEC))
+
+# concatenate
+capPHS_array       = vcat(transpose(preCapacity_ELEC[idx_PHS]), invCapacity_ELEC[:,idx_PHS])
+capLiBattery_array = vcat(transpose(preCapacity_ELEC[idx_LiBattery]), invCapacity_ELEC[:,idx_LiBattery])
+capH2Storage_array = vcat(transpose(preCapacity_ELEC[idx_H2Storage]), invCapacity_ELEC[:,idx_H2Storage])
+capFeBattery_array = vcat(transpose(preCapacity_ELEC[idx_FeBattery]), invCapacity_ELEC[:,idx_FeBattery])
+
+# find sum
+capPHS       = sum(capPHS_array, dims=2)
+capLiBattery = sum(capLiBattery_array, dims=2)
+capH2Storage = sum(capH2Storage_array, dims=2)
+capFeBattery = sum(capFeBattery_array, dims=2)
+
+# Specify column names as strings
+column_names = ["Li-ion battery", "Pumped hydro storage", "Hydrogen Storage", "Fe-air Battery"]
+
+# Convert data to 1-dimensional arrays
+capPHS       = vec(capPHS)
+capLiBattery = vec(capLiBattery)
+capH2Storage = vec(capH2Storage)
+capFeBattery = vec(capFeBattery)
+
+
+# Create a DataFrame with column names and data
+df = DataFrame(column_names[1] => capLiBattery, column_names[2] => capPHS, column_names[3] => capH2Storage, column_names[4] => capFeBattery,
+               column_names_P2G[1] => capPowerToCH4, column_names_P2G[2] => capPowerToH2)
+
+#
+resultName   = "$(top_dir)/STORAGE_POWER_CAPACITIES"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName, temporalName, scenarioName,".csv")
+#
+CSV.write(outputName, df, writeheader = true)
+
+
+
+#### Objective Function Value
+outputName = string("$(top_dir)/ObjectiveFunctionValue", temporalName, scenarioName,".csv")
+CSV.write(outputName, DataFrame(Value = [objective_value(m)]), writeheader = true)
+
+
+
+##########################################################################
+########################### GAS FLOWS EXPORTS ############################
+##########################################################################
+# function for hourly output
+function process_gasOutput(gas_output, outputName)
+    # Determine the column names for each slice in the third dimension
+    column_names = String[]  # Initialize as an empty string array
+    for i = 1:size(gas_output, 1)
+        prefix = "InvPeriod_$(i)"
+        for j = 1:size(gas_output, 2)
+            suffix = "RepDay_$(j)"
+            push!(column_names, string(prefix, "+", suffix))
+        end
+    end
+
+    # Reshape the 3D matrix into a 2D matrix
+    gas_output2D = gas_output[1, :,:]'
+    if size(gas_output, 1) > 1
+        for i = 2:size(gas_output, 1)
+            gas_output2D = hcat(gas_output2D, gas_output[i, :,:]')
+        end
+    end
+
+    # Create a DataFrame with column names
+    df = DataFrame(gas_output2D, column_names)
+
+    # Rename the columns to the specified names
+    rename!(df, Symbol.(column_names))
+
+    # Save the DataFrame to a CSV file
+    CSV.write(outputName, df)
+end
+
+### P2G
+P2G_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*eta_P2G[d] for d=1:P2G) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/P2G_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(P2G_output, outputName)
+
+### Imports
+Imports_output = JuMP.value.( sum(SUPPLY_GAS_slack[:,:,n] for n=1:NODES_GAS) )
+Imports_output = cat([Imports_output for _ in 1:24]..., dims=3)
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/Imports_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(Imports_output, outputName)
+
+### Charging
+Charging_output = JuMP.value.( sum(charging_GAS[:,:,:,s] for s = 1:STORAGE_GAS) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/Charging_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(Charging_output, outputName)
+
+### Discharging
+Discharging_output = JuMP.value.( sum(discharging_GAS[:,:,:,s] for s = 1:STORAGE_GAS) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/Discharging_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(Discharging_output, outputName)
+
+### Demand
+Demand_output = JuMP.value.( sum(sum(NominalGasOfftakes[:,:,:,n,g]*LHV[g]*MolarMass[g] for g=1:GAS_COMPONENTS) for n=1:NODES_GAS) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/Demand_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(Demand_output, outputName)
+
+
+
+
+
+##########################################################################
+########################## ELEC FLOWS EXPORTS ############################
+##########################################################################
+#
+### using the same code as gasOutput
+#
+### P2G
+ELEC_P2G_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_P2G_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_P2G_output, outputName)
+
+### Generation
+ELEC_Generation_output = JuMP.value.( sum(generation[:,:,:,g] for g = 1:GEN) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_Gen_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Generation_output, outputName)
+
+### Curtailment
+ELEC_Curtailment_output = JuMP.value.( sum(curtailmentRE[:,:,:,g] for g = 1:GEN) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_Curtailment_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Curtailment_output, outputName)
+
+### Charging
+ELEC_Charging_output = JuMP.value.( sum(charging_ELEC[:,:,:,s] for s = 1:STORAGE_ELEC) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_Charging_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Charging_output, outputName)
+
+### Discharging
+ELEC_Discharging_output = JuMP.value.( sum(discharging_ELEC[:,:,:,s] for s = 1:STORAGE_ELEC) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_Discharging_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Discharging_output, outputName)
+
+### Demand
+ELEC_Demand_output = JuMP.value.( sum(Demand_ELEC[:,:,:,n] for n = 1:NODES_ELEC) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_Demand_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Demand_output, outputName)
+
+
+
+
+
+##########################################################################
+############### STORAGE CHARGE/DISCHARGE ELEC FLOWS EXPORTS ##############
+##########################################################################
+# the data should sum up to the charging/discharging from the previous block
+
+# data form before:
+### Charging
+ELEC_Charging_vec = JuMP.value.( charging_ELEC[:,:,:,:] )
+### Discharging
+ELEC_Discharging_vec = JuMP.value.( discharging_ELEC[:,:,:,:] )
+
+# for each storage technology:
+idx_LiBattery = PrimeMover_STORAGE_ELEC .== fill("Li-ion battery", length(PrimeMover_STORAGE_ELEC))
+idx_PHS       = PrimeMover_STORAGE_ELEC .== fill("Pumped hydro storage", length(PrimeMover_STORAGE_ELEC))
+idx_FeBattery = PrimeMover_STORAGE_ELEC .== fill("Multi-day storage", length(PrimeMover_STORAGE_ELEC))
+idx_H2Storage = PrimeMover_STORAGE_ELEC .== fill("Long-duration storage", length(PrimeMover_STORAGE_ELEC))
+
+
+### Li-ion
+#
+ELEC_Charging_LiIon    = sum(ELEC_Charging_vec[:,:,:,idx_LiBattery], dims=4)
+ELEC_Discharging_LiIon = sum(ELEC_Discharging_vec[:,:,:,idx_LiBattery], dims=4)
+## charging
+resultName   = "$(top_dir)/ELEC_Charging_LiIon_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Charging_LiIon, outputName)
+
+## discharging
+resultName   = "$(top_dir)/ELEC_Discharging_LiIon_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Discharging_LiIon, outputName)
+
+
+
+### PHS
+#
+ELEC_Charging_PHS    = sum(ELEC_Charging_vec[:,:,:,idx_PHS], dims=4)
+ELEC_Discharging_PHS = sum(ELEC_Discharging_vec[:,:,:,idx_PHS], dims=4)
+## charging
+resultName   = "$(top_dir)/ELEC_Charging_PHS_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Charging_PHS, outputName)
+
+## discharging
+resultName   = "$(top_dir)/ELEC_Discharging_PHS_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Discharging_PHS, outputName)
+
+
+
+### FeBattery
+#
+ELEC_Charging_FeBattery    = sum(ELEC_Charging_vec[:,:,:,idx_FeBattery], dims=4)
+ELEC_Discharging_FeBattery = sum(ELEC_Discharging_vec[:,:,:,idx_FeBattery], dims=4)
+## charging
+resultName   = "$(top_dir)/ELEC_Charging_FeBattery_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Charging_FeBattery, outputName)
+
+## discharging
+resultName   = "$(top_dir)/ELEC_Discharging_FeBattery_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Discharging_FeBattery, outputName)
+
+
+
+### H2Storage
+#
+ELEC_Charging_H2Storage    = sum(ELEC_Charging_vec[:,:,:,idx_H2Storage], dims=4)
+ELEC_Discharging_H2Storage = sum(ELEC_Discharging_vec[:,:,:,idx_H2Storage], dims=4)
+## charging
+resultName   = "$(top_dir)/ELEC_Charging_H2Storage_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Charging_H2Storage, outputName)
+
+## discharging
+resultName   = "$(top_dir)/ELEC_Discharging_H2Storage_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_Discharging_H2Storage, outputName)
+
+
+
+
+
+##########################################################################
+############################# GEN EXPORTS ################################
+##########################################################################
+
+# determine pre capacity
+preCapacity_GEN = (NumUnits_GEN .* UnitSize_GEN)
+
+# define array based on inv periods
+invCapacity_GEN = zeros(T_inv, length(preCapacity_GEN))
+# loop
+for i=1:T_inv
+    #
+    netForInvP = UnitSize_GEN .* (sum( JuMP.value.(unitsbuilt_GEN[invP,:]) - JuMP.value.(unitsretired_GEN[invP,:]) for invP = 1:i))
+    invCapacity_GEN[i,:] = preCapacity_GEN[:] + netForInvP[:]
+end
+
+# Create an empty dictionary
+idx_GEN = Dict{String, Vector{Bool}}()
+#
+GenTechnology = unique(PrimeMover_GEN)
+
+# loop to get indeces
+for i in 1:length(GenTechnology)
+    key = GenTechnology[i]
+    value = PrimeMover_GEN .== fill(key, length(PrimeMover_GEN))
+
+    # Add the key-value pair to the dictionary
+    idx_GEN[key] = BitVector(value)
+end
+
+
+# # loop to concatenate
+cap_GEN_matrix = Dict{String, Matrix}()
+energy_GEN = Dict{String, Vector}()
+for i in 1:length(GenTechnology)
+    key = GenTechnology[i]
+    idx = idx_GEN[key]
+    cap_GEN_matrix[key] = vcat(transpose(preCapacity_GEN[idx]), invCapacity_GEN[:,idx])
+end
+
+# add the technologies' power cap
+cap_GEN = Dict{String, Vector}()
+for i in 1:length(GenTechnology)
+    key = GenTechnology[i]
+    cap_GEN[key] = vec(sum(cap_GEN_matrix[key], dims=2))
+end
+
+
+# create dataframe
+df = DataFrame(cap_GEN)
+#
+resultName   = "$(top_dir)/GEN_POWER_CAPACITIES"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName, temporalName, scenarioName,".csv")
+#
+CSV.write(outputName, df, writeheader = true)
+
+
+######### now for energy generation by generator prime mover:
+EnergyGen = sum(weights[:,T].*8760/t_ops.*sum(JuMP.value.(generation[:,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
+#
+energy_GEN = Dict{String, Vector}()
+# loop to combine different sources to 1
+for i in 1:length(GenTechnology)
+    key = GenTechnology[i]
+    idx = idx_GEN[key]
+    energy_GEN[key] = vec(sum(EnergyGen[:,idx], dims=2))
+end
+
+# create dataframe
+df = DataFrame(energy_GEN)
+#
+resultName   = "$(top_dir)/GEN_ENERGY_OUTPUT"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName, temporalName, scenarioName,".csv")
+#
+CSV.write(outputName, df, writeheader = true)
+
+
+
+##########################################################################
+######################### YEARLY STORAGE EXPORTS #########################
+##########################################################################
+#
+## then let's find the indeces of the different storage mechanisms
+idx_LiBattery = PrimeMover_STORAGE_ELEC .== fill("Li-ion battery", length(PrimeMover_STORAGE_ELEC))
+idx_PHS       = PrimeMover_STORAGE_ELEC .== fill("Pumped hydro storage", length(PrimeMover_STORAGE_ELEC))
+idx_FeBattery = PrimeMover_STORAGE_ELEC .== fill("Multi-day storage", length(PrimeMover_STORAGE_ELEC))
+idx_H2Storage = PrimeMover_STORAGE_ELEC .== fill("Long-duration storage", length(PrimeMover_STORAGE_ELEC))
+
+totalStorageSOC_LiBattery = sum(JuMP.value.(SOCTracked_ELEC[:,:,idx_LiBattery]), dims=3)
+totalStorageSOC_PHS       = sum(JuMP.value.(SOCTracked_ELEC[:,:,idx_PHS]), dims=3)
+totalStorageSOC_FeBattery = sum(JuMP.value.(SOCTracked_ELEC[:,:,idx_FeBattery]), dims=3)
+totalStorageSOC_H2Storage = sum(JuMP.value.(SOCTracked_ELEC[:,:,idx_H2Storage]), dims=3)
+totalStorageSOC_GAS = sum(JuMP.value.(SOCTracked_GAS), dims=3)
+
+findmax(totalStorageSOC_LiBattery)
+
+storageTypes = ["Li-ion battery", "Pumped hydro storage", "Multi-day storage", "Long-duration storage", "Natural gas storage"]
+
+# Determine the column names for each slice in the third dimension
+column_names = String[]  # Initialize as an empty string array
+for i = 1:size(storageTypes, 1)
+    prefix = storageTypes[i]
+    for j = 1:size(totalStorageSOC_LiBattery, 1)
+        suffix = "InvPeriod_$(j)"
+        push!(column_names, string(prefix, "+", suffix))
+    end
+end
+
+# create yearly flows matrix, assign it to LiBattery 
+# yearlyStorageFlows = totalStorageSOC_LiBattery[1, :,:]
+# Li-ion
+# if size(totalStorageSOC_LiBattery, 1) > 1
+#     for i = 2:size(totalStorageSOC_LiBattery, 1)
+#         yearlyStorageFlows = hcat(yearlyStorageFlows, totalStorageSOC_LiBattery[i, :,:])
+#     end
+# end
+# # PHS
+# for i = 1:size(totalStorageSOC_PHS, 1)
+#     yearlyStorageFlows = hcat(yearlyStorageFlows, totalStorageSOC_PHS[i, :,:])
+# end
+# # MDS
+# for i = 1:size(totalStorageSOC_FeBattery, 1)
+#     yearlyStorageFlows = hcat(yearlyStorageFlows, totalStorageSOC_FeBattery[i, :,:])
+# end
+# # H2
+# for i = 1:size(totalStorageSOC_H2Storage, 1)
+#     yearlyStorageFlows = hcat(yearlyStorageFlows, totalStorageSOC_H2Storage[i, :,:])
+# end
+# # GAS
+# for i = 1:size(totalStorageSOC_GAS, 1)
+#     yearlyStorageFlows = hcat(yearlyStorageFlows, totalStorageSOC_GAS[i, :,:])
+# end
+
+function concatenateYearlyOutput(input, output)
+    # add
+    for i = 1:size(input, 1)
+        output = hcat(output, input[i, :,:])
+    end
+    return output
+end
+
+yearlyStorageFlows = totalStorageSOC_LiBattery[1, :,:]
+#
+yearlyStorageFlows = concatenateYearlyOutput(totalStorageSOC_LiBattery, yearlyStorageFlows)
+yearlyStorageFlows = concatenateYearlyOutput(totalStorageSOC_PHS, yearlyStorageFlows)
+yearlyStorageFlows = concatenateYearlyOutput(totalStorageSOC_FeBattery, yearlyStorageFlows)
+yearlyStorageFlows = concatenateYearlyOutput(totalStorageSOC_H2Storage, yearlyStorageFlows)
+yearlyStorageFlows = concatenateYearlyOutput(totalStorageSOC_GAS, yearlyStorageFlows)
+yearlyStorageFlows = yearlyStorageFlows[:,2:end]
+
+# Create a DataFrame with column names
+df = DataFrame(yearlyStorageFlows, column_names)
+
+# Rename the columns to the specified names
+rename!(df, Symbol.(column_names))
+
+#
+resultName   = "$(top_dir)/YEARLY_STORAGE_FLOWS"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName, temporalName, scenarioName,".csv")
+# Save the DataFrame to a CSV file
+CSV.write(outputName, df)

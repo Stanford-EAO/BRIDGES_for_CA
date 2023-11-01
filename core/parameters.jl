@@ -13,7 +13,7 @@ gasdistretirement_allowed = 0
 # Indicate whether transmission expansion/retirement should be explicitly considered
 # 0 = No, 1 = Binary Yes, 2 = Continuous Yes Expansion Only (supports for elec-side expansion only)
 TRANSMISSION_EXPANSION_GAS = 0
-TRANSMISSION_EXPANSION_ELEC = 0
+TRANSMISSION_EXPANSION_ELEC = 2
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
@@ -34,7 +34,7 @@ toggle_variableNatGasPrice = true
 ################################################################################
 #### CLUSTERING PARAMETERS ####
 
-T_inv = 1               # Number of investment time periods modeled
+T_inv = 5               # Number of investment time periods modeled
 N_Periods = 6          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
@@ -120,8 +120,8 @@ gasdistretirement_forced = [0,0,0,0,0]
 
 ### Offsets
 offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
-maxOffsets_elec = 1.0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 1.0*ones(T_inv)
+maxOffsets_elec = 0.0 * ones(T_inv)                  # % of gross emissions
+maxOffsets_gas = 0.0 * ones(T_inv)
 
 offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
 # offsets_Cost = [1600, 1400, 1200, 1000, 800]   
@@ -151,7 +151,7 @@ if EITrajectory == "FastEI"
     global EI_GasSector = [200,100,20,2,0.0]    # kg/MWh gas delivered (to core customers)
 end
 
-H2molfrac_max = 0.2
+H2molfrac_max = 0.0
 ADDITIONAL_SLACK_NODE = 18
 SLACK_GAS = 100000000000 # MW
 
@@ -252,8 +252,8 @@ GasTransmissionOperatingCosts = 0 # $/km
 #### STORAGE OPTIONS ####
 
 ### Options: FormEnergy and PumpedHydroStorage
-FormEnergy_allowed = 0
-PHS_allowed = 0
+FormEnergy_allowed = 1
+PHS_allowed = 1
 
 
 ################################################################################

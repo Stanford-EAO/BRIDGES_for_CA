@@ -362,6 +362,7 @@ LHV_P2G = sum(MoleFracs_P2G.*transpose(MolarMass.*LHV), dims = 2)./MolarMass_P2G
 ### CAPEX, FOM, VOM, and fuel costs
 ################################################################################
 CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_wFormEnergy+PHS.csv",DataFrame)
+# CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_old.csv",DataFrame)
 FOMLookup = CSV.read("$(foldername)/FOMLookup_wFormEnergy+PHS.csv",DataFrame)
 VOMLookup = CSV.read("$(foldername)/VOMLookup.csv",DataFrame)
 FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp.csv",DataFrame)
