@@ -4,10 +4,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jarupas@stanford.edu
 
-#SBATCH --time=3:00:00
+#SBATCH --time=0:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=100GB
+#SBATCH --mem=20GB
 #SBATCH --cpus-per-task=64
 #SBATCH --partition=serc
 
@@ -17,4 +17,4 @@ ml load julia
 ml load gurobi/10.0.1_py39
 
 # Run your script
-srun julia run_file.jl highcost
+srun julia run_file.jl

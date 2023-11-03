@@ -30,6 +30,8 @@ appliance_decisions = 1
 hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
+IND_electrification_cost = 34 # $/MWh
+industrial_electrifyCCS_allowed = 1
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -112,16 +114,16 @@ end
 
 buildingretrofits = "Low"   # "Low" or "High" cost of building retrofit
 
-CleanElecCosts = "High"
-CleanGasCosts = "High"
+CleanElecCosts = "Mid"
+CleanGasCosts = "Mid"
 
 retirements_case = "NoGasDistRet"
 gasdistretirement_forced = [0,0,0,0,0]
 
 ### Offsets
 offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
-maxOffsets_elec = 0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 0*ones(T_inv)
+maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
+maxOffsets_gas = 0.0*ones(T_inv)
 
 # offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
 offsets_Cost = [650, 500, 550, 500, 450]  
@@ -130,7 +132,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 2    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.5    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################

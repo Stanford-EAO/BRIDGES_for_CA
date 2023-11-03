@@ -17,7 +17,7 @@ TRANSMISSION_EXPANSION_ELEC = 2
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
-LINKED_PERIODS_STORAGE = 1
+LINKED_PERIODS_STORAGE = 0
 # for generator operations such as min up/down times and ramp rates (if = 0, constraints only apply within each rep. period)
 LINKED_PERIODS_GENOPS = 0
 
@@ -30,12 +30,14 @@ appliance_decisions = 1
 hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
+IND_electrification_cost = 34 # $/MWh
+industrial_electrifyCCS_allowed = 0
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-N_Periods = 10          # Number of representative operational time slices modeled for each investment period
+N_Periods = 1          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
@@ -120,8 +122,8 @@ gasdistretirement_forced = [0,0,0,0,0]
 
 ### Offsets
 offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
-maxOffsets_elec = 0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 0*ones(T_inv)
+maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
+maxOffsets_gas = 0.0*ones(T_inv)
 
 # offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
 offsets_Cost = [650, 500, 550, 500, 450]  
@@ -130,7 +132,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 2    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.5    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################

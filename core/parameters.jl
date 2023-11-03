@@ -30,6 +30,8 @@ appliance_decisions = 1
 hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
+IND_electrification_cost = 34 # $/MWh
+industrial_electrifyCCS_allowed = 0
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
