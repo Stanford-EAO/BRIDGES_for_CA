@@ -232,6 +232,23 @@ PrimeMover_GEN = Generators[:,4]
 Fuel_GEN = Generators[:,5]
 NumUnits_GEN = Generators[:,6]                  # [units]
 UnitSize_GEN = Generators[:,7]                  # [MW]
+# retirement by 2030: force them to build no new nuclear
+if techScenario_Nuclear == "2030"
+    primeMover2compare = "Nuclear"
+    idx_nuclear = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_nuclear = [all(row) for row in eachrow(idx_nuclear)]
+    #
+    Generators[idx_nuclear, 8] = vec( fill(0, size(Generators[idx_nuclear, 8],1), size(Generators[idx_nuclear, 8],2)) )
+    Generators[idx_nuclear, 9] = vec( fill(0, size(Generators[idx_nuclear, 9],1), size(Generators[idx_nuclear, 9],2)) )
+    # test: increase geothermal
+    primeMover2compare = "Geothermal"
+    idx_geothermal = Generators[!, "Fuel"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
+    #
+    Generators[idx_geothermal, 8] = vec( fill(2, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
+    Generators[idx_geothermal, 9] = vec( fill(10, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
+end
+#
 MaxNewUnitsAnnual_GEN = Generators[:,8].*br     # [units/year]
 MaxNewUnitsTotal_GEN = Generators[:,9].*br      # [units]
 Pmin_GEN = Generators[:,10]                     # [p.u.]
@@ -248,6 +265,13 @@ StartUpCosts = Generators[:,20]                 # [$/start]
 EconomicLifetime_GEN = Generators[:,21]         # [years]
 Lifetime_GEN = Generators[:,22]                 # [years]
 StartupFuel = Generators[:,23]                  # [MMBtu/start]
+## scenarios for variable retirement year
+# nuclear
+primeMover2compare = "Nuclear"
+idx_nuclear = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, "Prime Mover"],1), size(Generators[!, "Prime Mover"],2))    
+idx_nuclear = [all(row) for row in eachrow(idx_nuclear)]
+Generators[idx_nuclear, "Forced Retirement"] = vec( fill(nuclear_RetirementYear, size(Generators[idx_nuclear, "Forced Retirement"],1), size(Generators[idx_nuclear, "Forced Retirement"],2)) )
+#
 RetirementYear_GEN = min.(Generators[:,24]+Lifetime_GEN,Generators[:,25])
 CRF_GEN = (WACC.*(1+WACC).^EconomicLifetime_GEN)./((1+WACC).^EconomicLifetime_GEN .- 1)
 
@@ -287,6 +311,13 @@ end
 # pumped hydro storage
 if PHS_allowed == 0
     primeMover2compare = "Pumped hydro storage"
+    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill(primeMover2compare, size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
+    idx_allowed = [all(row) for row in eachrow(idx_allowed)]
+    ElectricalStorage = ElectricalStorage[idx_allowed,:]
+end
+# hydrogen storage
+if H2Storage_allowed == 0
+    primeMover2compare = "Long-duration storage"
     idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill(primeMover2compare, size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
     idx_allowed = [all(row) for row in eachrow(idx_allowed)]
     ElectricalStorage = ElectricalStorage[idx_allowed,:]
@@ -379,10 +410,51 @@ FOM_STORAGE_ELEC = zeros(T_inv,STORAGE_ELEC)
 CAPEX_APPLIANCES = zeros(T_inv, APPLIANCES)
 FOM_APPLIANCES = zeros(T_inv, APPLIANCES)
 
+## Apply cost multipliers for different energy storage cost scenarios
+################################################################################
+# define function for scaling
+function scaleCAPEX(techType, df, multiplier)
+    
+    # Get the index of the columns corresponding to the range you want (2020 to 2050)
+    start_col = findfirst(names(CAPEXLookup) .== "2020")
+    end_col = findlast(names(CAPEXLookup) .== "2050")
+    #
+    # Filter the DataFrame for rows with "Li-ion battery" in the "Technology" column
+    filtered_data = CAPEXLookup[CAPEXLookup[!, "Technology"] .== techType, :]
+
+    # Select columns from '2020' to '2030' for the filtered data
+    selected_columns = filtered_data[:, start_col:end_col]
+
+    # Multiply values in selected columns by multiplier
+    selected_columns = selected_columns .* multiplier
+
+    CAPEXLookup[CAPEXLookup[!, "Technology"] .== techType, start_col:end_col] .= selected_columns
+    
+    return df
+end
+
+## run it on all costs; if multiplier is 1 then it won't change anything
+# Li-ion
+techType = "Li-ion battery"
+CAPEXLookup = scaleCAPEX(techType, CAPEXLookup, cost_LiIon_multiplier)
+println("")
+println("Li-ion 2020 cost is: ", CAPEXLookup[CAPEXLookup[!, "Technology"] .== techType, "2020"][1], " \$/kW")
+# Fe-Air
+techType = "Multi-day storage"
+CAPEXLookup = scaleCAPEX(techType, CAPEXLookup, cost_FeAir_multiplier)
+println("Fe-Air 2020 cost is: ", CAPEXLookup[CAPEXLookup[!, "Technology"] .== techType, "2020"][1], " \$/kW")
+# Hydrogen
+techType = "Long-duration storage"
+CAPEXLookup = scaleCAPEX(techType, CAPEXLookup, cost_HydrogenStorage_multiplier)
+println("Hydrogen 2020 cost is: ", CAPEXLookup[CAPEXLookup[!, "Technology"] .== techType, "2020"][1], " \$/kW")
+println("")
+
+
+
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
 CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
-if CleanElecCosts =="High"
+if CleanElecCosts == "High"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
     end
@@ -394,7 +466,7 @@ if CleanElecCosts =="High"
     end
 end
 
-if CleanElecCosts =="Low"
+if CleanElecCosts == "Low"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecLowGas.csv",DataFrame)
     end
@@ -406,7 +478,7 @@ if CleanElecCosts =="Low"
     end
 end
 
-if CleanElecCosts =="Mid"
+if CleanElecCosts == "Mid"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecLowGas.csv",DataFrame)
     end

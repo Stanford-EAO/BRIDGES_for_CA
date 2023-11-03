@@ -106,9 +106,42 @@ end
 if industrials == "Mid"
     global baselinegasdemand_multiplier = 2.5
 end
-if industrials =="High"
+if industrials == "High"
     global baselinegasdemand_multiplier = 5
 end
+
+### Energy Storage Cost
+# Li-ion
+costScenario_LiIon = "Mid"
+#
+cost_LiIon_multiplier = 1
+if costScenario_LiIon == "Low"
+    global cost_LiIon_multiplier = 0.75
+end
+if costScenario_LiIon == "High"
+    global cost_LiIon_multiplier = 1.5
+end
+# Fe-Air
+costScenario_FeAir = "Mid"
+#
+cost_FeAir_multiplier = 1
+if costScenario_FeAir == "Low"
+    global cost_FeAir_multiplier = 0.75
+end
+if costScenario_FeAir == "High"
+    global cost_FeAir_multiplier = 21.5/14  # comparing both white papers from Form Energy
+end
+# Hydrogen
+costScenario_HydrogenStorage = "Mid"
+#
+cost_HydrogenStorage_multiplier = 1
+if costScenario_HydrogenStorage == "Low"
+    global cost_HydrogenStorage_multiplier = 0.75
+end
+if costScenario_HydrogenStorage == "High"
+    global cost_HydrogenStorage_multiplier = 3
+end
+
 
 buildingretrofits = "Low"   # "Low" or "High" cost of building retrofit
 
@@ -247,13 +280,31 @@ ElecTransmissionOperatingCosts = 0 # $/MW
 GasTransmissionCapitalCosts = 0 # $/km
 GasTransmissionOperatingCosts = 0 # $/km
 
+################################################################################
+#### FIRM GEN OPTIONS ####
+# nuclear retirement year 
+techScenario_Nuclear = "2030"
+# unrestricted
+nuclear_RetirementYear = 2060                   # normal retirement year, like all other generators
+# retirement by 2030
+if techScenario_Nuclear == "2030"
+    global nuclear_RetirementYear = 2030
+end
+# retirement by 2045
+if techScenario_Nuclear == "2045"
+    global nuclear_RetirementYear = 2045
+end
+
 
 ################################################################################
 #### STORAGE OPTIONS ####
 
-### Options: FormEnergy and PumpedHydroStorage
+### Options: FormEnergy and PumpedHydroStorage and HydrogenStorage
 FormEnergy_allowed = 1
 PHS_allowed = 1
+H2Storage_allowed = 1
+# starting SOC
+SOC_fraction = 0.5
 
 
 ################################################################################
@@ -282,5 +333,14 @@ println("EI trajectory gas: ", EI_GasSector)
 println("Electric transmission expansion: ", TRANSMISSION_EXPANSION_ELEC)
 println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, " \$/MW-m")
 
+println("Nuclear Retirement Year: ", nuclear_RetirementYear)
+
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)
+println("Hydrogen Storage: ", H2Storage_allowed)
+
+println("Li-ion Cost Multiplier: ", cost_LiIon_multiplier)
+println("Fe-Air Cost Multiplier: ", cost_FeAir_multiplier)
+println("H2 Storage Cost Multiplier: ", cost_HydrogenStorage_multiplier)
+
+println("Starting SOC: ", SOC_fraction)
