@@ -98,21 +98,8 @@ end
 @variable(m, Demand_GAS[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS] >= 0)
 #@variable(m, Demand_LPG[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS] >= 0)
 
-if industrial_electrifyCCS_allowed == 0
-    BaselineDemand_GAS_Electrify = zeros(T_inv,NODES_GAS)
-    # BaselineDemand_GAS_CCS = zeros(T_inv,NODES_GAS)
-    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], Demand_ELEC[I,T,t,n] == BaselineDemand_ELEC[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_ELEC[T,t,a] for a = 1:APPLIANCES))
-    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_GAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
-else
-    @variable(m, BaselineDemand_GAS_Electrify[I = 1:T_inv, n = 1:NODES_GAS] >= 0)
-    # @variable(m, BaselineDemand_GAS_CCS[I = 1:T_inv, n = 1:NODES_GAS] >= 0)
-    @variable(m, BaselineDemand_GAS_Reduced[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS] >= 0)
-    @constraint(m, [I = 1:T_inv, n = 1:NODES_GAS], BaselineDemand_GAS_Electrify[I,n] <= 0.5*sum(sum(BaselineDemand_GAS_Reduced[I,T,t,n] for t = 1:t_ops) for T = 1:T_ops))
-    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_GAS_Reduced[I,T,t,n] == BaselineDemand_GAS[I,T,t,n] - 1/(HOURS_PER_YEAR)*(BaselineDemand_GAS_Electrify[I,n]))
-
-    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], Demand_ELEC[I,T,t,n] == BaselineDemand_ELEC[I,T,t,n]+ 1/(HOURS_PER_YEAR)*BaselineDemand_GAS_Electrify[I,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_ELEC[T,t,a] for a = 1:APPLIANCES))
-    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_GAS_Reduced[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
-end
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], Demand_ELEC[I,T,t,n] == BaselineDemand_ELEC[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_ELEC[T,t,a] for a = 1:APPLIANCES))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_GAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
 
 # To permit sensitivity testing to disallowing hybrid appliance strategies
 if hybrids_allowed == 0

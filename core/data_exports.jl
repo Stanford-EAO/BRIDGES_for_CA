@@ -16,8 +16,6 @@ unitsretired_TRANS_GAS = JuMP.value.(unitsretired_TRANS_GAS)
 unitsbuilt_TRANS_ELEC = JuMP.value.(unitsbuilt_TRANS_ELEC)
 unitsretired_TRANS_ELEC = JuMP.value.(unitsretired_TRANS_ELEC)
 addflow_TRANS_ELEC = JuMP.value.(addflow_TRANS_ELEC)
-BaselineDemand_GAS_Electrify = JuMP.value.(BaselineDemand_GAS_Electrify)
-
 
 Demand_GAS = JuMP.value.(Demand_GAS)
 Demand_ELEC = JuMP.value.(Demand_ELEC)
@@ -119,7 +117,7 @@ GenerationSave = zeros(T_inv,GEN+P2G+9)
 for i = 1:T_inv
      GenerationSave[i,1:GEN] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(generation[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
      GenerationSave[i,GEN+1:GEN+P2G] = sum(weights[i,T]*8760/t_ops*sum(JuMP.value.(P2G_dispatch[i,T,t,:]).*eta_P2G for t = 1:t_ops) for T = 1:T_ops)
-     GenerationSave[i,GEN+P2G+1] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_GAS[T,t,:]) + sum(BaselineDemand_GAS[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops) - sum(BaselineDemand_GAS_Electrify[i,:])
+     GenerationSave[i,GEN+P2G+1] = sum(weights[i,T]*8760/t_ops*sum(sum(InitialAppliancePopulation[:].*ApplianceProfiles_GAS[T,t,:]) + sum(BaselineDemand_GAS[i,T,t,:])  for t = 1:t_ops) for T = 1:T_ops)
      GenerationSave[i,GEN+P2G+2] = sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,:]) for t = 1:t_ops) for T = 1:T_ops)
      GenerationSave[i,GEN+P2G+3] = CleanGas_powersector[i]
      GenerationSave[i,GEN+P2G+4] = CleanGas_gassector[i]
@@ -148,7 +146,7 @@ for i = 1:T_inv
         HourlyLoadFullSave[count:count+t_ops-1, 1] = sum(Demand_ELEC[i,j,:,:], dims = 2)
         HourlyLoadFullSave[count:count+t_ops-1, 2] = sum(Demand_GAS[i,j,:,:], dims = 2)
         HourlyLoadFullSave[count:count+t_ops-1, 3] = sum(BaselineDemand_ELEC[i,j,:,:], dims = 2)
-        HourlyLoadFullSave[count:count+t_ops-1, 4] = sum(BaselineDemand_GAS[i,j,:,:], dims = 2) - (1/HOURS_PER_YEAR)*(sum(BaselineDemand_GAS_Electrify[i,:]))*ones(t_ops)
+        HourlyLoadFullSave[count:count+t_ops-1, 4] = sum(BaselineDemand_GAS[i,j,:,:], dims = 2)
         HourlyStoredElecFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_ELEC[i,j,1:t_ops,:])
         HourlyStoredGasEnergyFullSave[count:count+t_ops-1,:] = JuMP.value.(storedEnergy_GAS[i,j,1:t_ops,:])
         if LINKED_PERIODS_STORAGE == 1
@@ -200,5 +198,4 @@ CSV.write("$(top_dir)/REPDAYS.csv",Tables.table(RepDays[1,:]), writeheader = tru
 CSV.write("$(top_dir)/ADDELECFLOW.csv",Tables.table(addflow_TRANS_ELEC), writeheader = true)
 CSV.write("$(top_dir)/PEAKDEMAND.csv",Tables.table(JuMP.value.(PeakDistDemand)), writeheader = true)
 CSV.write("$(top_dir)/PEAKDEMANDINC.csv",Tables.table(JuMP.value.(PeakDistDemandInc)), writeheader = true)
-
 

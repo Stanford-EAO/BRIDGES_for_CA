@@ -30,8 +30,6 @@ appliance_decisions = 1
 hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
-IND_electrification_cost = 34 # $/MWh
-industrial_electrifyCCS_allowed = 0
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -132,7 +130,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 1.5    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.8    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################
