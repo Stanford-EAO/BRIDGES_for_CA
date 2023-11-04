@@ -19,7 +19,6 @@
     + Cost_DistributionInfrastructure*sum(PeakDistDemandInc[i,n] for n = 1:NODES_ELEC) 
     + sum(weights[i,T]*8760/t_ops*sum(costOfGasStorage/1000*sum(charging_GAS[i,T,t,s] for s = 1:STORAGE_GAS) for t = 1:t_ops) for T = 1:T_ops) 
     + sum(weights[i,T]*8760*CommodityCost_NG[i,T]/1000*sum(SUPPLY_GAS_slack[i,T,n] for n = 1:NODES_GAS) for T = 1:T_ops)
-    + IND_electrification_cost*sum(BaselineDemand_GAS_Electrify[i,n] for n = 1:NODES_GAS)
 #   - CommodityCost_NG[i,1]*(CleanGas_gassector[i] + CleanGas_powersector[i])/1000
     + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i])
     + sum(sum(max(min((Years[i0]+EconomicLifetime_ELECTrans)-Years[i],1),0)*CRF_ELECTrans*CAPEX_ELECTrans[e]*addflow_TRANS_ELEC[i0,e] for i0 = 1:i) for e = 1:EDGES_ELEC)) for i = 1:T_inv))
