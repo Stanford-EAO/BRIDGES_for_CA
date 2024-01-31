@@ -49,3 +49,9 @@ OffshoreWind,Mid
 Res Solar PV,Mid
 Comm Solar PV,Mid
 Geothermal EGS,Mid
+Pumped hydro storage,Mid
+Multi-day storage,Mid
+AC_GasFurnace,Mid
+AC_ElecHeatPump_SpaceHeat,Mid
+AC_GasFurnaceComm,Mid
+AC_HeatPump_SpaceHeatComm,Mid
