@@ -1,0 +1,533 @@
+﻿Node_GAS,Gen_ID,Prime Mover,Fuel,Clumps
+1,GEN01,Coal,Coal,Coal
+1,GEN02,Natural Gas CC,Natural Gas,Natural Gas
+1,GEN03,Natural Gas CT,Natural Gas,Natural Gas
+1,GEN04,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+1,GEN05,Biopower,Biomass,Biomass
+1,GEN06,Solar Thermal,UtilityPV,Solar PV
+1,GEN07,Solar PV,UtilityPV,Solar PV
+1,GEN08,Comm Solar PV,UtilityPV,Solar PV
+1,GEN09,Res Solar PV,UtilityPV,Solar PV
+1,GEN10,Wind,LandbasedWind,Wind
+1,GEN11,Geothermal,Geothermal,Geothermal
+1,GEN12,Geothermal EGS,Geothermal,Enhanced Geothermal
+1,GEN13,Nuclear,Nuclear,Nuclear
+1,GEN14,Hydropower,Hydro,Hydro
+2,GEN15,Coal,Coal,Coal
+2,GEN16,Natural Gas CC,Natural Gas,Natural Gas
+2,GEN17,Natural Gas CT,Natural Gas,Natural Gas
+2,GEN18,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+2,GEN19,Biopower,Biomass,Biomass
+2,GEN20,Solar Thermal,UtilityPV,Solar PV
+2,GEN21,Solar PV,UtilityPV,Solar PV
+2,GEN22,Comm Solar PV,UtilityPV,Solar PV
+2,GEN23,Res Solar PV,UtilityPV,Solar PV
+2,GEN24,Wind,LandbasedWind,Wind
+2,GEN25,Geothermal,Geothermal,Geothermal
+2,GEN26,Geothermal EGS,Geothermal,Enhanced Geothermal
+2,GEN27,Nuclear,Nuclear,Nuclear
+2,GEN28,Hydropower,Hydro,Hydro
+3,GEN29,Coal,Coal,Coal
+3,GEN30,Natural Gas CC,Natural Gas,Natural Gas
+3,GEN31,Natural Gas CT,Natural Gas,Natural Gas
+3,GEN32,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+3,GEN33,Biopower,Biomass,Biomass
+3,GEN34,Solar Thermal,UtilityPV,Solar PV
+3,GEN35,Solar PV,UtilityPV,Solar PV
+3,GEN36,Comm Solar PV,UtilityPV,Solar PV
+3,GEN37,Res Solar PV,UtilityPV,Solar PV
+3,GEN38,Wind,LandbasedWind,Wind
+3,GEN39,Geothermal,Geothermal,Geothermal
+3,GEN40,Geothermal EGS,Geothermal,Enhanced Geothermal
+3,GEN41,Nuclear,Nuclear,Nuclear
+3,GEN42,Hydropower,Hydro,Hydro
+4,GEN43,Coal,Coal,Coal
+4,GEN44,Natural Gas CC,Natural Gas,Natural Gas
+4,GEN45,Natural Gas CT,Natural Gas,Natural Gas
+4,GEN46,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+4,GEN47,Biopower,Biomass,Biomass
+4,GEN48,Solar Thermal,UtilityPV,Solar PV
+4,GEN49,Solar PV,UtilityPV,Solar PV
+4,GEN50,Comm Solar PV,UtilityPV,Solar PV
+4,GEN51,Res Solar PV,UtilityPV,Solar PV
+4,GEN52,Wind,LandbasedWind,Wind
+4,GEN53,Geothermal,Geothermal,Geothermal
+4,GEN54,Geothermal EGS,Geothermal,Enhanced Geothermal
+4,GEN55,Nuclear,Nuclear,Nuclear
+4,GEN56,Hydropower,Hydro,Hydro
+5,GEN57,Coal,Coal,Coal
+5,GEN58,Natural Gas CC,Natural Gas,Natural Gas
+5,GEN59,Natural Gas CT,Natural Gas,Natural Gas
+5,GEN60,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+5,GEN61,Biopower,Biomass,Biomass
+5,GEN62,Solar Thermal,UtilityPV,Solar PV
+5,GEN63,Solar PV,UtilityPV,Solar PV
+5,GEN64,Comm Solar PV,UtilityPV,Solar PV
+5,GEN65,Res Solar PV,UtilityPV,Solar PV
+5,GEN66,Wind,LandbasedWind,Wind
+5,GEN67,Geothermal,Geothermal,Geothermal
+5,GEN68,Geothermal EGS,Geothermal,Enhanced Geothermal
+5,GEN69,Nuclear,Nuclear,Nuclear
+5,GEN70,Hydropower,Hydro,Hydro
+6,GEN71,Coal,Coal,Coal
+6,GEN72,Natural Gas CC,Natural Gas,Natural Gas
+6,GEN73,Natural Gas CT,Natural Gas,Natural Gas
+6,GEN74,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+6,GEN75,Biopower,Biomass,Biomass
+6,GEN76,Solar Thermal,UtilityPV,Solar PV
+6,GEN77,Solar PV,UtilityPV,Solar PV
+6,GEN78,Comm Solar PV,UtilityPV,Solar PV
+6,GEN79,Res Solar PV,UtilityPV,Solar PV
+6,GEN80,Wind,LandbasedWind,Wind
+6,GEN81,Geothermal,Geothermal,Geothermal
+6,GEN82,Geothermal EGS,Geothermal,Enhanced Geothermal
+6,GEN83,Nuclear,Nuclear,Nuclear
+6,GEN84,Hydropower,Hydro,Hydro
+7,GEN85,Coal,Coal,Coal
+7,GEN86,Natural Gas CC,Natural Gas,Natural Gas
+7,GEN87,Natural Gas CT,Natural Gas,Natural Gas
+7,GEN88,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+7,GEN89,Biopower,Biomass,Biomass
+7,GEN90,Solar Thermal,UtilityPV,Solar PV
+7,GEN91,Solar PV,UtilityPV,Solar PV
+7,GEN92,Comm Solar PV,UtilityPV,Solar PV
+7,GEN93,Res Solar PV,UtilityPV,Solar PV
+7,GEN94,Wind,LandbasedWind,Wind
+7,GEN95,Geothermal,Geothermal,Geothermal
+7,GEN96,Geothermal EGS,Geothermal,Enhanced Geothermal
+7,GEN97,Nuclear,Nuclear,Nuclear
+7,GEN98,Hydropower,Hydro,Hydro
+8,GEN99,Coal,Coal,Coal
+8,GEN100,Natural Gas CC,Natural Gas,Natural Gas
+8,GEN101,Natural Gas CT,Natural Gas,Natural Gas
+8,GEN102,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+8,GEN103,Biopower,Biomass,Biomass
+8,GEN104,Solar Thermal,UtilityPV,Solar PV
+8,GEN105,Solar PV,UtilityPV,Solar PV
+8,GEN106,Comm Solar PV,UtilityPV,Solar PV
+8,GEN107,Res Solar PV,UtilityPV,Solar PV
+8,GEN108,Wind,LandbasedWind,Wind
+8,GEN109,Geothermal,Geothermal,Geothermal
+8,GEN110,Geothermal EGS,Geothermal,Enhanced Geothermal
+8,GEN111,Nuclear,Nuclear,Nuclear
+8,GEN112,Hydropower,Hydro,Hydro
+9,GEN113,Coal,Coal,Coal
+9,GEN114,Natural Gas CC,Natural Gas,Natural Gas
+9,GEN115,Natural Gas CT,Natural Gas,Natural Gas
+9,GEN116,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+9,GEN117,Biopower,Biomass,Biomass
+9,GEN118,Solar Thermal,UtilityPV,Solar PV
+9,GEN119,Solar PV,UtilityPV,Solar PV
+9,GEN120,Comm Solar PV,UtilityPV,Solar PV
+9,GEN121,Res Solar PV,UtilityPV,Solar PV
+9,GEN122,Wind,LandbasedWind,Wind
+9,GEN123,Geothermal,Geothermal,Geothermal
+9,GEN124,Geothermal EGS,Geothermal,Enhanced Geothermal
+9,GEN125,Nuclear,Nuclear,Nuclear
+9,GEN126,Hydropower,Hydro,Hydro
+10,GEN127,Coal,Coal,Coal
+10,GEN128,Natural Gas CC,Natural Gas,Natural Gas
+10,GEN129,Natural Gas CT,Natural Gas,Natural Gas
+10,GEN130,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+10,GEN131,Biopower,Biomass,Biomass
+10,GEN132,Solar Thermal,UtilityPV,Solar PV
+10,GEN133,Solar PV,UtilityPV,Solar PV
+10,GEN134,Comm Solar PV,UtilityPV,Solar PV
+10,GEN135,Res Solar PV,UtilityPV,Solar PV
+10,GEN136,Wind,LandbasedWind,Wind
+10,GEN137,Geothermal,Geothermal,Geothermal
+10,GEN138,Geothermal EGS,Geothermal,Enhanced Geothermal
+10,GEN139,Nuclear,Nuclear,Nuclear
+10,GEN140,Hydropower,Hydro,Hydro
+11,GEN141,Coal,Coal,Coal
+11,GEN142,Natural Gas CC,Natural Gas,Natural Gas
+11,GEN143,Natural Gas CT,Natural Gas,Natural Gas
+11,GEN144,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+11,GEN145,Biopower,Biomass,Biomass
+11,GEN146,Solar Thermal,UtilityPV,Solar PV
+11,GEN147,Solar PV,UtilityPV,Solar PV
+11,GEN148,Comm Solar PV,UtilityPV,Solar PV
+11,GEN149,Res Solar PV,UtilityPV,Solar PV
+11,GEN150,Wind,LandbasedWind,Wind
+11,GEN151,Geothermal,Geothermal,Geothermal
+11,GEN152,Geothermal EGS,Geothermal,Enhanced Geothermal
+11,GEN153,Nuclear,Nuclear,Nuclear
+11,GEN154,Hydropower,Hydro,Hydro
+12,GEN155,Coal,Coal,Coal
+12,GEN156,Natural Gas CC,Natural Gas,Natural Gas
+12,GEN157,Natural Gas CT,Natural Gas,Natural Gas
+12,GEN158,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+12,GEN159,Biopower,Biomass,Biomass
+12,GEN160,Solar Thermal,UtilityPV,Solar PV
+12,GEN161,Solar PV,UtilityPV,Solar PV
+12,GEN162,Comm Solar PV,UtilityPV,Solar PV
+12,GEN163,Res Solar PV,UtilityPV,Solar PV
+12,GEN164,Wind,LandbasedWind,Wind
+12,GEN165,Geothermal,Geothermal,Geothermal
+12,GEN166,Geothermal EGS,Geothermal,Enhanced Geothermal
+12,GEN167,Nuclear,Nuclear,Nuclear
+12,GEN168,Hydropower,Hydro,Hydro
+13,GEN169,Coal,Coal,Coal
+13,GEN170,Natural Gas CC,Natural Gas,Natural Gas
+13,GEN171,Natural Gas CT,Natural Gas,Natural Gas
+13,GEN172,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+13,GEN173,Biopower,Biomass,Biomass
+13,GEN174,Solar Thermal,UtilityPV,Solar PV
+13,GEN175,Solar PV,UtilityPV,Solar PV
+13,GEN176,Comm Solar PV,UtilityPV,Solar PV
+13,GEN177,Res Solar PV,UtilityPV,Solar PV
+13,GEN178,Wind,LandbasedWind,Wind
+13,GEN179,Geothermal,Geothermal,Geothermal
+13,GEN180,Geothermal EGS,Geothermal,Enhanced Geothermal
+13,GEN181,Nuclear,Nuclear,Nuclear
+13,GEN182,Hydropower,Hydro,Hydro
+14,GEN183,Coal,Coal,Coal
+14,GEN184,Natural Gas CC,Natural Gas,Natural Gas
+14,GEN185,Natural Gas CT,Natural Gas,Natural Gas
+14,GEN186,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+14,GEN187,Biopower,Biomass,Biomass
+14,GEN188,Solar Thermal,UtilityPV,Solar PV
+14,GEN189,Solar PV,UtilityPV,Solar PV
+14,GEN190,Comm Solar PV,UtilityPV,Solar PV
+14,GEN191,Res Solar PV,UtilityPV,Solar PV
+14,GEN192,Wind,LandbasedWind,Wind
+14,GEN193,Geothermal,Geothermal,Geothermal
+14,GEN194,Geothermal EGS,Geothermal,Enhanced Geothermal
+14,GEN195,Nuclear,Nuclear,Nuclear
+14,GEN196,Hydropower,Hydro,Hydro
+15,GEN197,Coal,Coal,Coal
+15,GEN198,Natural Gas CC,Natural Gas,Natural Gas
+15,GEN199,Natural Gas CT,Natural Gas,Natural Gas
+15,GEN200,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+15,GEN201,Biopower,Biomass,Biomass
+15,GEN202,Solar Thermal,UtilityPV,Solar PV
+15,GEN203,Solar PV,UtilityPV,Solar PV
+15,GEN204,Comm Solar PV,UtilityPV,Solar PV
+15,GEN205,Res Solar PV,UtilityPV,Solar PV
+15,GEN206,Wind,LandbasedWind,Wind
+15,GEN207,Geothermal,Geothermal,Geothermal
+15,GEN208,Geothermal EGS,Geothermal,Enhanced Geothermal
+15,GEN209,Nuclear,Nuclear,Nuclear
+15,GEN210,Hydropower,Hydro,Hydro
+16,GEN211,Coal,Coal,Coal
+16,GEN212,Natural Gas CC,Natural Gas,Natural Gas
+16,GEN213,Natural Gas CT,Natural Gas,Natural Gas
+16,GEN214,Natural Gas CC-CCS,Natural Gas,Natural Gas + CCS
+16,GEN215,Biopower,Biomass,Biomass
+16,GEN216,Solar Thermal,UtilityPV,Solar PV
+16,GEN217,Solar PV,UtilityPV,Solar PV
+16,GEN218,Comm Solar PV,UtilityPV,Solar PV
+16,GEN219,Res Solar PV,UtilityPV,Solar PV
+16,GEN220,Wind,LandbasedWind,Wind
+16,GEN221,Geothermal,Geothermal,Geothermal
+16,GEN222,Geothermal EGS,Geothermal,Enhanced Geothermal
+16,GEN223,Nuclear,Nuclear,Nuclear
+16,GEN224,Hydropower,Hydro,Hydro
+21,GEN225,OffshoreWind,OffshoreWind,Offshore Wind
+22,GEN226,OffshoreWind,OffshoreWind,Offshore Wind
+18,GEN227,Coal,Coal,Coal
+18,GEN228,Natural Gas CC,Natural Gas,Natural Gas
+18,GEN230,Solar PV,UtilityPV,Solar PV
+18,GEN231,Hydropower,Hydro,Hydro
+18,GEN232,Wind,LandbasedWind,Wind
+19,GEN234,Coal,Coal,Coal
+19,GEN235,Natural Gas CC,Natural Gas,Natural Gas
+19,GEN237,Solar PV,UtilityPV,Solar PV
+19,GEN238,Hydropower,Hydro,Hydro
+19,GEN239,Wind,LandbasedWind,Wind
+19,GEN241,Nuclear,Nuclear,Nuclear
+1,BAT1,Li-ion battery,Li-ion battery,Short-Duration Storage
+1,Redwood Coast Airport Microgrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+2,BAT2,Li-ion battery,Li-ion battery,Short-Duration Storage
+2,Pacific Union College BESS,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,BAT3,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Gilead Foster City Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Silicon Valley Clean Water,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,D'Arrigo Brothers - Phase 4,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,UC Santa Cruz Solar,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Elkhorn Battery Energy Storage System,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Dynegy Moss Landing Power Plant Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Dynegy Moss Landing Power Plant Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+3,Dynegy Moss Landing Power Plant Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+4,BAT4,Li-ion battery,Li-ion battery,Short-Duration Storage
+4,West Valley Mission CCD Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+4,Google Moffett Park Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+4,Gavilan Community College Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+5,BAT5,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,BAT6,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,CSU Long Beach,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Saticoy,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Vallecito,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,"AES ES Alamitos, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Silverstrand Grid Energy Storage System,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Acorn I Energy Storage LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,OCSD,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Orange Coast College PH2 Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Pebbly Beach Generating Station Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+6,Long Beach Convention Center,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,BAT7,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,County of San Diego COC Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Kearny North Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Genentech-Oceanside Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Gateway Energy Storage System,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Kearny South Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Canyon Crest Academy,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,El Cajon Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Gilead Oceanside Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,University of California San Diego Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Kearny Mesa Storage LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Vista Energy Storage System ,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,San Diego International Airport BESS,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Top Gun Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+7,Vanadium Redox Flow Battery Plant,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,BAT8,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,DESI-1 Battery Energy Storage Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,PPA Grand,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Stanton Energy Reliability Center Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Ortega Highway Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Center Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,HEBT WLA 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,HEBT Irvine 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,HEBT Irvine 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,HEBT Irvine 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,HEBT Irvine 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Stanton Energy Reliability Center Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Allergan,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,DATS,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Downey,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Baker,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,BCE Los Alamitos 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,LAWRP,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Hecate Energy Johanna Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Hecate Energy Johanna Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,SOCCD,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,"Johanna Energy Center, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+8,BCE Los Alamitos 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Orange County Energy Storage 3,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Orange County Energy Storage 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,DESI-2 Battery Storage Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+8,Santa Ana Storage 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,BAT9,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,Glendale Battery Energy Storage System,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,Biola University Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,VESI Pomona,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,Gilead Sciences La Verne Rooftop Solar,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,VESI Pomona,Li-ion battery,Li-ion battery,Short-Duration Storage
+9,Walnut Unified School District Walnut HS Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,BAT10,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Mira Loma Energy Storage Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Fallbrook Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Valley Center 54,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Valley Center 85,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Mira Loma Energy Storage Facility,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Escondido Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+10,Grapeland Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+11,BAT11,Li-ion battery,Li-ion battery,Short-Duration Storage
+11,Sierra Nevada Brewing Co Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+11,Lincoln WWTF Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+11,Tierra Buena Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+11,Tierra Buena Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,BAT12,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,Bishop Ranch - BR 1-Y,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,UC Merced Solar Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,University of the Pacific,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,North Central Valley,Li-ion battery,Li-ion battery,Short-Duration Storage
+12,Diablo Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,BAT13,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Sealed Air Madera Solar Project,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,RE Tranquillity,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Slate Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Slate Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Henrietta D Energy Storage LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Fresno Sunnyside High School Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Slate Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Slate Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,RE Mustang LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Fresno Hoover High School Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Cal Flats BESS,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,Fresno Bullard High School Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+13,RE Tranquillity,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,BAT14,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Daggett 3,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Sanborn BESS 2,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Sanborn BESS 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,SEPV Sierra,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,"Rabbitbrush Solar, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Hudson - High Desert Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn E1A,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Resurgence Solar,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn E3,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn S3,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn E2,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Luna Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Beacon BESS 1,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Lancaster Area Battery,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Sagebrush ESS,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn S4,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Resurgence Solar II,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Springbok 3 Solar Farm Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,RE Garland,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,"BigBeau Solar, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+14,Edwards Sanborn S1,Li-ion battery,Li-ion battery,Short-Duration Storage
+14,RE Garland,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,BAT15,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Arlington Energy Center III,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,"Maverick Solar 6, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Crimson,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Blythe Mesa Solar II,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,McCoy Solar Energy Project Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Borrego Springs Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Borrego Springs Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,"Blythe Solar II, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Arlington Energy Center II,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,LeConte Energy Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Sunlight Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,CED West Side Canal Battery Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Desert Peak Energy Storage I,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Desert Peak Energy Storage II,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Desert Harvest II LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,"Blythe Solar 110, LLC",Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Wildcat I Energy Storage LLC,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,"Blythe Solar III, LLC Hybrid",Li-ion battery,Li-ion battery,Short-Duration Storage
+15,El Centro Hybrid,Li-ion battery,Li-ion battery,Short-Duration Storage
+15,Crimson,Li-ion battery,Li-ion battery,Short-Duration Storage
+16,BAT16,Li-ion battery,Li-ion battery,Short-Duration Storage
+16,Coso Battery Storage,Li-ion battery,Li-ion battery,Short-Duration Storage
+1,BAT17,Long-duration storage,Long-duration storage,Long-Duration Storage
+2,BAT18,Long-duration storage,Long-duration storage,Long-Duration Storage
+3,BAT19,Long-duration storage,Long-duration storage,Long-Duration Storage
+4,BAT20,Long-duration storage,Long-duration storage,Long-Duration Storage
+5,BAT21,Long-duration storage,Long-duration storage,Long-Duration Storage
+6,BAT22,Long-duration storage,Long-duration storage,Long-Duration Storage
+7,BAT23,Long-duration storage,Long-duration storage,Long-Duration Storage
+8,BAT24,Long-duration storage,Long-duration storage,Long-Duration Storage
+9,BAT25,Long-duration storage,Long-duration storage,Long-Duration Storage
+10,BAT26,Long-duration storage,Long-duration storage,Long-Duration Storage
+11,BAT27,Long-duration storage,Long-duration storage,Long-Duration Storage
+12,BAT28,Long-duration storage,Long-duration storage,Long-Duration Storage
+13,BAT29,Long-duration storage,Long-duration storage,Long-Duration Storage
+14,BAT30,Long-duration storage,Long-duration storage,Long-Duration Storage
+15,BAT31,Long-duration storage,Long-duration storage,Long-Duration Storage
+16,BAT32,Long-duration storage,Long-duration storage,Long-Duration Storage
+1,BAT33,Multi-day storage,Multi-day storage,Long-Duration Storage
+2,BAT34,Multi-day storage,Multi-day storage,Long-Duration Storage
+3,BAT35,Multi-day storage,Multi-day storage,Long-Duration Storage
+4,BAT36,Multi-day storage,Multi-day storage,Long-Duration Storage
+5,BAT37,Multi-day storage,Multi-day storage,Long-Duration Storage
+6,BAT38,Multi-day storage,Multi-day storage,Long-Duration Storage
+7,BAT39,Multi-day storage,Multi-day storage,Long-Duration Storage
+8,BAT40,Multi-day storage,Multi-day storage,Long-Duration Storage
+9,BAT41,Multi-day storage,Multi-day storage,Long-Duration Storage
+10,BAT42,Multi-day storage,Multi-day storage,Long-Duration Storage
+11,BAT43,Multi-day storage,Multi-day storage,Long-Duration Storage
+12,BAT44,Multi-day storage,Multi-day storage,Long-Duration Storage
+13,BAT45,Multi-day storage,Multi-day storage,Long-Duration Storage
+14,BAT46,Multi-day storage,Multi-day storage,Long-Duration Storage
+15,BAT47,Multi-day storage,Multi-day storage,Long-Duration Storage
+16,BAT48,Multi-day storage,Multi-day storage,Long-Duration Storage
+1,BAT49,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+2,BAT50,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+3,BAT51,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+4,BAT52,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+5,BAT53,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+6,BAT54,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+7,BAT55,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+8,BAT56,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+9,BAT57,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+9,Castaic,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+9,Castaic,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+9,Castaic,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+9,Castaic,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+10,BAT58,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+10,Lake Hodges Hydroelectric Facility,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+10,Lake Hodges Hydroelectric Facility,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,BAT59,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Edward C Hyatt,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Edward C Hyatt,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Thermalito,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Thermalito,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Thermalito,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+11,Edward C Hyatt,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,BAT60,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,ONeill,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+12,W R Gianelli,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+13,BAT61,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+14,BAT62,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+15,BAT63,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+16,BAT64,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+16,Helms Pumped Storage,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+16,Helms Pumped Storage,Pumped hydro storage,Pumped hydro storage,Long-Duration Storage
+1,P2G1,Biomethane,Biomethane,Power-to-Gas
+2,P2G2,Biomethane,Biomethane,Power-to-Gas
+3,P2G3,Biomethane,Biomethane,Power-to-Gas
+4,P2G4,Biomethane,Biomethane,Power-to-Gas
+5,P2G5,Biomethane,Biomethane,Power-to-Gas
+6,P2G6,Biomethane,Biomethane,Power-to-Gas
+7,P2G7,Biomethane,Biomethane,Power-to-Gas
+8,P2G8,Biomethane,Biomethane,Power-to-Gas
+9,P2G9,Biomethane,Biomethane,Power-to-Gas
+10,P2G10,Biomethane,Biomethane,Power-to-Gas
+11,P2G11,Biomethane,Biomethane,Power-to-Gas
+12,P2G12,Biomethane,Biomethane,Power-to-Gas
+13,P2G13,Biomethane,Biomethane,Power-to-Gas
+14,P2G14,Biomethane,Biomethane,Power-to-Gas
+15,P2G15,Biomethane,Biomethane,Power-to-Gas
+16,P2G16,Biomethane,Biomethane,Power-to-Gas
+1,P2G17,Electrolysis,Electrolysis,Power-to-Gas
+2,P2G18,Electrolysis,Electrolysis,Power-to-Gas
+3,P2G19,Electrolysis,Electrolysis,Power-to-Gas
+4,P2G20,Electrolysis,Electrolysis,Power-to-Gas
+5,P2G21,Electrolysis,Electrolysis,Power-to-Gas
+6,P2G22,Electrolysis,Electrolysis,Power-to-Gas
+7,P2G23,Electrolysis,Electrolysis,Power-to-Gas
+8,P2G24,Electrolysis,Electrolysis,Power-to-Gas
+9,P2G25,Electrolysis,Electrolysis,Power-to-Gas
+10,P2G26,Electrolysis,Electrolysis,Power-to-Gas
+11,P2G27,Electrolysis,Electrolysis,Power-to-Gas
+12,P2G28,Electrolysis,Electrolysis,Power-to-Gas
+13,P2G29,Electrolysis,Electrolysis,Power-to-Gas
+14,P2G30,Electrolysis,Electrolysis,Power-to-Gas
+15,P2G31,Electrolysis,Electrolysis,Power-to-Gas
+16,P2G32,Electrolysis,Electrolysis,Power-to-Gas
+1,P2G33,Net-zero CH4,Net-zero CH4,Power-to-Gas
+2,P2G34,Net-zero CH4,Net-zero CH4,Power-to-Gas
+3,P2G35,Net-zero CH4,Net-zero CH4,Power-to-Gas
+4,P2G36,Net-zero CH4,Net-zero CH4,Power-to-Gas
+5,P2G37,Net-zero CH4,Net-zero CH4,Power-to-Gas
+6,P2G38,Net-zero CH4,Net-zero CH4,Power-to-Gas
+7,P2G39,Net-zero CH4,Net-zero CH4,Power-to-Gas
+8,P2G40,Net-zero CH4,Net-zero CH4,Power-to-Gas
+9,P2G41,Net-zero CH4,Net-zero CH4,Power-to-Gas
+10,P2G42,Net-zero CH4,Net-zero CH4,Power-to-Gas
+11,P2G43,Net-zero CH4,Net-zero CH4,Power-to-Gas
+12,P2G44,Net-zero CH4,Net-zero CH4,Power-to-Gas
+13,P2G45,Net-zero CH4,Net-zero CH4,Power-to-Gas
+14,P2G46,Net-zero CH4,Net-zero CH4,Power-to-Gas
+15,P2G47,Net-zero CH4,Net-zero CH4,Power-to-Gas
+16,P2G48,Net-zero CH4,Net-zero CH4,Power-to-Gas
+11,1,Underground gas storage,Underground gas storage,Long-Duration Storage
+11,2,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,3,Underground gas storage,Underground gas storage,Long-Duration Storage
+9,4,Underground gas storage,Underground gas storage,Long-Duration Storage
+6,5,Underground gas storage,Underground gas storage,Long-Duration Storage
+9,6,Underground gas storage,Underground gas storage,Long-Duration Storage
+13,7,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,8,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,9,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,10,Underground gas storage,Underground gas storage,Long-Duration Storage
+6,11,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,12,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,13,Underground gas storage,Underground gas storage,Long-Duration Storage
+12,14,Underground gas storage,Underground gas storage,Long-Duration Storage
