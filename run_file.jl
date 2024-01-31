@@ -4,7 +4,6 @@
 # Pkg.add("Clustering")
 # Pkg.add("Distances")
 # Pkg.add("Gurobi")
-# Pkg.add(Pkg.PackageSpec(;name="Gurobi", version="1.1.0"))
 # Pkg.add("Tables")
 # Pkg.add("DelimitedFiles")
 # Pkg.add("Dates")
@@ -20,15 +19,7 @@ using DataFrames, CSV, Tables, Clustering, Distances, Gurobi, Dates, Random
 using JuMP
 
 # Read parameter file
-if length(ARGS) == 0
-    param_folder = "core/Parameters/parameters_default.jl"
-    println(param_folder)
-    include(param_folder)
-else
-    param_folder = raw"core/Parameters/parameters_"*ARGS[1]*".jl"
-    println(param_folder)
-    include(param_folder)
-end
+include("core/parameters.jl")
 
 # Read data import file
 include("core/data_imports.jl")
@@ -37,9 +28,8 @@ include("core/data_imports.jl")
 include("core/clustering.jl")
 
 # Define optimization program
-m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 7,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
-    "LogToConsole" => 1, "ScaleFlag" => 1,
-    "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) #"Presolve"=>2)) #, "NumericFocus"=>2, "Presolve"=>2))
+m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 46,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
+    "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) # "NumericFocus"=>2, "Presolve"=>2))
 
 # Read constraint and optimize file
 include("core/cons_capacity.jl")
@@ -49,8 +39,8 @@ include("core/cons_policy.jl")
 
 include("core/optimize.jl")
 
-# # Read export file
-include("core/data_exports.jl")
+# Read export file
+# include("core/data_exports.jl")
 
 println("Success!")
 
