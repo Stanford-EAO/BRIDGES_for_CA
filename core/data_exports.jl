@@ -803,3 +803,291 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 outputName = string(resultName, temporalName, scenarioName,".csv")
 # Save the DataFrame to a CSV file
 CSV.write(outputName, df)
+
+
+
+##########################################################################
+######################### STORAGE UNITS BY NODE ##########################
+##########################################################################
+#
+### Storage units by node and type
+#
+#### Storage Units
+preCapacity_ELEC = (NumUnits_STORAGE_ELEC)
+# define array based on inv periods
+invCapacity_Built_ELEC = zeros(T_inv, length(preCapacity_ELEC))
+invCapacity_Ret_ELEC = zeros(T_inv, length(preCapacity_ELEC))
+# loop
+for i = 1:T_inv
+    #
+    invCapacity_Built_ELEC[i,:] = JuMP.value.(unitsbuilt_STORAGE_ELEC[i,:])
+    invCapacity_Ret_ELEC[i,:] = JuMP.value.(unitsretired_STORAGE_ELEC[i,:])
+end
+
+# find types 
+nodeNumber = unique(ElectricalStorage[:,1])
+storageType = unique(PrimeMover_STORAGE_ELEC)
+# find number of storage types and nodes
+numNodes = length(nodeNumber)
+numStorageTypes = length(storageType)
+#
+invCapacity_Built_CZ_ELEC = zeros(T_inv, numStorageTypes, numNodes)
+invCapacity_Ret_CZ_ELEC   = zeros(T_inv, numStorageTypes, numNodes)
+#
+for i = 1:T_inv
+    # generate local version of built/ret for inv period I
+    built_InvPeriod = invCapacity_Built_ELEC[i,:]
+    ret_InvPeriod   = invCapacity_Ret_ELEC[i,:]
+    #
+    for j = 1:numStorageTypes
+        # find indexing based on storage type
+        idx_Storage = PrimeMover_STORAGE_ELEC .== fill(storageType[j], length(PrimeMover_STORAGE_ELEC))
+        for k = 1:numNodes
+            # find indexing based on node
+            idx_Node = ElectricalStorage[:,1] .== fill(nodeNumber[k], length(ElectricalStorage[:,1]))
+            # intersection
+            idx_intersection = idx_Storage .& idx_Node
+            # find intersection and then add to 
+            resultsBuilt_intersection = built_InvPeriod[idx_intersection]
+            resultsRet_intersection   = ret_InvPeriod[idx_intersection]
+            #
+            resultsBuilt_array = zeros(length(idx_intersection))
+            resultsRet_array   = zeros(length(idx_intersection))
+            resultsBuilt_array[findall(idx_intersection .== 1)] = resultsBuilt_intersection
+            resultsRet_array[findall(idx_intersection .== 1)]   = resultsRet_intersection
+            #
+            # add to matrix
+            invCapacity_Built_CZ_ELEC[i,j,k] = sum(resultsBuilt_array)
+            invCapacity_Ret_CZ_ELEC[i,j,k]   = sum(resultsRet_array)
+        end
+    end
+end
+
+
+
+function process_storageUnitsOutput(gas_output, outputName)
+    # Determine the column names for each slice in the third dimension
+    column_names = String[]  # Initialize as an empty string array
+    for i = 1:size(gas_output, 1)
+        prefix = "InvPeriod_$(i)"
+        for j = 1:size(gas_output, 2)
+            suffix = storageType[j]
+            push!(column_names, string(prefix, "+", suffix))
+        end
+    end
+
+    # Reshape the 3D matrix into a 2D matrix
+    gas_output2D = gas_output[1, :,:]'
+    if size(gas_output, 1) > 1
+        for i = 2:size(gas_output, 1)
+            gas_output2D = hcat(gas_output2D, gas_output[i, :,:]')
+        end
+    end
+
+    # Create a DataFrame with column names
+    df = DataFrame(gas_output2D, column_names)
+
+    # Rename the columns to the specified names
+    rename!(df, Symbol.(column_names))
+
+    # Save the DataFrame to a CSV file
+    CSV.write(outputName, df)
+end
+
+
+### Built
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NumUnitsBuilt_StorageELEC_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_storageUnitsOutput(invCapacity_Built_CZ_ELEC, outputName)
+
+### Built
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NumUnitsRet_StorageELEC_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_storageUnitsOutput(invCapacity_Ret_CZ_ELEC, outputName)
+
+
+
+
+##########################################################################
+# 
+### Storage units by node and type in final year **ONLY**
+##
+#### Storage Capacity in MW
+preCapacity_ELEC = (NumUnits_STORAGE_ELEC .* UnitSize_STORAGE_ELEC)
+# define array based on inv periods
+invCapacity_ELEC = zeros(1, length(preCapacity_ELEC))
+# loop
+for i=T_inv
+    #
+    netForInvP = UnitSize_STORAGE_ELEC .* sum( JuMP.value.(unitsbuilt_STORAGE_ELEC[invP,:]) - JuMP.value.(unitsretired_STORAGE_ELEC[invP,:]) for invP = 1:i)
+    invCapacity_ELEC[1,:] = preCapacity_ELEC[:] + netForInvP[:]
+end
+
+
+# find types 
+nodeNumber = unique(ElectricalStorage[:,1])
+storageType = unique(PrimeMover_STORAGE_ELEC)
+# find number of storage types and nodes
+numNodes = length(nodeNumber)
+numStorageTypes = length(storageType)
+#
+invCapacity_Total_CZ_ELEC = zeros(1, numStorageTypes, numNodes)
+#
+for i = T_inv
+    # # generate local version of built/ret for inv period I
+    net_InvPeriod = invCapacity_ELEC[1,:]
+    #
+    for j = 1:numStorageTypes
+        # find indexing based on storage type
+        idx_Storage = PrimeMover_STORAGE_ELEC .== fill(storageType[j], length(PrimeMover_STORAGE_ELEC))
+        for k = 1:numNodes
+            # find indexing based on node
+            idx_Node = ElectricalStorage[:,1] .== fill(nodeNumber[k], length(ElectricalStorage[:,1]))
+            # intersection
+            idx_intersection = idx_Storage .& idx_Node
+            # find intersection and then add to 
+            resultsTotal_intersection = net_InvPeriod[idx_intersection]
+            #
+            resultsTotal_array = zeros(length(idx_intersection))
+            resultsTotal_array[findall(idx_intersection .== 1)] = resultsTotal_intersection
+            #
+            # add to matrix
+            invCapacity_Total_CZ_ELEC[1,j,k] = sum(resultsTotal_array)
+        end
+    end
+end
+
+
+
+### NetCapacity
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NetCapacity_StorageELEC_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_storageUnitsOutput(invCapacity_Total_CZ_ELEC, outputName)
+
+
+
+
+
+##########################################################################
+########################### GEN UNITS BY NODE ############################
+##########################################################################
+#
+### Storage capacities by node and type
+#
+#### Storage Units
+preCapacity_GEN = (NumUnits_GEN)
+# define array based on inv periods
+invCapacity_Built_GEN = zeros(T_inv, length(preCapacity_GEN))
+invCapacity_Ret_GEN = zeros(T_inv, length(preCapacity_GEN))
+# loop
+for i = 1:T_inv
+    #
+    invCapacity_Built_GEN[i,:] = JuMP.value.(unitsbuilt_GEN[i,:])
+    invCapacity_Ret_GEN[i,:] = JuMP.value.(unitsretired_GEN[i,:])
+end
+
+# find types 
+nodeNumber = unique(Generators[:,1])
+genType = unique(PrimeMover_GEN)
+# find number of storage types and nodes
+numNodes = length(nodeNumber)
+numGenTypes = length(genType)
+#
+invCapacity_Built_CZ_GEN = zeros(T_inv, numGenTypes, numNodes)
+invCapacity_Ret_CZ_GEN   = zeros(T_inv, numGenTypes, numNodes)
+#
+for i = 1:T_inv
+    # generate local version of built/ret for inv period I
+    built_InvPeriod = invCapacity_Built_GEN[i,:]
+    ret_InvPeriod   = invCapacity_Ret_GEN[i,:]
+    #
+    for j = 1:numGenTypes
+        # find indexing based on storage type
+        idx_Gen = PrimeMover_GEN .== fill(genType[j], length(PrimeMover_GEN))
+        for k = 1:numNodes
+            # find indexing based on node
+            idx_Node = Generators[:,1] .== fill(nodeNumber[k], length(Generators[:,1]))
+            # intersection
+            idx_intersection = idx_Gen .& idx_Node
+            # find intersection and then add to 
+            resultsBuilt_intersection = built_InvPeriod[idx_intersection]
+            resultsRet_intersection   = ret_InvPeriod[idx_intersection]
+            #
+            resultsBuilt_array = zeros(length(idx_intersection))
+            resultsRet_array   = zeros(length(idx_intersection))
+            resultsBuilt_array[findall(idx_intersection .== 1)] = resultsBuilt_intersection
+            resultsRet_array[findall(idx_intersection .== 1)]   = resultsRet_intersection
+            #
+            # add to matrix
+            invCapacity_Built_CZ_GEN[i,j,k] = sum(resultsBuilt_array)
+            invCapacity_Ret_CZ_GEN[i,j,k]   = sum(resultsRet_array)
+        end
+    end
+end
+
+
+
+function process_genUnitsOutput(output, outputName)
+    # Determine the column names for each slice in the third dimension
+    column_names = String[]  # Initialize as an empty string array
+    for i = 1:size(output, 1)
+        prefix = "InvPeriod_$(i)"
+        for j = 1:size(output, 2)
+            suffix = genType[j]
+            push!(column_names, string(prefix, "+", suffix))
+        end
+    end
+
+    # Reshape the 3D matrix into a 2D matrix
+    output2D = output[1, :,:]'
+    if size(output, 1) > 1
+        for i = 2:size(output, 1)
+            output2D = hcat(output2D, output[i, :,:]')
+        end
+    end
+
+    # Create a DataFrame with column names
+    df = DataFrame(output2D, column_names)
+
+    # Rename the columns to the specified names
+    rename!(df, Symbol.(column_names))
+
+    # Save the DataFrame to a CSV file
+    CSV.write(outputName, df)
+end
+
+
+### Built
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NumUnitsBuilt_GEN_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_genUnitsOutput(invCapacity_Built_CZ_GEN, outputName)
+
+### Built
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NumUnitsRet_GEN_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_genUnitsOutput(invCapacity_Ret_CZ_GEN, outputName)

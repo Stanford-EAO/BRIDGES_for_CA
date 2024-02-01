@@ -35,7 +35,7 @@ toggle_variableNatGasPrice = true
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-N_Periods = 6          # Number of representative operational time slices modeled for each investment period
+N_Periods = 5           # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
@@ -310,9 +310,12 @@ SOC_fraction = 0.5
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
 
+println("")
+#
 println("PARAMETERS")
 println("T_inv: ", T_inv)
 println("N_Periods: ", N_Periods)
+println("")
 
 println("Clustering case: ", clustering_case)
 if clustering_case == "kmeans"
@@ -332,15 +335,19 @@ println("EI trajectory gas: ", EI_GasSector)
 
 println("Electric transmission expansion: ", TRANSMISSION_EXPANSION_ELEC)
 println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, " \$/MW-m")
+println("")
 
 println("Nuclear Retirement Year: ", nuclear_RetirementYear)
+println("")
 
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)
 println("Hydrogen Storage: ", H2Storage_allowed)
+println("")
 
 println("Li-ion Cost Multiplier: ", cost_LiIon_multiplier)
 println("Fe-Air Cost Multiplier: ", cost_FeAir_multiplier)
 println("H2 Storage Cost Multiplier: ", cost_HydrogenStorage_multiplier)
+println("")
 
 println("Starting SOC: ", SOC_fraction)

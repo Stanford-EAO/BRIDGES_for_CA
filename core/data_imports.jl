@@ -232,21 +232,23 @@ PrimeMover_GEN = Generators[:,4]
 Fuel_GEN = Generators[:,5]
 NumUnits_GEN = Generators[:,6]                  # [units]
 UnitSize_GEN = Generators[:,7]                  # [MW]
-# retirement by 2030: force them to build no new nuclear
-if techScenario_Nuclear == "2030"
+## add geothermal capacity anyway?
+# increase geothermal
+primeMover2compare = "Geothermal EGS"
+idx_geothermal = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
+#
+Generators[idx_geothermal, 8] = vec( fill(2, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
+Generators[idx_geothermal, 9] = vec( fill(9, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
+#
+# retirement by 2030 or 2045: force them to build no new nuclear
+if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
     primeMover2compare = "Nuclear"
     idx_nuclear = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
     idx_nuclear = [all(row) for row in eachrow(idx_nuclear)]
     #
     Generators[idx_nuclear, 8] = vec( fill(0, size(Generators[idx_nuclear, 8],1), size(Generators[idx_nuclear, 8],2)) )
     Generators[idx_nuclear, 9] = vec( fill(0, size(Generators[idx_nuclear, 9],1), size(Generators[idx_nuclear, 9],2)) )
-    # test: increase geothermal
-    primeMover2compare = "Geothermal"
-    idx_geothermal = Generators[!, "Fuel"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
-    idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
-    #
-    Generators[idx_geothermal, 8] = vec( fill(2, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
-    Generators[idx_geothermal, 9] = vec( fill(10, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
 end
 #
 MaxNewUnitsAnnual_GEN = Generators[:,8].*br     # [units/year]
@@ -275,7 +277,7 @@ Generators[idx_nuclear, "Forced Retirement"] = vec( fill(nuclear_RetirementYear,
 RetirementYear_GEN = min.(Generators[:,24]+Lifetime_GEN,Generators[:,25])
 CRF_GEN = (WACC.*(1+WACC).^EconomicLifetime_GEN)./((1+WACC).^EconomicLifetime_GEN .- 1)
 
-PowerToGas = CSV.read("$(foldername)/PowerToGas$(system).csv",DataFrame)
+PowerToGas = CSV.read("$(foldername)/PowerToGas$(system)_reduced.csv",DataFrame)
 P2G = length(PowerToGas[:, :1])
 PrimeMover_P2G = PowerToGas[:,4]
 NumUnits_P2G = PowerToGas[:,5]                  # [units]
@@ -298,7 +300,10 @@ MoleFracs_P2G = Matrix(PowerToGas[:,23:24])             # [%]
 CRF_P2G = (WACC.*(1+WACC).^EconomicLifetime_P2G)./((1+WACC).^EconomicLifetime_P2G .- 1)
 RetirementYear_P2G = min.(PowerToGas[:,21]+Lifetime_P2G, PowerToGas[:,22])
 
-ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wFormEnergy+PHS_August2023.csv",DataFrame)
+ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
+# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wFormEnergy+PHS_August2023.csv",DataFrame)
+# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wNils.csv",DataFrame)
+# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_50.csv",DataFrame)
 ElectricalStorage = ElectricalStorage[:,2:size(ElectricalStorage,2)]                 # remove useless cols for some reason
 ### choose storage options
 # formEnergy
@@ -339,7 +344,7 @@ CRF_STORAGE_ELEC = (WACC.*(1+WACC).^EconomicLifetime_STORAGE_ELEC)./((1+WACC).^E
 RetirementYear_STORAGE_ELEC = min.(ElectricalStorage[:,15]+Lifetime_STORAGE_ELEC,ElectricalStorage[:,16])
 
 
-GasStorage = CSV.read("$(foldername)/Storage_GAS$(system)_2022initialStorage.csv",DataFrame)
+GasStorage = CSV.read("$(foldername)/Storage_GAS$(system).csv",DataFrame)
 GasStorage = GasStorage[:,3:size(GasStorage,2)]                 # remove useless cols for some reason
 STORAGE_GAS = length(GasStorage[:, :1])
 PrimeMover_STORAGE_GAS = GasStorage[:,4]
@@ -392,9 +397,8 @@ LHV_P2G = sum(MoleFracs_P2G.*transpose(MolarMass.*LHV), dims = 2)./MolarMass_P2G
 ################################################################################
 ### CAPEX, FOM, VOM, and fuel costs
 ################################################################################
-CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_wFormEnergy+PHS.csv",DataFrame)
-# CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_old.csv",DataFrame)
-FOMLookup = CSV.read("$(foldername)/FOMLookup_wFormEnergy+PHS.csv",DataFrame)
+CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup.csv",DataFrame)
+FOMLookup = CSV.read("$(foldername)/FOMLookup.csv",DataFrame)
 VOMLookup = CSV.read("$(foldername)/VOMLookup.csv",DataFrame)
 FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp.csv",DataFrame)
 
@@ -453,7 +457,7 @@ println("")
 
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
-CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
+CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
 if CleanElecCosts == "High"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
