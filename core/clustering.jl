@@ -97,6 +97,8 @@ println("Check weights :")
 println(weights[1,:])
 println("Check medoids :")
 println(medoids[1,:])
+println("Rep Day Sequence: ", RepDays)
+
 
 ## After identifying the representative days, the raw data are
 # re-shaped into the required indexing format for optimization

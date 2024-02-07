@@ -2,19 +2,21 @@
 ### Expansion and retirement of energy supply/demand units
 # See Eq. 2.5a/2.5b/2.5c in Von Wald thesis
 ################################################################################
-@variable(m, 0 <= unitsbuilt_GEN[I = 1:T_inv, g = 1:GEN]  <= MaxNewUnitsAnnual_GEN[g])                                      # [units]
+@variable(m, 0 <= unitsbuilt_GEN[I = 1:T_inv, g = 1:GEN] <= MaxNewUnitsAnnual_GEN[g])                                      # [units]
 @variable(m, 0 <= unitsretired_GEN[I = 1:T_inv, g = 1:GEN])                                                                 # [units]
 @constraint(m, [g = 1:GEN], sum(unitsbuilt_GEN[i,g] for i = 1:T_inv) <= MaxNewUnitsTotal_GEN[g])                            # [units]
+# new constraint to check if we can limit building
+# @constraint(m, [I = 1:T_inv, g = 1:GEN], unitsbuilt_GEN[I, g] <= MaxNewUnitsAnnual_GEN[g] * min( max(RetirementYear_GEN[g] - Years[I],0), 1) )                                      # [units]
 
-@variable(m, 0 <= unitsbuilt_P2G[I = 1:T_inv, d = 1:P2G]  <= MaxNewUnitsAnnual_P2G[d])                                      # [units]
+@variable(m, 0 <= unitsbuilt_P2G[I = 1:T_inv, d = 1:P2G] <= MaxNewUnitsAnnual_P2G[d])                                      # [units]
 @variable(m, 0 <= unitsretired_P2G[I = 1:T_inv, d = 1:P2G])                                                                 # [units]
 @constraint(m, [d = 1:P2G], sum(unitsbuilt_P2G[i,d] for i = 1:T_inv) <= MaxNewUnitsTotal_P2G[d])                            # [units]
 
-@variable(m, 0 <= unitsbuilt_STORAGE_ELEC[I = 1:T_inv, s = 1:STORAGE_ELEC]  <= MaxNewUnitsAnnual_STORAGE_ELEC[s])           # [units]
+@variable(m, 0 <= unitsbuilt_STORAGE_ELEC[I = 1:T_inv, s = 1:STORAGE_ELEC] <= MaxNewUnitsAnnual_STORAGE_ELEC[s])           # [units]
 @variable(m, 0 <= unitsretired_STORAGE_ELEC[I = 1:T_inv, s = 1:STORAGE_ELEC])                                               # [units]
 @constraint(m, [s = 1:STORAGE_ELEC], sum(unitsbuilt_STORAGE_ELEC[i,s] for i = 1:T_inv) <= MaxNewUnitsTotal_STORAGE_ELEC[s]) # [units]
 
-@variable(m, 0 <= unitsbuilt_STORAGE_GAS[I = 1:T_inv, s = 1:STORAGE_GAS]  <= MaxNewUnitsAnnual_STORAGE_GAS[s])              # [units]
+@variable(m, 0 <= unitsbuilt_STORAGE_GAS[I = 1:T_inv, s = 1:STORAGE_GAS] <= MaxNewUnitsAnnual_STORAGE_GAS[s])              # [units]
 @variable(m, 0 <= unitsretired_STORAGE_GAS[I = 1:T_inv, s = 1:STORAGE_GAS])                                                 # [units]
 @constraint(m, [s = 1:STORAGE_GAS], sum(unitsbuilt_STORAGE_GAS[i,s] for i = 1:T_inv) <= MaxNewUnitsTotal_STORAGE_GAS[s])    # [units]
 
@@ -27,7 +29,8 @@
 ### Retirement functions for generators, p2g, and storage units
 # See Eq. 2.5d/2.5e in Von Wald thesis 
 ################################################################################
-@constraint(m, [I = 1, g = 1:GEN], unitsretired_GEN[I,g] <= NumUnits_GEN[g] + unitsbuilt_GEN[I,g])                          
+@constraint(m, [I = 1, g = 1:GEN], unitsretired_GEN[I,g] <= NumUnits_GEN[g])# + unitsbuilt_GEN[I,g])                          
+# @constraint(m, [I = 1, g = 1:GEN], unitsretired_GEN[I,g] <= NumUnits_GEN[g] + unitsbuilt_GEN[I,g])                          
 @constraint(m, [I = 1, g = 1:GEN], unitsretired_GEN[I,g] >= NumUnits_GEN[g]*max(min(Years[I] - RetirementYear_GEN[g],1),0)) 
 if T_inv > 1
     @constraint(m, [I = 2:T_inv, g = 1:GEN], unitsretired_GEN[I,g] <= NumUnits_GEN[g] + sum(unitsbuilt_GEN[i0,g] - unitsretired_GEN[i0,g]  for i0 = 1:I-1))
@@ -118,3 +121,4 @@ end
 if hybrids_allowed == 0
     @constraint(m, [a = 1:APPLIANCES, I = 1:T_inv], unitsbuilt_APPS[I,a] <= (1-IS_HYBRID[a])*10^3)
 end
+
