@@ -31,9 +31,7 @@
 @variable(m, CleanGas_GEN[I = 1:T_inv, g = 1:GEN] >= 0)
 @constraint(m, [I = 1:T_inv], sum(CleanGas_GEN[I, g] for g = 1:GEN) == CleanGas_powersector[I])
 @constraint(m, [I = 1:T_inv, g = 1:GEN], CleanGas_GEN[I, g]/MWh_PER_MMBTU <= sum(weights[I,T]*8760/t_ops*sum((generation[I,T,t,g]*HeatRate[g] + StartupFuel[g]*startup_GEN[I,T,t,g])*NG_fueled[g] for t = 1:t_ops) for T = 1:T_ops))
-
 @constraint(m, [I = 1:T_inv], sum((sum(weights[I,T]*8760/t_ops*sum((generation[I,T,t,g]*HeatRate[g] + StartupFuel[g]*startup_GEN[I,T,t,g]) for t = 1:t_ops) for T = 1:T_ops) - CleanGas_GEN[I, g]/MWh_PER_MMBTU) *emissions_factors[g] for g = 1:GEN) <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
-
 @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
 
 ### Maximum biomethane production and use of sustainable bio-energy. 
@@ -54,24 +52,34 @@
 # In this case, binary variables are introduced to indicate for each distribution system
 # when that system is shut down.
 if gasdistretirement_allowed == 1
-    @variable(m, distSysRetirement_GAS[I = 1:T_inv, d = 1:DIST_GAS], Bin)
-    @constraint(m, [I = 1:T_inv, d = 1:DIST_GAS], (1-sum(distSysRetirement_GAS[j,d] for j = 1:I))*sum(sum(InitialAppliancePopulation[a]/1000*ApplianceProfilesGAS[t,a] for t = 1:8760) for a = 1:APPLIANCES) >= sum(sum(sum(APP_DistSystemLoc_GAS[d,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES) for t= 1:t_ops) for T = 1:T_ops))
+    # @variable(m, distSysRetirement_GAS[I = 1:T_inv, d = 1:DIST_GAS], Bin)
+    # @constraint(m, [I = 1:T_inv, d = 1:DIST_GAS], (1-sum(distSysRetirement_GAS[j,d] for j = 1:I))*sum(sum(InitialAppliancePopulation[a]/1000*ApplianceProfilesGAS[t,a] for t = 1:8760) for a = 1:APPLIANCES) >= sum(sum(sum(APP_DistSystemLoc_GAS[d,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES) for t= 1:t_ops) for T = 1:T_ops))
+    @variable(m, distSysRetirement_GAS[I = 1:T_inv, d = 1:DIST_GAS] >= 0)
+    @constraint(m, [I = 1:T_inv, d = 1:DIST_GAS], (1-sum(distSysRetirement_GAS[j,d] for j = 1:I))*sum(APP_DistSystemLoc_GAS[d,a]*InitialAppliancePopulation[a]/1000 for a = gasApps) >= sum(APP_DistSystemLoc_GAS[d,a]*(unitsremaining_APPS[I,a]) for a = gasApps))
     @constraint(m, [d = 1:DIST_GAS], sum(distSysRetirement_GAS[j,d] for j = 1:T_inv) <= 1)
-end
-# If no gas distribution retirement is contemplated by the model, the distSysRetirement_GAS indicators are fixed parameters
-if gasdistretirement_allowed == 0
-    distSysRetirement_GAS = zeros(T_inv,DIST_GAS)
-end
+
 # Use may also select whether to force the model to shut down gas distribution systems
 # by using gasdistretirement_forced with a 1 in the year where the system must be shut down.
 # Currently all distribution systems must be shut down in the same year.
-if sum(gasdistretirement_forced) >= 1
+elseif sum(gasdistretirement_forced) >= 1
+    region_index = 1:DIST_GAS
     distSysRetirement_GAS = zeros(T_inv,DIST_GAS)
+    if region_retire == "North"
+        region_index = [1,2,3,4,11,12,16]
+    elseif region_retire == "South"
+        region_index = [5,6,7,8,9,10,13,14,15]
+    elseif region_retire == "Cities"
+        region_index = [3,4,6,7,8,9,12]
+    end
     for ii = 1:T_inv
-        distSysRetirement_GAS[ii,:] .= gasdistretirement_forced[ii]
+        distSysRetirement_GAS[ii,region_index] .= gasdistretirement_forced[ii]
     end
     # And delivered gas volumes are constrained to be 0 during and after this designated shut-down year:
-    @constraint(m, [I = 1:T_inv, d = 1:DIST_GAS], (1-sum(distSysRetirement_GAS[j,d] for j = 1:I))*sum(sum(InitialAppliancePopulation[a]/1000*ApplianceProfilesGAS[t,a] for t = 1:8760) for a = 1:APPLIANCES) >= sum(sum(sum(APP_DistSystemLoc_GAS[d,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES) for t= 1:t_ops) for T = 1:T_ops))
+    @constraint(m, [I = 1:T_inv, d = 1:DIST_GAS], (1-sum(distSysRetirement_GAS[j,d] for j = 1:I))*sum(APP_DistSystemLoc_GAS[d,a]*InitialAppliancePopulation[a]/1000 for a = gasApps) >= sum(APP_DistSystemLoc_GAS[d,a]*(unitsremaining_APPS[I,a]) for a = gasApps))
+
+# If no gas distribution retirement is contemplated by the model, the distSysRetirement_GAS indicators are fixed parameters
+else
+    distSysRetirement_GAS = zeros(T_inv,DIST_GAS)
 end
 
 ## The gas distribution system fixed costs are then computed based on these shut-down decisions:
@@ -79,7 +87,7 @@ end
 ###############################################################################
 @variable(m, gasdistsyst_Cost[I = 1:T_inv] >= 0)
 # Gas distribution system cost includes several terms that will be either active or zero depending on whether the retirement decision is made:
-@constraint(m, [I = 1:T_inv], gasdistsyst_Cost[I] == sum(sum(AccDepGasSyst_FixedCosts[j,I]/1000*distSysRetirement_GAS[j,d] for d = 1:DIST_GAS) for j = 1:T_inv) + sum(BAUGasSyst_FixedCosts[I]/1000*(1-sum(distSysRetirement_GAS[j,d] for j = 1:T_inv)) for d = 1:DIST_GAS))
+@constraint(m, [I = 1:T_inv], gasdistsyst_Cost[I] == sum(sum(AccDepGasSyst_FixedCosts[d,j,I]/1000*distSysRetirement_GAS[j,d] for d = 1:DIST_GAS) for j = 1:T_inv) + sum(BAUGasSyst_FixedCosts[d,I]/1000*(1-sum(distSysRetirement_GAS[j,d] for j = 1:T_inv)) for d = 1:DIST_GAS))
 
 
 ###############################################################################

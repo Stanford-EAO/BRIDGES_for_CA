@@ -42,9 +42,6 @@ InitialAppliancePopulation = EndUseAppliances[:,7]  # Initial appliance populati
 ApplianceLifetime = EndUseAppliances[:,8]           # Expected appliance lifetime [years]
 IS_HYBRID = EndUseAppliances[:,9]                   # Indicator for whether the appliance is hybrid gas-electric
 upgrade_cost = EndUseAppliances[:,10]               # Building infrastructure upgrade costs associated with transitioning to this appliance [$]
-if buildingretrofits == "High"
-    global upgrade_cost = EndUseAppliances[:,11]
-end
 CRF_APPLIANCES = (WACC_APPLIANCES.*(1+WACC_APPLIANCES).^ApplianceLifetime)./((1+WACC_APPLIANCES).^ApplianceLifetime .- 1)   # Capital recovery factor [yr^-1] for annualizing appliance investments
 
 ## Create a matrix that maps each appliance to the energy service that it satisfies
@@ -156,7 +153,7 @@ Length_ElecTrans = TransmissionLinks_ELEC[:,8]                          # m
 EconomicLifetime_ELECTrans = 50                                         # years
 CAPEX_ELECTrans = ElecTransmissionCapitalCosts.*Length_ElecTrans        # $/MW-m * m => $/MW
 CRF_ELECTrans = (WACC.*(1+WACC).^EconomicLifetime_ELECTrans)./((1+WACC).^EconomicLifetime_ELECTrans .- 1)
-# FOM_ELECTrans = ElecTransmissionOperatingCosts.*Line_Rating
+AMMORTIZED_ELECTrans = CAPEX_ELECTrans.*Line_Rating.*(CRF_ELECTrans+ElecTransmissionOperatingCosts)
 
 TransmissionLinks_GAS = CSV.read("$(foldername)/GasTransmission$(system).csv",DataFrame)
 EDGES_GAS = length(TransmissionLinks_GAS[:,1])
@@ -220,6 +217,9 @@ C = C.*10^6
 ### Import set of energy supply/storage/demand units
 ################################################################################
 Generators = CSV.read("$(foldername)/Generators$(system).csv",DataFrame)
+if nuclear_constrain == 0
+    Generators = CSV.read("$(foldername)/Generators$(system)_wNuclear.csv",DataFrame)
+end
 HourlyVRE2 = CSV.read("$(foldername)/HourlyVRE$(system)$(region).csv",DataFrame)
 HourlyVRE = zeros(8760,length(HourlyVRE2[1,:]))
 for i = 1:length(HourlyVRE2[1,:])
@@ -277,7 +277,14 @@ Generators[idx_nuclear, "Forced Retirement"] = vec( fill(nuclear_RetirementYear,
 RetirementYear_GEN = min.(Generators[:,24]+Lifetime_GEN,Generators[:,25])
 CRF_GEN = (WACC.*(1+WACC).^EconomicLifetime_GEN)./((1+WACC).^EconomicLifetime_GEN .- 1)
 
+<<<<<<< HEAD
 PowerToGas = CSV.read("$(foldername)/PowerToGas$(system)_reduced.csv",DataFrame)
+=======
+PowerToGas = CSV.read("$(foldername)/PowerToGas$(system).csv",DataFrame)
+if p2g_constrain == 1
+    PowerToGas = CSV.read("$(foldername)/PowerToGas$(system)Constrained.csv",DataFrame)
+end
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
 P2G = length(PowerToGas[:, :1])
 PrimeMover_P2G = PowerToGas[:,4]
 NumUnits_P2G = PowerToGas[:,5]                  # [units]
@@ -301,10 +308,13 @@ CRF_P2G = (WACC.*(1+WACC).^EconomicLifetime_P2G)./((1+WACC).^EconomicLifetime_P2
 RetirementYear_P2G = min.(PowerToGas[:,21]+Lifetime_P2G, PowerToGas[:,22])
 
 ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
+<<<<<<< HEAD
 # ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wFormEnergy+PHS_August2023.csv",DataFrame)
 # ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wNils.csv",DataFrame)
 # ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_50.csv",DataFrame)
 ElectricalStorage = ElectricalStorage[:,2:size(ElectricalStorage,2)]                 # remove useless cols for some reason
+=======
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
 ### choose storage options
 # formEnergy
 if FormEnergy_allowed == 0
@@ -345,7 +355,10 @@ RetirementYear_STORAGE_ELEC = min.(ElectricalStorage[:,15]+Lifetime_STORAGE_ELEC
 
 
 GasStorage = CSV.read("$(foldername)/Storage_GAS$(system).csv",DataFrame)
+<<<<<<< HEAD
 GasStorage = GasStorage[:,3:size(GasStorage,2)]                 # remove useless cols for some reason
+=======
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
 STORAGE_GAS = length(GasStorage[:, :1])
 PrimeMover_STORAGE_GAS = GasStorage[:,4]
 NumUnits_STORAGE_GAS = GasStorage[:,5]                          # [units]
@@ -458,6 +471,7 @@ println("")
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
 CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
+<<<<<<< HEAD
 if CleanElecCosts == "High"
     if CleanGasCosts == "Low"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
@@ -493,6 +507,14 @@ if CleanElecCosts == "Mid"
         global CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
     end
 end
+=======
+if CleanCosts == "Low"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosLow$(cost_case).csv",DataFrame)
+elseif CleanCosts == "High"
+    global CostScenarios = CSV.read("$(foldername)/CostScenariosHigh$(cost_case).csv",DataFrame)
+end
+
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
 
 # Look up each technology, the associated calendar year in the data tables and assign
 # it a cost value

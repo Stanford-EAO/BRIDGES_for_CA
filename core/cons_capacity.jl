@@ -72,6 +72,14 @@ for a = 1:APPLIANCES
     end
 end
 
+gasApps = cat(collect(1:16), collect(33:48), dims =(1))
+gasApps = cat(gasApps, collect(65:80), dims =(1))
+gasApps = cat(gasApps, collect(65+32:80+32), dims =(1))
+gasApps = cat(gasApps, collect(65+32*2:80+32*2), dims =(1))
+GASAPPS = length(gasApps)
+unitsremaining_APPS_historical[T_inv,gasApps] .= 0
+# CSV.write("remaining2.csv",Tables.table(unitsremaining_APPS_historical[:,:]), writeheader = true)
+
 # See Eq. 2.5 in Von Wald thesis
 ###############################################################################
 @constraint(m, [I = 1:T_inv, a = 1:APPLIANCES], unitsremaining_APPS[I,a] == unitsremaining_APPS_historical[I,a] + sum(unitsbuilt_APPS[i0,a] - unitsretired_APPS[i0,a] for i0 = 1:I))
@@ -83,6 +91,11 @@ if T_inv > 1
     @constraint(m, [I = 2:T_inv, a = 1:APPLIANCES], unitsretired_APPS[I,a] >= sum(round(cumulativefailurefrac[a,v,I],digits = 4)*unitsbuilt_APPS[v,a] for v = 1:I-1) - sum(unitsretired_APPS[i0,a] for i0 = 1:I-1))
 end
 
+if force_retire_gasApps == 1
+    if T_inv == 5
+        @constraint(m, [I = T_inv, a = gasApps], unitsremaining_APPS[I,a] <= unitsremaining_APPS_historical[I,a])
+    end
+end
 
 # See Eq. 2.14 in Von Wald thesis
 ###############################################################################
@@ -103,7 +116,6 @@ end
 
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], Demand_ELEC[I,T,t,n] == BaselineDemand_ELEC[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_ELEC[T,t,a] for a = 1:APPLIANCES))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_GAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
-#@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_LPG[I,T,t,n] == 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_LPG[T,t,a] for a = 1:APPLIANCES))
 
 # To permit sensitivity testing to disallowing hybrid appliance strategies
 if hybrids_allowed == 0

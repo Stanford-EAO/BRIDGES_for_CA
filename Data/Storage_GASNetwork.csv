@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ,Unnamed: 0,Node_ELEC,Node_GAS,Storage_ID,Prime Mover,Existing Units [no.],Unit Size [MW],Max New Units Annual [units/year],Max New Units Total [no.],Duration [hours],Charge efficiency [%],Discharge efficiency [%],Loss efficiency [%],Economic Lifetime [years],Lifetime [years],Install Year,Forced Retirement,MoleFrac_CH4 [%],MoleFrac_H2 [%],Initial Storage [MWh]
 0,0,11,11,1,Underground gas storage,1,11600.731041666668,0,0,1894.7368421052631,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,12139894.085807448
 1,1,11,11,2,Underground gas storage,1,3663.38875,0,0,880.0,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1780517.7992517592
@@ -13,3 +14,20 @@
 11,11,12,12,12,Underground gas storage,1,2442.2591666666667,0,0,1389.6,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1874399.64684867
 12,12,12,12,13,Underground gas storage,1,610.5647916666667,0,0,2448.0,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,825512.7978349064
 13,13,12,12,14,Underground gas storage,1,854.7907083333334,0,0,771.4285714285714,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,364196.8225742235
+=======
+Node_ELEC,Node_GAS,Storage_ID,Prime Mover,Existing Units [no.],Unit Size [MW],Max New Units Annual [units/year],Max New Units Total [no.],Duration [hours],Charge efficiency [%],Discharge efficiency [%],Loss efficiency [%],Economic Lifetime [years],Lifetime [years],Install Year,Forced Retirement,MoleFrac_CH4 [%],MoleFrac_H2 [%],Initial Storage [MWh]
+11,11,1,Underground gas storage,1,11601,0,0,1895,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,12139894
+11,11,2,Underground gas storage,1,3663,0,0,880,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1780518
+12,12,3,Underground gas storage,1,4885,0,0,706,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1905640
+9,9,4,Underground gas storage,1,22713,0,0,1112,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,10215450
+6,6,5,Underground gas storage,1,4885,0,0,144,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,463084
+9,9,6,Underground gas storage,1,12211,0,0,648,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,5904372
+13,13,7,Underground gas storage,1,7937,0,0,738,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,3237305
+12,12,8,Underground gas storage,1,3053,0,0,430,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,725156
+12,12,9,Underground gas storage,1,3053,0,0,721,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1215608
+12,12,10,Underground gas storage,1,20515,0,0,530,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,6001192
+6,6,11,Underground gas storage,1,5129,0,0,1229,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,5904372
+12,12,12,Underground gas storage,1,2442,0,0,1390,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,1874400
+12,12,13,Underground gas storage,1,611,0,0,2448,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,825513
+12,12,14,Underground gas storage,1,855,0,0,771,0.96,0.995,1.14e-08,40,40,2050,2050,1,0,364197
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5

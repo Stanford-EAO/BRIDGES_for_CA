@@ -10,19 +10,19 @@ LandbasedWind,Mid
 GasFiredWH,Mid
 ElecHeatPumpWH,Mid
 ElecHeatPump_SpaceHeat,Mid
-HybridElecHeatPump_SpaceHeat,Mid
-LPGHybridElecHeatPump_SpaceHeat,Mid
 GasFurnace_SpaceHeat,Mid
 GasRange_Res,Mid
 ElecInduction_Res,Mid
 GasRange_Comm,Mid
 ElecInduction_Comm,Mid
 GasFurnace_SpaceHeatComm,Mid
-LPGHybridElecHeatPump_SpaceHeatComm,Mid
-HybridElecHeatPump_SpaceHeatComm,Mid
 ElecHeatPump_SpaceHeatComm,Mid
 GasFiredWHComm,Mid
 ElecHeatPumpWHComm,Mid
+LPGHybridElecHeatPump_SpaceHeatComm,Mid
+HybridElecHeatPump_SpaceHeatComm,Mid
+HybridElecHeatPump_SpaceHeat,Mid
+LPGHybridElecHeatPump_SpaceHeat,Mid
 Net-zero CH4,Mid
 Biomethane,Mid
 Gasification,Mid
@@ -49,6 +49,15 @@ OffshoreWind,Mid
 Res Solar PV,Mid
 Comm Solar PV,Mid
 Geothermal EGS,Mid
+<<<<<<< HEAD
 Multi-day storage,Mid
 Pumped hydro storage,Mid
 Batteria,Mid
+=======
+Pumped hydro storage,Mid
+Multi-day storage,Mid
+AC_GasFurnace,Mid
+AC_ElecHeatPump_SpaceHeat,Mid
+AC_GasFurnaceComm,Mid
+AC_HeatPump_SpaceHeatComm,Mid
+>>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
