@@ -203,7 +203,7 @@ CSV.write("$(top_dir)/PEAKDEMANDINC.csv",Tables.table(JuMP.value.(PeakDistDemand
 if gasdistretirement_allowed == 1
     CSV.write("$(top_dir)/DISTRETIRE.csv",Tables.table(JuMP.value.(distSysRetirement_GAS)), writeheader = true)
 end
-<<<<<<< HEAD
+
 
 ## then let's find the indeces of the different P2G
 idx_PowerToCH4  = PrimeMover_P2G .!= fill("Electrolysis", length(PrimeMover_P2G))
@@ -1086,5 +1086,4 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
 process_genUnitsOutput(invCapacity_Ret_CZ_GEN, outputName)
-=======
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
+
