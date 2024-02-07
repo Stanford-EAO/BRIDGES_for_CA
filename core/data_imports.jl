@@ -277,14 +277,9 @@ Generators[idx_nuclear, "Forced Retirement"] = vec( fill(nuclear_RetirementYear,
 RetirementYear_GEN = min.(Generators[:,24]+Lifetime_GEN,Generators[:,25])
 CRF_GEN = (WACC.*(1+WACC).^EconomicLifetime_GEN)./((1+WACC).^EconomicLifetime_GEN .- 1)
 
-<<<<<<< HEAD
-PowerToGas = CSV.read("$(foldername)/PowerToGas$(system)_reduced.csv",DataFrame)
-=======
+
 PowerToGas = CSV.read("$(foldername)/PowerToGas$(system).csv",DataFrame)
-if p2g_constrain == 1
-    PowerToGas = CSV.read("$(foldername)/PowerToGas$(system)Constrained.csv",DataFrame)
-end
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
+
 P2G = length(PowerToGas[:, :1])
 PrimeMover_P2G = PowerToGas[:,4]
 NumUnits_P2G = PowerToGas[:,5]                  # [units]
@@ -308,13 +303,7 @@ CRF_P2G = (WACC.*(1+WACC).^EconomicLifetime_P2G)./((1+WACC).^EconomicLifetime_P2
 RetirementYear_P2G = min.(PowerToGas[:,21]+Lifetime_P2G, PowerToGas[:,22])
 
 ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
-<<<<<<< HEAD
-# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wFormEnergy+PHS_August2023.csv",DataFrame)
-# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_wNils.csv",DataFrame)
-# ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system)_50.csv",DataFrame)
-ElectricalStorage = ElectricalStorage[:,2:size(ElectricalStorage,2)]                 # remove useless cols for some reason
-=======
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
+
 ### choose storage options
 # formEnergy
 if FormEnergy_allowed == 0
@@ -355,10 +344,7 @@ RetirementYear_STORAGE_ELEC = min.(ElectricalStorage[:,15]+Lifetime_STORAGE_ELEC
 
 
 GasStorage = CSV.read("$(foldername)/Storage_GAS$(system).csv",DataFrame)
-<<<<<<< HEAD
-GasStorage = GasStorage[:,3:size(GasStorage,2)]                 # remove useless cols for some reason
-=======
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
+
 STORAGE_GAS = length(GasStorage[:, :1])
 PrimeMover_STORAGE_GAS = GasStorage[:,4]
 NumUnits_STORAGE_GAS = GasStorage[:,5]                          # [units]
@@ -471,50 +457,13 @@ println("")
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
 CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
-<<<<<<< HEAD
-if CleanElecCosts == "High"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_HighElecMidGas.csv",DataFrame)
-    end
-end
 
-if CleanElecCosts == "Low"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_LowElecMidGas.csv",DataFrame)
-    end
-end
-
-if CleanElecCosts == "Mid"
-    if CleanGasCosts == "Low"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecLowGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "High"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_MidElecHighGas.csv",DataFrame)
-    end
-    if CleanGasCosts == "Mid"
-        global CostScenarios = CSV.read("$(foldername)/CostScenarios_wFormEnergy+PHS.csv",DataFrame)
-    end
-end
-=======
 if CleanCosts == "Low"
     global CostScenarios = CSV.read("$(foldername)/CostScenariosLow$(cost_case).csv",DataFrame)
 elseif CleanCosts == "High"
     global CostScenarios = CSV.read("$(foldername)/CostScenariosHigh$(cost_case).csv",DataFrame)
 end
 
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5
 
 # Look up each technology, the associated calendar year in the data tables and assign
 # it a cost value

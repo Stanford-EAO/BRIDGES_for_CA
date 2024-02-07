@@ -41,11 +41,9 @@ considerACsavings = 1
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-<<<<<<< HEAD:core/parameters.jl
-N_Periods = 5           # Number of representative operational time slices modeled for each investment period
-=======
+
+
 N_Periods = 10          # Number of representative operational time slices modeled for each investment period
->>>>>>> de0a04f3126df98d2cddfd04d06958faa63b80c5:core/Parameters/parameters_default.jl
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
