@@ -33,9 +33,6 @@ hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
 force_retire_gasApps = 0
-p2g_constrain = 1
-nuclear_constrain = 1
-considerACsavings = 1
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -356,8 +353,6 @@ println("Nuclear Retirement Year: ", nuclear_RetirementYear)
 println("")
 
 println("Appliance ban by 2045: ", force_retire_gasApps)
-println("Constrain P2G: ", p2g_constrain)
-println("Consider incremental AC savings: ", considerACsavings)
 
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)
