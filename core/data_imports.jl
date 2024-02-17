@@ -217,9 +217,7 @@ C = C.*10^6
 ### Import set of energy supply/storage/demand units
 ################################################################################
 Generators = CSV.read("$(foldername)/Generators$(system).csv",DataFrame)
-if nuclear_constrain == 0
-    Generators = CSV.read("$(foldername)/Generators$(system)_wNuclear.csv",DataFrame)
-end
+
 HourlyVRE2 = CSV.read("$(foldername)/HourlyVRE$(system)$(region).csv",DataFrame)
 HourlyVRE = zeros(8760,length(HourlyVRE2[1,:]))
 for i = 1:length(HourlyVRE2[1,:])
