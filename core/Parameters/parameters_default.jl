@@ -165,7 +165,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 1.8    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.0    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################
