@@ -34,11 +34,12 @@ bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
 force_retire_gasApps = 0
 
-
 ################################################################################
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
+
+
 N_Periods = 10          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
@@ -165,7 +166,7 @@ GasQuality = "Nodal" # "Annual", "No"
 
 br = 1.0                        # build rate multiplier
 transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 1.8    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+forceretire_multiplier = 1.0    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################
