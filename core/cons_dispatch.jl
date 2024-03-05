@@ -185,11 +185,8 @@ if LINKED_PERIODS_STORAGE == 1
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_GAS], SOCTracked_GAS[I,Int(Periods_Per_Year),s] == storedEnergy_GAS[I,Int(RepDays[I,1]),1,s])
 
     # define initial conditions for storage
-    # gas: for day 1 in investment period 1, start with that
-    @constraint(m, [I = 1, d = 1, s = 1:STORAGE_GAS], SOCTracked_GAS[I,d,s] == initialStorage_GAS[s])
+    @constraint(m, [I = 1:T_inv, d = 1, s = 1:STORAGE_GAS], SOCTracked_GAS[I,d,s] == initialStorage_GAS[s])
 
     # electric: start at zero or at max capacity
-    # @constraint(m, [I = 1, d = 1, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,d,s] == 0)
-    SOC_fraction = 0.25
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,Int(Periods_Per_Year),s] == SOC_fraction*UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i,s] - unitsretired_STORAGE_ELEC[i,s] for i = 1:I))*duration_ELEC[s])
 end
