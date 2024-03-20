@@ -1,23 +1,24 @@
-# import Pkg
-# Pkg.add("DataFrames")
-# Pkg.add("CSV")
-# Pkg.add("Clustering")
-# Pkg.add("Distances")
-# Pkg.add("Gurobi")
-# Pkg.add(Pkg.PackageSpec(;name="Gurobi", version="1.1.0"))
-# Pkg.add("Tables")
-# Pkg.add("DelimitedFiles")
-# Pkg.add("Dates")
-# Pkg.add("Grisu")
-# Pkg.add("Random")
-# Pkg.add("JuMP")
-# Pkg.add(Pkg.PackageSpec(;name="JuMP", version="1.7.0"))
-
+import Pkg
+Pkg.add("DataFrames")
+Pkg.add("CSV")
+Pkg.add("Clustering")
+Pkg.add("Distances")
+Pkg.add("Gurobi")
+Pkg.add(Pkg.PackageSpec(;name="Gurobi", version="1.1.0"))
+Pkg.add("Tables")
+Pkg.add("DelimitedFiles")
+Pkg.add("Dates")
+Pkg.add("Grisu")
+Pkg.add("Random")
+Pkg.add("JuMP")
+Pkg.add(Pkg.PackageSpec(;name="JuMP", version="1.7.0"))
+Pkg.add("YAML")
 # Pkg.add("NBInclude")
 # Pkg.add("Plots")
-using DataFrames, CSV, Tables, Clustering, Distances, Gurobi, Dates, Random
+
+using DataFrames, CSV, Tables, Clustering, Distances, Dates, Random, JuMP, YAML
+using Gurobi
 # using NBInclude, Plots
-using JuMP
 
 # Read parameter file
 if length(ARGS) == 0
@@ -49,7 +50,7 @@ include("core/cons_policy.jl")
 
 include("core/optimize.jl")
 
-# # Read export file
+# Read export file
 include("core/data_exports.jl")
 
 println("Success!")
