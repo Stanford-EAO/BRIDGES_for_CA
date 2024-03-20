@@ -1,51 +1,56 @@
-foldername = "Data"
+# This julia file imports the parameters from the yaml configuration file and 
+# turns them into parameters that are accessible in the BRIDGES core scripts.
+# In a few cases first calculations are performed on the parameters.
+
+config = YAML.load_file("core/Parameters/config_default.yaml")
+
+foldername = config["params"]["foldername"]
 
 ################################################################################
 ########### TOGGLES ###########
 # Turns on/off different model relaxations and functionality
 
 # Indicate whether you want to fix gas flow in the direction specified in the GasTransmission and ElecTransmission csv files (=0) or introduce binary variables to allow bi-directional flow directions (=1)
-GASFLOW_DIRECTIONS = 0
+GASFLOW_DIRECTIONS = config["params"]["GASFLOW_DIRECTIONS"]
 
 # Indiciate whether gas distribution retirement should be contemplated (with the associated savings)
-gasdistretirement_allowed = 0
-gasdistretirement_forced = [0,0,0,0,0]
-region_retire = "All" # North, South, All, Cities
+gasdistretirement_allowed = config["params"]["gasdistretirement_allowed"]
+gasdistretirement_forced = config["params"]["gasdistretirement_forced"]
+region_retire = config["params"]["region_retire"]
 
 # Indicate whether transmission expansion/retirement should be explicitly considered
 # 0 = No, 1 = Binary Yes, 2 = Continuous Yes Expansion Only (supports for elec-side expansion only)
-TRANSMISSION_EXPANSION_GAS = 0
-TRANSMISSION_EXPANSION_ELEC = 2
+TRANSMISSION_EXPANSION_GAS = config["params"]["TRANSMISSION_EXPANSION_GAS"]
+TRANSMISSION_EXPANSION_ELEC = config["params"]["TRANSMISSION_EXPANSION_ELEC"]
 
 # Indicate whether to include constraints that link representative time periods
 # for tracking storage state of charge (if = 0, periodicity constraints are imposed for each rep. period)
-LINKED_PERIODS_STORAGE = 1
+LINKED_PERIODS_STORAGE = config["params"]["LINKED_PERIODS_STORAGE"]
 # for generator operations such as min up/down times and ramp rates (if = 0, constraints only apply within each rep. period)
-LINKED_PERIODS_GENOPS = 0
+LINKED_PERIODS_GENOPS = config["params"]["LINKED_PERIODS_GENOPS"]
 
 # Indicate whether steady-state physics should be simulated for the electric and gas systems
 # If = 0, the flows of power and gas will be governed by simple transport models
-STEADYSTATE_ELEC = 1
-STEADYSTATE_GAS = 0
+STEADYSTATE_ELEC = config["params"]["STEADYSTATE_ELEC"]
+STEADYSTATE_GAS = config["params"]["STEADYSTATE_GAS"]
 
-appliance_decisions = 1
-hybrids_allowed = 0
-bounding_steady_states = 0              # default 0
-toggle_variableNatGasPrice = true
-force_retire_gasApps = 0
+appliance_decisions = config["params"]["appliance_decisions"] # whether retired appliances may be replaced by appliances that satisfy same demand but with different fuel
+transport_decisions = config["params"]["transport_decisions"] # whether retired vehicles may be replaced by vehicles that satisfy same demand but with different fuel
+hybrids_allowed = config["params"]["hybrids_allowed"]
+bounding_steady_states = config["params"]["bounding_steady_states"] # default 0
+toggle_variableNatGasPrice = config["params"]["toggle_variableNatGasPrice"]
+force_retire_gasApps = config["params"]["force_retire_gasApps"]
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
 
-T_inv = 5               # Number of investment time periods modeled
-
-
-N_Periods = 10          # Number of representative operational time slices modeled for each investment period
-HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
+T_inv = config["params"]["T_inv"]                           # Number of investment time periods modeled
+N_Periods = config["params"]["N_Periods"]                   # Number of representative operational time slices modeled for each investment period
+HOURS_PER_PERIOD = config["params"]["HOURS_PER_PERIOD"]     # Number of hourly time steps in each rep. op. time slice
 
 T_ops = N_Periods                                           # Number of operational periods simulated for each investment year
 t_ops = HOURS_PER_PERIOD                                    # Number of hours simulated for each operational period
-HOURS_PER_YEAR = 8760   # hours/year
+HOURS_PER_YEAR = config["params"]["HOURS_PER_YEAR"]         # hours/year
 Periods_Per_Year = Int(HOURS_PER_YEAR/HOURS_PER_PERIOD)     # Number of rep. operational periods per calendar year
 
 # Clustering technique to use for generating representative days
@@ -53,33 +58,34 @@ Periods_Per_Year = Int(HOURS_PER_YEAR/HOURS_PER_PERIOD)     # Number of rep. ope
 # (a) "average",
 # (b) "ward",
 # (c) "kmeans"
-clustering_case = "ward"
-# clustering_case = "kmeans"  
-# seed_no = 1234
-# Random.seed!(seed_no) 
+clustering_case = config["params"]["clustering_case"]
+if clustering_case == "kmeans"  
+    seed_no = 1234
+    Random.seed!(seed_no)
+end
 
-BaseYear = 2019                             # Initial year
-Years = [2025,2030,2035,2040,2045]          # Modeled investment years
-AllYears = [2019,2025,2030,2035,2040,2045]  # List of all calendar years
+BaseYear = config["params"]["BaseYear"]                     # Initial year
+Years = config["params"]["Years"]                           # Modeled investment years
+AllYears = config["params"]["AllYears"]                     # List of all calendar years
 
 ################################################################################
 #### CONVERSION CONSTANTS ####
 
-SEC_PER_HOUR = 3600     # sec/hour
-MJ_PER_MWh = 3600       # MJ/MWh
-MWh_PER_MMBTU = 0.293   # MWh/MMBtu
-EF_NG = 53.1/MWh_PER_MMBTU/1000    #tCO2/MWh NG     # Per EPA emissions inventory (only CO2, no CH4 leakage)
-HHV_H2 = 12.7  # MJ/standard m3
-HHV_CH4 = 37.7  # MJ/standard m3
-LHV_H2 = 10.24 # MJ/standard m3
-LHV_CH4 = 33.9  # MJ/standard m3
+SEC_PER_HOUR = config["params"]["SEC_PER_HOUR"]             # sec/hour
+MJ_PER_MWh = config["params"]["MJ_PER_MWh"]                 # MJ/MWh
+MWh_PER_MMBTU = config["params"]["MWh_PER_MMBTU"]           # MWh/MMBtu
+EF_NG = config["params"]["EF_NG"]                           # tCO2/MWh NG  This is "53.1/MWh_PER_MMBTU/1000". Per EPA emissions inventory (only CO2, no CH4 leakage)
+HHV_H2 = config["params"]["HHV_H2"]                         # MJ/standard m3
+HHV_CH4 = config["params"]["HHV_CH4"]                       # MJ/standard m3
+LHV_H2 = config["params"]["LHV_H2"]                         # MJ/standard m3
+LHV_CH4 = config["params"]["LHV_CH4"]                       # MJ/standard m3
 
 ## Gas/Power flow parameters
-SLACK_BUS = 20
-BASEMVA = 100
-SLACK_NODE = 20
-PRESSURE_MIN = (3447380/10^6)^2 # 500 psi squared
-PRESSURE_MAX = (10342136/10^6)^2 #(5515808/10^6)^2 # 800 psi squared
+SLACK_BUS = config["params"]["SLACK_BUS"]
+BASEMVA = config["params"]["BASEMVA"]
+SLACK_NODE = config["params"]["SLACK_NODE"]
+PRESSURE_MIN = config["params"]["PRESSURE_MIN"] 
+PRESSURE_MAX = config["params"]["PRESSURE_MAX"] 
 SLACK_NODE_Pressure = PRESSURE_MAX
 
 
@@ -88,119 +94,123 @@ SLACK_NODE_Pressure = PRESSURE_MAX
 ###### MODEL PARAMETERS #######
 
 # For file import, and to permit many sensitivity scenarios, each configuration can be specified by a system and a region which corresponds to the necessary import files
-system = "Network"
-region = "Cold"
-num = ""
+system = config["params"]["system"]
+region = config["params"]["region"]
+num = config["params"]["num"]
 
 ### Biomethane
-biomethane = "Mid"
-max_biomethane_share = 0.1      # annual system-wide limitation on biomethane production (as a share of initial core gas demands)
+biomethane = config["params"]["biomethane"]
+max_biomethane_share = config["params"]["max_biomethane_share_scenarios"]["Mid"]            # Annual system-wide limitation on biomethane production (as a share of initial core gas demands)
 if biomethane == "High"
-    global max_biomethane_share = 0.50
+    global max_biomethane_share = config["params"]["max_biomethane_share_scenarios"]["High"]
 end
 if biomethane == "Low"
-    global max_biomethane_share = 0.1
+    global max_biomethane_share = config["params"]["max_biomethane_share_scenarios"]["Low"]
 end
 
 ### Industrials
-industrials = "None"            # as % of baseline electricity demands
-baselinegasdemand_multiplier = 1
+industrials = config["params"]["industrials"]            
+baselinegasdemand_multiplier = config["params"]["baselinegasdemand_multiplier_scenarios"]["None"] # as % of baseline electricity demands
 if industrials == "No"
-    global baselinegasdemand_multiplier = 0.001
+    global baselinegasdemand_multiplier = config["params"]["baselinegasdemand_multiplier_scenarios"]["No"]
 end
 if industrials == "Mid"
-    global baselinegasdemand_multiplier = 2.5
+    global baselinegasdemand_multiplier = config["params"]["baselinegasdemand_multiplier_scenarios"]["Mid"]
 end
-if industrials == "High"
-    global baselinegasdemand_multiplier = 5
+if industrials =="High"
+    global baselinegasdemand_multiplier = config["params"]["baselinegasdemand_multiplier_scenarios"]["High"]
 end
 
 ### Energy Storage Cost
 # Li-ion
-costScenario_LiIon = "Mid"
+costScenario_LiIon = config["params"]["costScenario_LiIon"]
 #
-cost_LiIon_multiplier = 1
+cost_LiIon_multiplier = config["params"]["cost_LiIon_multiplier_scenarios"]["Mid"]
 if costScenario_LiIon == "Low"
-    global cost_LiIon_multiplier = 0.75
+    global cost_LiIon_multiplier = config["params"]["cost_LiIon_multiplier_scenarios"]["Low"]
 end
 if costScenario_LiIon == "High"
-    global cost_LiIon_multiplier = 1.5
+    global cost_LiIon_multiplier = config["params"]["cost_LiIon_multiplier_scenarios"]["High"]
 end
+        
 # Fe-Air
-costScenario_FeAir = "Mid"
+costScenario_FeAir = config["params"]["costScenario_FeAir"]
 #
-cost_FeAir_multiplier = 1
+cost_FeAir_multiplier = config["params"]["cost_FeAir_multiplier_scenarios"]["Mid"]
 if costScenario_FeAir == "Low"
-    global cost_FeAir_multiplier = 0.75
+    global cost_FeAir_multiplier = config["params"]["cost_FeAir_multiplier_scenarios"]["Low"]
 end
 if costScenario_FeAir == "High"
-    global cost_FeAir_multiplier = 21.5/14  # comparing both white papers from Form Energy
+    global cost_FeAir_multiplier = config["params"]["cost_FeAir_multiplier_scenarios"]["High"]
 end
+
 # Hydrogen
-costScenario_HydrogenStorage = "Mid"
+costScenario_HydrogenStorage = config["params"]["costScenario_HydrogenStorage"]
 #
-cost_HydrogenStorage_multiplier = 1
+cost_HydrogenStorage_multiplier = config["params"]["cost_HydrogenStorage_multiplier_scenarios"]["Mid"]
 if costScenario_HydrogenStorage == "Low"
-    global cost_HydrogenStorage_multiplier = 0.75
+    global cost_HydrogenStorage_multiplier = config["params"]["cost_HydrogenStorage_multiplier_scenarios"]["Low"]
 end
 if costScenario_HydrogenStorage == "High"
-    global cost_HydrogenStorage_multiplier = 3
+    global cost_HydrogenStorage_multiplier = config["params"]["cost_HydrogenStorage_multiplier_scenarios"]["High"]
 end
 
 
-buildingretrofits = "Low"   # "Low" or "High" cost of building retrofit
+buildingretrofits = config["params"]["buildingretrofits"]                                   # "Low" or "High" cost of building retrofit
+transportretrofits = config["params"]["transportretrofits"]                                 # "Low" or "High" cost of building retrofit
 
-CleanCosts = "Mid"
-cost_case = ""
+CleanCosts = config["params"]["CleanCosts"]
+cost_case = config["params"]["cost_case"]
+
 
 ### Offsets
-offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
-maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 0.0*ones(T_inv)
+offsets_case = config["params"]["offsets_case"]                                             # where No offsets = 0, Unlimited Offsets = 1.0
+maxOffsets_elec = config["params"]["maxOffsets_elec"] * ones(T_inv)                         # % of gross emissions
+maxOffsets_gas = config["params"]["maxOffsets_gas"] * ones(T_inv)
 
-# offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
-offsets_Cost = [650, 500, 550, 500, 450]  
+offsets_Cost = config["params"]["offsets_Cost"]                                             # $/tCO2e  
 
-GasQuality = "Nodal" # "Annual", "No"
+GasQuality = config["params"]["GasQuality"]                                                 # "Nodal", "Annual", "No"
 
-br = 1.0                        # build rate multiplier
-transmission_multiplier = 1.0   # electric transmission rating multiplier
-forceretire_multiplier = 1.0    # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
+br = config["params"]["br"]                                                                 # build rate multiplier
+transmission_multiplier = config["params"]["transmission_multiplier"]                       # electric transmission rating multiplier
+forceretire_multiplier = config["params"]["forceretire_multiplier"]                         # multiplier for upper limit on appliance retirement (as share of natural retirement), min = 1.0
 
 
 ################################################################################
 ##### EMISSIONS INTENSITY# ####
 
-EITrajectory = "MidEI"
+EITrajectory= config["params"]["EITrajectory"]
 
 # Specify emissions intensity targets for the electricity sector and gas sector with Slow and Fast sensitivity scenarios possible.
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
-EI_ElecSector = [200,150,100,50,0] #[500,250,75,50,0]  # kg/MWh electricity generated
-EI_GasSector = [200,150,100,50,0] #[200,150,50,15,0]   # kg/MWh gas delivered (to core customers)
+EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["MidEI"]                        # kg/MWh electricity generated
+EI_GasSector = config["params"]["EI_GasSector_scenarios"]["MidEI"]                          # kg/MWh gas delivered (to core customers)
 if EITrajectory == "SlowEI"
-    global EI_ElecSector = [500,500,250,250,0]  # kg/MWh electricity generated
-    global EI_GasSector = [200,200,90,90,0.0]   # kg/MWh gas delivered (to core customers)
+    global EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["SlowEI"]            # kg/MWh electricity generated
+    global EI_GasSector = config["params"]["EI_GasSector_scenarios"]["SlowEI"]              # kg/MWh gas delivered (to core customers)
 end
 if EITrajectory == "FastEI"
-    global EI_ElecSector = [1000,500,100,10,0]  # kg/MWh electricity generated
-    global EI_GasSector = [200,100,20,2,0.0]    # kg/MWh gas delivered (to core customers)
+    global EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["FastEI"]            # kg/MWh electricity generated
+    global EI_GasSector = config["params"]["EI_GasSector_scenarios"]["FastEI"]              # kg/MWh gas delivered (to core customers)
 end
 
-H2molfrac_max = 0.0
-ADDITIONAL_SLACK_NODE = 18
-SLACK_GAS = 1e8 # MW
+H2molfrac_max = config["params"]["H2molfrac_max"]
+ADDITIONAL_SLACK_NODE = config["params"]["ADDITIONAL_SLACK_NODE"]
+SLACK_GAS = config["params"]["SLACK_GAS"]                                                   # MW
 
 ################################################################################
 #### DISCOUNT RATES & WACC ####
 
-WACC = 0.07                         # Weighted average cost of capital (WACC) applied to annualize utility-scale capital investments
-WACC_APPLIANCES = 0.15              # Weighted average cost of capital (WACC) applied to annualize customer-scale appliance investments
-societal_discounting = 0.05         # discount rate [%] applied to discount future costs to present value
-LoadGrowthRate = 0.00               # [%/year] of baseline electricity/gas demand growth 
+WACC = config["params"]["WACC"]                                                             # Weighted average cost of capital (WACC) applied to annualize utility-scale capital investments
+WACC_APPLIANCES = config["params"]["WACC_APPLIANCES"]                                       # Weighted average cost of capital (WACC) applied to annualize customer-scale appliance investments
+WACC_TRANSPORT = config["params"]["WACC_TRANSPORT"]                                         # Weighted average cost of capital (WACC) applied to annualize customer-scale vehicle investments
+societal_discounting = config["params"]["societal_discounting"]                             # discount rate [%] applied to discount future costs to present value
+LoadGrowthRate = config["params"]["LoadGrowthRate"]                                         # [%/year] of baseline electricity/gas demand growth 
 
 ## Compute the discounting factor for each investment period's annualized costs based on the number of years represented by each period
 # Eq. 2.72 in Von Wald thesis.
-EndOfCostHorizon = 2050             # Specifies the horizon over which societal costs should be included in objective function
+EndOfCostHorizon = config["params"]["EndOfCostHorizon"]                                     # Specifies the horizon over which societal costs should be included in objective function
 discountfactor = zeros(T_inv)
 for i = 1:T_inv
     if i < T_inv
@@ -215,85 +225,38 @@ for i = 1:T_inv
     end
 end
 
-# Specify the number of residential and commercial customers on each distribution system
-# Residential system costs are estimated at $350/customer-year
-# Commercial system costs are estimated at $1200/cust.-year
-Customers = CSV.read("$(foldername)/CustomersOnDistSystem.csv",DataFrame)
-N_ResCust = Customers[:,2]
-N_CommCust = Customers[:,3]
-Costs_GasDistSys = 350*N_ResCust + 1200*N_CommCust # Dollars per distsyst. per year
-
 ################################################################################
 #### GAS DISTRIBUTION UTILITY FINANCIAL ASSUMPTIONS ####
 
-# For gas distribution retirement evaluation, we need to estimate the potential avoided costs
-# of gas system maintenance and reinvestment. To do this, we use the estimated revenue requirement
-# and how it evolves across the planning time horizon using a simplified set of assumptions.
-RR_est = Costs_GasDistSys     # Each distribution system has an associated total revenue requirement [$/year]
-# Here, we assess the potential annual costs of gas system maintenance, depreciation, and reinvestment
-# for two cases: business as usual (BAU) and Accelerated Depreciation (AccDep).
-BAUGasSyst_FixedCosts = zeros(length(N_ResCust),T_inv)
-AccDepGasSyst_FixedCosts = zeros(length(N_ResCust),T_inv,T_inv)
 # Using a simplified set of financial assumptions
-equity = 0.10               # return on equity afforded to utility shareholders [%]
-debt = 0.04                 # interest rate on debt associated with securitization of the gas system  [%]
-shareFOM = 0.1              # share of total annual revenue requirement that is fixed operating costs (as opposed to capital investment)
-ReinvestmentRate = 0.025    # % of reinvestment 
-AvgDepreciation = 0.03      # average % of depreciation per year
-println("Estimated Revenue Requirement = $(sum(RR_est)) per year")
-RB_est = ((1-shareFOM)*RR_est/(equity + AvgDepreciation))
-println("Estimated Ratebase = $(sum(RB_est))")
-for i = 2:T_inv
-    depTimeHorizon = Years[i] - Years[1]
-    syd = depTimeHorizon*(depTimeHorizon+1)/2
-    nb = RB_est
-    depTimeHorizon_remaining = Years[i] - Years[1]
-    for j = 1:T_inv-1
-        cost = zeros(length(N_ResCust))
-        if j < i
-            for y = 1:(Years[j+1]-Years[j])
-                cost = cost + depTimeHorizon_remaining/syd*RB_est + nb*debt
-                nb = nb - depTimeHorizon_remaining/syd*RB_est
-                depTimeHorizon_remaining = depTimeHorizon_remaining - 1
-            end
-            AccDepGasSyst_FixedCosts[:,i,j] = cost/(Years[j+1]-Years[j])
-        end
-        if j >= i
-            AccDepGasSyst_FixedCosts[:,i,j] .= 0
-        end
-    end
-    BAUGasSyst_FixedCosts[:,i] = sum(RR_est*shareFOM + (equity+AvgDepreciation)*((1-AvgDepreciation+ReinvestmentRate)^y)*((1-shareFOM)*RR_est/(equity + AvgDepreciation)) for y = (AllYears[i]-BaseYear+1):(AllYears[i+1]-BaseYear))/(AllYears[i+1]-AllYears[i])
-    println("BAU Gas Costs = $(sum(BAUGasSyst_FixedCosts[d,i] for d = 1:length(N_ResCust)))")
-    println("ShutDown Gas Costs = $(sum(AccDepGasSyst_FixedCosts[d,i,:] for d = 1:length(N_ResCust)))")
-end
+equity = config["params"]["equity"]                                                         # return on equity afforded to utility shareholders [%]
+debt = config["params"]["debt"]                                                             # interest rate on debt associated with securitization of the gas system  [%]
+shareFOM = config["params"]["shareFOM"]                                                     # share of total annual revenue requirement that is fixed operating costs (as opposed to capital investment)
+ReinvestmentRate = config["params"]["ReinvestmentRate"]                                     # % of reinvestment 
+AvgDepreciation = config["params"]["AvgDepreciation"]                                       # average % of depreciation per year
 
-BAUGasSyst_FixedCosts[:,1] = RR_est
-# If you retire the gas system in investment period 1, then you must pay off the entire rate base in this year
-AccDepGasSyst_FixedCosts[:,1,1] = RB_est
-
-# Cost of electric distribution infrastructure is based on (Fares, et. al, )
-# as a function of the peak electrical demand
-Cost_DistributionInfrastructure = 73        # $/kW peak
+# Cost of electric distribution infrastructure is based on (Fares, et. al, ) as a function of the peak electrical demand
+Cost_DistributionInfrastructure = config["params"]["Cost_DistributionInfrastructure"]       # $/kW peak
 
 # Cost values for transmission expansion/retirement modeling
-ElecTransmissionCapitalCosts = 0.93 # $/MW-m from Table 1 of "Cost of long-distance energy transmission by different carriers," DeSantis
-ElecTransmissionOperatingCosts = 0.105 # % of CAPEX where Misc. Costs per year = 5% of Total Capital Cost and Maintenance costs per year = 5% of Total Capital Cost
-GasTransmissionCapitalCosts = 0 # $/km
-GasTransmissionOperatingCosts = 0 # $/km
+ElecTransmissionCapitalCosts = config["params"]["ElecTransmissionCapitalCosts"]             # $/MW-m from "Cost of long-distance energy transmission by different carriers," DeSantis
+ElecTransmissionOperatingCosts = config["params"]["ElecTransmissionOperatingCosts"]         # $/MW
+GasTransmissionCapitalCosts = config["params"]["GasTransmissionCapitalCosts"]               # $/km
+GasTransmissionOperatingCosts = config["params"]["GasTransmissionOperatingCosts"]           # $/km
 
 ################################################################################
 #### FIRM GEN OPTIONS ####
 # nuclear retirement year 
-techScenario_Nuclear = "2030"
+techScenario_Nuclear = config["params"]["techScenario_Nuclear"]
 # unrestricted
-nuclear_RetirementYear = 2060                   # normal retirement year, like all other generators
+nuclear_RetirementYear = config["params"]["nuclear_RetirementYear"]                   # normal retirement year, like all other generators
 # retirement by 2030
 if techScenario_Nuclear == "2030"
-    global nuclear_RetirementYear = 2030
+    global nuclear_RetirementYear = config["params"]["nuclear_RetirementYear_scenarios"][2030] 
 end
 # retirement by 2045
 if techScenario_Nuclear == "2045"
-    global nuclear_RetirementYear = 2045
+    global nuclear_RetirementYear = config["params"]["nuclear_RetirementYear_scenarios"][2045] 
 end
 
 
@@ -301,12 +264,11 @@ end
 #### STORAGE OPTIONS ####
 
 ### Options: FormEnergy and PumpedHydroStorage and HydrogenStorage
-FormEnergy_allowed = 1
-PHS_allowed = 1
-H2Storage_allowed = 1
+FormEnergy_allowed = config["params"]["FormEnergy_allowed"]
+PHS_allowed = config["params"]["PHS_allowed"]
+H2Storage_allowed = config["params"]["H2Storage_allowed"]
 # starting SOC
-SOC_fraction = 0.5
-
+SOC_fraction = config["params"]["SOC_fraction"]
 
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
