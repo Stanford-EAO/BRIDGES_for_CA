@@ -1,0 +1,52 @@
+""" Main Snakefile."""
+
+BRIDGES_path = "C:/Users/mheyer/Code_Stanford/BRIDGES_for_CA/"
+
+# Provide path to parameter file. Contents are available in all rules and scripts via "xyz = config['some_key']".
+configfile: "".join([BRIDGES_path, "core/Parameters/config_default.yaml"])
+#configfile: workflow.source_path("../config.yaml")
+
+# Integrate other snakefiles into the main snakefile.
+include: "".join([BRIDGES_path, "DataPreprocessing/rules/transport.smk"])  
+include: "".join([BRIDGES_path, "DataPreprocessing/rules/appliances.smk"])
+include: "".join([BRIDGES_path, "DataPreprocessing/rules/storage.smk"])
+
+# Triggers execution of all included rules (by providing target file as input to rule)
+rule run_all:
+    message: "Create the following target files."
+    input: 
+        "".join([BRIDGES_path, "Data/TransportProfiles_ELECNetworkCold.csv"]),
+        "".join([BRIDGES_path, "Data/ApplianceProfiles_ELECNetworkCold.csv"]),
+        "".join([BRIDGES_path, "Data/Storage_ELECNetwork.csv"])
+
+# Rules used to delete downloaded/generated files in raw data folder (Run: snakemake clean_raw_data_...)
+rule clean_raw_data_transport:
+    message: "Remove files generated for transport sector."
+    params: path_to_delete = "".join([BRIDGES_path, "Data/RawData/transport\*"])
+    shell: 
+        # For Windows command prompt. (For unix-like terminal use: rm -r "../Data/RawData/transport/*")
+        """
+        del /Q /F "{params.path_to_delete}"
+        echo "Downloaded and temporary transport data has been cleaned. Permanent non-downloadables have not been cleaned."
+        """
+
+rule clean_raw_data_appliances:
+    message: "Remove files generated for appliance sector."
+    params: path_to_delete = "".join([BRIDGES_path, "Data/RawData/appliances\*"])
+    shell: 
+        # For Windows command prompt. (For unix-like terminal use: rm -r "../Data/RawData/appliance/*")
+        """
+        del /Q /F "{params.path_to_delete}""
+        echo "Downloaded and temporary appliance data has been cleaned. Permanent non-downloadables have not been cleaned."
+        """
+
+rule clean_raw_data_storage:
+    message: "Remove files generated for storage sector."
+    params: path_to_delete = "".join([BRIDGES_path, "Data/RawData/storage\*"])
+    shell: 
+        # For Windows command prompt. (For unix-like terminal use: rm -r "../Data/RawData/storage/*")
+        """
+        del /Q /F "{params.path_to_delete}""
+        echo "Downloaded and temporary storage data has been cleaned. Permanent non-downloadables have not been cleaned."
+        """
+        
