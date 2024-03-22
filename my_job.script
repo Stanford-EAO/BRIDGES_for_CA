@@ -4,10 +4,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jarupas@stanford.edu
 
-#SBATCH --time=15:00:00
+#SBATCH --time=3:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=50GB
+#SBATCH --mem=100GB
 #SBATCH --cpus-per-task=46
 #SBATCH --partition=serc
 
