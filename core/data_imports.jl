@@ -236,8 +236,8 @@ primeMover2compare = "Geothermal EGS"
 idx_geothermal = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
 idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
 #
-Generators[idx_geothermal, 8] = vec( fill(2, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
-Generators[idx_geothermal, 9] = vec( fill(9, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
+Generators[idx_geothermal, 8] = vec( fill(4, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
+Generators[idx_geothermal, 9] = vec( fill(20, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
 #
 # retirement by 2030 or 2045: force them to build no new nuclear
 if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
