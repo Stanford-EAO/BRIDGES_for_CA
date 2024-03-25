@@ -253,8 +253,8 @@ if techScenario_OffshoreWind == "Limited Offshore"
     idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
     idx_offshorewind = [all(row) for row in eachrow(idx_offshorewind)]
     #
-    Generators[idx_offshorewind, 8] = vec( fill(1, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
-    Generators[idx_offshorewind, 9] = vec( fill(4, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
+    Generators[idx_offshorewind, 8] = vec( fill(2, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
+    Generators[idx_offshorewind, 9] = vec( fill(5, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
 elseif techScenario_OffshoreWind == "No Offshore"
     primeMover2compare = "OffshoreWind"
     idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
