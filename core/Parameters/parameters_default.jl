@@ -38,8 +38,6 @@ force_retire_gasApps = 0
 #### CLUSTERING PARAMETERS ####
 
 T_inv = 5               # Number of investment time periods modeled
-
-
 N_Periods = 10          # Number of representative operational time slices modeled for each investment period
 HOURS_PER_PERIOD = 24   # Number of hourly time steps in each rep. op. time slice
 
@@ -330,6 +328,8 @@ println("Linked generation: ", LINKED_PERIODS_GENOPS)
 println("Steady state elec: ", STEADYSTATE_ELEC)
 println("Steady state gas: ", STEADYSTATE_GAS)
 
+println("EI trajectory electric: ", EI_ElecSector)
+println("EI trajectory gas: ", EI_GasSector)
 println("Max offset electric: ", maxOffsets_elec)
 println("Max offset gas: ", maxOffsets_gas)
 println("Offset cost: ", offsets_Cost)
@@ -338,8 +338,6 @@ println("Gas quality: ", GasQuality)
 println("Max H2 injection frac: ", H2molfrac_max)
 println("Max appliance retirement multiplier: ", forceretire_multiplier)
 println("Max biomethane share: ", max_biomethane_share)
-println("EI trajectory electric: ", EI_ElecSector)
-println("EI trajectory gas: ", EI_GasSector)
 
 println("Allow gas dist. retirement: ", gasdistretirement_allowed)
 println("Force gas dist. retirement: ", gasdistretirement_forced)
