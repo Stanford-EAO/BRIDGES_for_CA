@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=BRIDGES
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jarupas@stanford.edu
+#SBATCH --mail-user=youremail@stanford.edu
 
 #SBATCH --time=2:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ ml load julia
 ml load gurobi
 
 # Run your script
-srun julia run_file.jl offset20
+srun julia run_file.jl
