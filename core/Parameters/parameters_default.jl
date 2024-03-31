@@ -52,6 +52,7 @@ Periods_Per_Year = Int(HOURS_PER_YEAR/HOURS_PER_PERIOD)     # Number of rep. ope
 # (b) "ward",
 # (c) "kmeans"
 clustering_case = "ward"
+consider_extremedays = "No"
 # clustering_case = "kmeans"  
 # seed_no = 1234
 # Random.seed!(seed_no) 
@@ -154,10 +155,10 @@ cost_case = ""
 ### Offsets
 offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
 maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
-maxOffsets_gas = 0.0*ones(T_inv)
+maxOffsets_gas = 0.0*ones(T_inv) 
 
 # offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
-offsets_Cost = [650, 500, 550, 500, 450]  
+offsets_Cost = [650, 500, 550, 500, 450]
 
 GasQuality = "Nodal" # "Annual", "No"
 
@@ -173,8 +174,8 @@ EITrajectory = "MidEI"
 
 # Specify emissions intensity targets for the electricity sector and gas sector with Slow and Fast sensitivity scenarios possible.
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
-EI_ElecSector = [200,150,100,50,0] #[500,250,75,50,0]  # kg/MWh electricity generated
-EI_GasSector = [200,150,100,50,0] #[200,150,50,15,0]   # kg/MWh gas delivered (to core customers)
+EI_ElecSector = [200,150,100,50,0]   # kg/MWh electricity generated
+EI_GasSector = [200,150,100,50,0]   # kg/MWh gas delivered (to core customers)
 if EITrajectory == "SlowEI"
     global EI_ElecSector = [500,500,250,250,0]  # kg/MWh electricity generated
     global EI_GasSector = [200,200,90,90,0.0]   # kg/MWh gas delivered (to core customers)
@@ -294,6 +295,7 @@ if techScenario_Nuclear == "2045"
     global nuclear_RetirementYear = 2045
 end
 
+techScenario_OffshoreWind = "Yes Offshore" # "No Offshore" activates restriction
 
 ################################################################################
 #### STORAGE OPTIONS ####
@@ -326,6 +328,8 @@ println("Linked generation: ", LINKED_PERIODS_GENOPS)
 println("Steady state elec: ", STEADYSTATE_ELEC)
 println("Steady state gas: ", STEADYSTATE_GAS)
 
+println("EI trajectory electric: ", EI_ElecSector)
+println("EI trajectory gas: ", EI_GasSector)
 println("Max offset electric: ", maxOffsets_elec)
 println("Max offset gas: ", maxOffsets_gas)
 println("Offset cost: ", offsets_Cost)
@@ -334,8 +338,6 @@ println("Gas quality: ", GasQuality)
 println("Max H2 injection frac: ", H2molfrac_max)
 println("Max appliance retirement multiplier: ", forceretire_multiplier)
 println("Max biomethane share: ", max_biomethane_share)
-println("EI trajectory electric: ", EI_ElecSector)
-println("EI trajectory gas: ", EI_GasSector)
 
 println("Allow gas dist. retirement: ", gasdistretirement_allowed)
 println("Force gas dist. retirement: ", gasdistretirement_forced)
@@ -348,9 +350,11 @@ println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, 
 println("")
 
 println("Nuclear Retirement Year: ", nuclear_RetirementYear)
+println("Offshore Wind: ", techScenario_OffshoreWind)
 println("")
 
 println("Appliance ban by 2045: ", force_retire_gasApps)
+println("Consider extreme days: ", consider_extremedays)
 
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)

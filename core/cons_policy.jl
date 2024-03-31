@@ -28,10 +28,7 @@
 # Here, some emissions from gaseous fuel consumption are offset by the nominal allocation of net-zero emission gas to each sector.
 # See Eq. 2.60 in Von Wald thesis
 ################################################################################
-@variable(m, CleanGas_GEN[I = 1:T_inv, g = 1:GEN] >= 0)
-@constraint(m, [I = 1:T_inv], sum(CleanGas_GEN[I, g] for g = 1:GEN) == CleanGas_powersector[I])
-@constraint(m, [I = 1:T_inv, g = 1:GEN], CleanGas_GEN[I, g]/MWh_PER_MMBTU <= sum(weights[I,T]*8760/t_ops*sum((generation[I,T,t,g]*HeatRate[g] + StartupFuel[g]*startup_GEN[I,T,t,g])*NG_fueled[g] for t = 1:t_ops) for T = 1:T_ops))
-@constraint(m, [I = 1:T_inv], sum((sum(weights[I,T]*8760/t_ops*sum((generation[I,T,t,g]*HeatRate[g] + StartupFuel[g]*startup_GEN[I,T,t,g]) for t = 1:t_ops) for T = 1:T_ops) - CleanGas_GEN[I, g]/MWh_PER_MMBTU) *emissions_factors[g] for g = 1:GEN) <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
+@constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + StartupFuel[g]*startup_GEN[I,T,t,g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*(CleanGas_powersector[I])  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
 @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
 
 ### Maximum biomethane production and use of sustainable bio-energy. 

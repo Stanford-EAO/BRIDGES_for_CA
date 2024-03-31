@@ -248,6 +248,21 @@ if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
     Generators[idx_nuclear, 8] = vec( fill(0, size(Generators[idx_nuclear, 8],1), size(Generators[idx_nuclear, 8],2)) )
     Generators[idx_nuclear, 9] = vec( fill(0, size(Generators[idx_nuclear, 9],1), size(Generators[idx_nuclear, 9],2)) )
 end
+if techScenario_OffshoreWind == "Limited Offshore"
+    primeMover2compare = "OffshoreWind"
+    idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_offshorewind = [all(row) for row in eachrow(idx_offshorewind)]
+    #
+    Generators[idx_offshorewind, 8] = vec( fill(2, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
+    Generators[idx_offshorewind, 9] = vec( fill(5, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
+elseif techScenario_OffshoreWind == "No Offshore"
+    primeMover2compare = "OffshoreWind"
+    idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_offshorewind = [all(row) for row in eachrow(idx_offshorewind)]
+    #
+    Generators[idx_offshorewind, 8] = vec( fill(0, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
+    Generators[idx_offshorewind, 9] = vec( fill(0, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
+end
 #
 MaxNewUnitsAnnual_GEN = Generators[:,8].*br     # [units/year]
 MaxNewUnitsTotal_GEN = Generators[:,9].*br      # [units]
