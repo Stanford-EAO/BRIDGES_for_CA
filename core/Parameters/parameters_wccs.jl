@@ -296,7 +296,7 @@ if techScenario_Nuclear == "2045"
 end
 
 techScenario_OffshoreWind = "Yes Offshore" # "No Offshore" activates restriction
-techScenario_NGCC = "No" # if "No" restricts to no new build of NG CC,CT,CC-CCS
+techScenario_NGCC = "Yes" # if "No" restricts to no new build of NG CC,CT,CC-CCS
 
 ################################################################################
 #### STORAGE OPTIONS ####
