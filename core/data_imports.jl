@@ -232,8 +232,7 @@ NumUnits_GEN = Generators[:,6]                  # [units]
 UnitSize_GEN = Generators[:,7]                  # [MW]
 ## add geothermal capacity anyway?
 # increase geothermal
-primeMover2compare = "Geothermal EGS"
-idx_geothermal = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+idx_geothermal = Generators[!, "Prime Mover"] .== fill("Geothermal EGS", size(Generators[!, 8],1), size(Generators[!, 8],2))    
 idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
 #
 Generators[idx_geothermal, 8] = vec( fill(4, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
@@ -241,23 +240,30 @@ Generators[idx_geothermal, 9] = vec( fill(20, size(Generators[idx_geothermal, 9]
 #
 # retirement by 2030 or 2045: force them to build no new nuclear
 if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
-    primeMover2compare = "Nuclear"
-    idx_nuclear = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_nuclear = Generators[!, "Prime Mover"] .== fill("Nuclear", size(Generators[!, 8],1), size(Generators[!, 8],2))    
     idx_nuclear = [all(row) for row in eachrow(idx_nuclear)]
     #
     Generators[idx_nuclear, 8] = vec( fill(0, size(Generators[idx_nuclear, 8],1), size(Generators[idx_nuclear, 8],2)) )
     Generators[idx_nuclear, 9] = vec( fill(0, size(Generators[idx_nuclear, 9],1), size(Generators[idx_nuclear, 9],2)) )
 end
+if techScenario_NGCC == "No"
+    ng_primemovers = ["Natural Gas CC-CCS","Natural Gas CC","Natural Gas CT"]
+    for i = 1:length(ng_primemovers)
+        idx_ngccs = Generators[!, "Prime Mover"] .== fill(ng_primemovers[i], size(Generators[!, 8],1), size(Generators[!, 8],2))    
+        idx_ngccs = [all(row) for row in eachrow(idx_ngccs)]
+        #
+        Generators[idx_ngccs, 8] = vec( fill(0, size(Generators[idx_ngccs, 8],1), size(Generators[idx_ngccs, 8],2)) )
+        Generators[idx_ngccs, 9] = vec( fill(0, size(Generators[idx_ngccs, 9],1), size(Generators[idx_ngccs, 9],2)) )
+    end
+end
 if techScenario_OffshoreWind == "Limited Offshore"
-    primeMover2compare = "OffshoreWind"
-    idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_offshorewind = Generators[!, "Prime Mover"] .== fill("OffshoreWind", size(Generators[!, 8],1), size(Generators[!, 8],2))    
     idx_offshorewind = [all(row) for row in eachrow(idx_offshorewind)]
     #
     Generators[idx_offshorewind, 8] = vec( fill(2, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
     Generators[idx_offshorewind, 9] = vec( fill(5, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
 elseif techScenario_OffshoreWind == "No Offshore"
-    primeMover2compare = "OffshoreWind"
-    idx_offshorewind = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, 8],1), size(Generators[!, 8],2))    
+    idx_offshorewind = Generators[!, "Prime Mover"] .== fill("OffshoreWind", size(Generators[!, 8],1), size(Generators[!, 8],2))    
     idx_offshorewind = [all(row) for row in eachrow(idx_offshorewind)]
     #
     Generators[idx_offshorewind, 8] = vec( fill(0, size(Generators[idx_offshorewind, 8],1), size(Generators[idx_offshorewind, 8],2)) )
@@ -282,8 +288,7 @@ Lifetime_GEN = Generators[:,22]                 # [years]
 StartupFuel = Generators[:,23]                  # [MMBtu/start]
 ## scenarios for variable retirement year
 # nuclear
-primeMover2compare = "Nuclear"
-idx_nuclear = Generators[!, "Prime Mover"] .== fill(primeMover2compare, size(Generators[!, "Prime Mover"],1), size(Generators[!, "Prime Mover"],2))    
+idx_nuclear = Generators[!, "Prime Mover"] .== fill("Nuclear", size(Generators[!, "Prime Mover"],1), size(Generators[!, "Prime Mover"],2))    
 idx_nuclear = [all(row) for row in eachrow(idx_nuclear)]
 Generators[idx_nuclear, "Forced Retirement"] = vec( fill(nuclear_RetirementYear, size(Generators[idx_nuclear, "Forced Retirement"],1), size(Generators[idx_nuclear, "Forced Retirement"],2)) )
 #
@@ -320,22 +325,19 @@ ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame
 ### choose storage options
 # formEnergy
 if FormEnergy_allowed == 0
-    primeMover2compare = "Multi-day storage"
-    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill(primeMover2compare, size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
+    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill("Multi-day storage", size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
     idx_allowed = [all(row) for row in eachrow(idx_allowed)]
     ElectricalStorage = ElectricalStorage[idx_allowed,:]
 end
 # pumped hydro storage
 if PHS_allowed == 0
-    primeMover2compare = "Pumped hydro storage"
-    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill(primeMover2compare, size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
+    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill("Pumped hydro storage", size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
     idx_allowed = [all(row) for row in eachrow(idx_allowed)]
     ElectricalStorage = ElectricalStorage[idx_allowed,:]
 end
 # hydrogen storage
 if H2Storage_allowed == 0
-    primeMover2compare = "Long-duration storage"
-    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill(primeMover2compare, size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
+    idx_allowed = ElectricalStorage[!, "Prime Mover"] .!= fill("Long-duration storage", size(ElectricalStorage[!, "Prime Mover"],1), size(ElectricalStorage[!, "Prime Mover"],2))
     idx_allowed = [all(row) for row in eachrow(idx_allowed)]
     ElectricalStorage = ElectricalStorage[idx_allowed,:]
 end
