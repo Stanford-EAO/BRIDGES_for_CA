@@ -1,0 +1,70 @@
+site_name: BRIDGES Documentation
+nav: # determines order of pages
+  - Home: index.md
+  - Project structure: projectstructure.md
+  - Running BRIDGES: runningbridges.md
+  - Contributing to BRIDGES: contributing.md
+  - Introduction to Snakemake: snakemake101.md
+  - Introduction to Sherlock: sherlock101.md
+  - Introduction to MkDocs: mkdocs101.md  
+theme:
+  name: material
+  features:
+    #- navigation.tabs # for having tabs on top of page instead of headers on the left
+    - navigation.sections
+    - navigation.tracking
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette: # for configuring color schemes
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+      primary: custom
+      accent: green     
+    - scheme: slate 
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode    
+      primary: custom
+      accent: lime
+  font: 
+    text: Roboto #Source Sans 4
+    code: Roboto Mono
+  logo: images/logo_BRIDGES_round.png
+  icon:
+    annotation: material/plus-circle
+
+markdown_extensions:
+  - pymdownx.highlight: # for adding highlighting and line numbers to code blocks
+      anchor_linenums: true 
+  - pymdownx.inlinehilite # for inline highlights in codeblocks
+  - admonition # for admonition blocks
+  - pymdownx.arithmatex: # for preserving LaTeX math equations during Markdown conversion process
+      generic: true
+  - footnotes # for footnotes
+  - pymdownx.details
+  - pymdownx.superfences # for nested of fences (a fence is field in codeblock)
+  - pymdownx.mark # for marking text
+  - attr_list
+  - md_in_html # for image captions
+
+
+extra:
+  social: # for icons in right bottom corner
+    - icon: fontawesome/solid/bolt-lightning
+      link: https://eao.stanford.edu/
+
+copyright: |
+  &copy; 2024 <a href="https://eao.stanford.edu/"  target="_blank" rel="noopener">Mathis Heyer @ Environmental Assessment and Optimization Group</a>
+
+
+extra_css: # for custom color definition
+  - stylesheets/extra.css
+

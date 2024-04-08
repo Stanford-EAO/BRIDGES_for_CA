@@ -1,5 +1,5 @@
 ###############################################################################
-### Objective function = total societal costs [$/yr]
+### Objective function = total societal costs [$000s/yr]
 # See Eq. 2.1 in Von Wald thesis
 ###############################################################################
 

@@ -1,0 +1,57 @@
+Technology,Cost
+Li-ion battery,Mid
+Electrolysis,Mid
+Coal,Mid
+Nuclear,Mid
+Solar PV,Mid
+Wind,Mid
+UtilityPV,Mid
+LandbasedWind,Mid
+GasFiredWH,Low
+ElecHeatPumpWH,Low
+ElecHeatPump_SpaceHeat,Low
+GasFurnace_SpaceHeat,Low
+GasRange_Res,Low
+ElecInduction_Res,Low
+GasRange_Comm,Low
+ElecInduction_Comm,Low
+GasFurnace_SpaceHeatComm,Low
+ElecHeatPump_SpaceHeatComm,Low
+GasFiredWHComm,Low
+ElecHeatPumpWHComm,Low
+LPGHybridElecHeatPump_SpaceHeatComm,Mid
+HybridElecHeatPump_SpaceHeatComm,Mid
+HybridElecHeatPump_SpaceHeat,Mid
+LPGHybridElecHeatPump_SpaceHeat,Mid
+Net-zero CH4,Mid
+Biomethane,Mid
+Gasification,Mid
+BTL,Mid
+PTL,Mid
+Long-duration storage,Mid
+Underground gas storage,Mid
+Peaker Plant,Mid
+Natural Gas IC,Mid
+Natural Gas CC,Mid
+Natural Gas CT,Mid
+Natural Gas ST,Mid
+Natural Gas CC-CCS,Mid
+Biopower,Mid
+Solar Thermal,Mid
+Geothermal,Mid
+Hydropower,Mid
+Pumped Storage,Mid
+Diesel,Mid
+Natural Gas,Mid
+Biomass,Mid
+Hydro,Mid
+OffshoreWind,Mid
+Res Solar PV,Mid
+Comm Solar PV,Mid
+Geothermal EGS,Mid
+Pumped hydro storage,Mid
+Multi-day storage,Mid
+AC_GasFurnace,Low
+AC_ElecHeatPump_SpaceHeat,Low
+AC_GasFurnaceComm,Low
+AC_HeatPump_SpaceHeatComm,Low
