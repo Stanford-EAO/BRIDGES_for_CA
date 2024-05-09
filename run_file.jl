@@ -38,7 +38,7 @@ include("core/data_imports.jl")
 include("core/clustering.jl")
 
 # Define optimization program
-m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 7,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
+m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 30,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
     "LogToConsole" => 1, "ScaleFlag" => 1,
     "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) #"Presolve"=>2)) #, "NumericFocus"=>2, "Presolve"=>2))
 

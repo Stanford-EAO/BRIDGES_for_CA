@@ -259,6 +259,8 @@ if techScenario_Nuclear == "2045"
     global nuclear_RetirementYear = config["params"]["nuclear_RetirementYear_scenarios"][2045] 
 end
 
+techScenario_OffshoreWind = "Yes Offshore" # "No Offshore" activates restriction
+techScenario_NGCC = "No" # if "No" restricts to no new build of NG CC,CT,CC-CCS
 
 ################################################################################
 #### STORAGE OPTIONS ####
@@ -284,12 +286,15 @@ println("Clustering case: ", clustering_case)
 if clustering_case == "kmeans"
     println("Random seed: ", seed_no)
 end
+println("Consider extreme days: ", consider_extremedays)
 
 println("Linked storage: ", LINKED_PERIODS_STORAGE)
 println("Linked generation: ", LINKED_PERIODS_GENOPS)
 println("Steady state elec: ", STEADYSTATE_ELEC)
 println("Steady state gas: ", STEADYSTATE_GAS)
 
+println("EI trajectory electric: ", EI_ElecSector)
+println("EI trajectory gas: ", EI_GasSector)
 println("Max offset electric: ", maxOffsets_elec)
 println("Max offset gas: ", maxOffsets_gas)
 println("Offset cost: ", offsets_Cost)
@@ -298,8 +303,6 @@ println("Gas quality: ", GasQuality)
 println("Max H2 injection frac: ", H2molfrac_max)
 println("Max appliance retirement multiplier: ", forceretire_multiplier)
 println("Max biomethane share: ", max_biomethane_share)
-println("EI trajectory electric: ", EI_ElecSector)
-println("EI trajectory gas: ", EI_GasSector)
 
 println("Allow gas dist. retirement: ", gasdistretirement_allowed)
 println("Force gas dist. retirement: ", gasdistretirement_forced)
@@ -312,6 +315,8 @@ println("Electric transmission expansion cost: ", ElecTransmissionCapitalCosts, 
 println("")
 
 println("Nuclear Retirement Year: ", nuclear_RetirementYear)
+println("Offshore Wind Build: ", techScenario_OffshoreWind)
+println("NG New Build: ", techScenario_NGCC)
 println("")
 
 println("Appliance ban by 2045: ", force_retire_gasApps)
