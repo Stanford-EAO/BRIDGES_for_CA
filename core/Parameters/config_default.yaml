@@ -75,6 +75,7 @@ params:
     # (b) "ward",
     # (c) "kmeans"
     clustering_case: "ward"
+    consider_extremedays: "No"
 
     BaseYear: 2019                              # Initial year
     Years: [2025,2030,2035,2040,2045]           # Modeled investment years

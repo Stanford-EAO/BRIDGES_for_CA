@@ -59,6 +59,7 @@ Periods_Per_Year = Int(HOURS_PER_YEAR/HOURS_PER_PERIOD)     # Number of rep. ope
 # (b) "ward",
 # (c) "kmeans"
 clustering_case = config["params"]["clustering_case"]
+consider_extremedays = config["params"]["consider_extremedays"]
 if clustering_case == "kmeans"  
     seed_no = 1234
     Random.seed!(seed_no)
