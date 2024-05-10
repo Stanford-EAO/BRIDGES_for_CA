@@ -20,6 +20,8 @@ using DataFrames, CSV, Tables, Clustering, Distances, Dates, Random, JuMP, YAML
 using Gurobi
 # using NBInclude, Plots
 
+include("core/Parameters/parameters.jl")
+#=
 # Read parameter file
 if length(ARGS) == 0
     param_folder = "core/Parameters/parameters_default.jl"
@@ -30,6 +32,7 @@ else
     println(param_folder)
     include(param_folder)
 end
+=#
 
 # Read data import file
 include("core/data_imports.jl")
