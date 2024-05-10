@@ -1,6 +1,7 @@
 """ Main Snakefile."""
 
-BRIDGES_path = "C:/Users/mheyer/Code_Stanford/BRIDGES_for_CA/"
+BRIDGES_path = "C:/Users/mheyer/Code_Stanford/BRIDGES_for_CA/"      # for Running on Local
+#BRIDGES_path =  "/home/users/mheyer/BRIDGES_for_CA/"               # for Running on Sherlock
 
 # Provide path to parameter file. Contents are available in all rules and scripts via "xyz = config['some_key']".
 configfile: "".join([BRIDGES_path, "core/Parameters/config_default.yaml"])

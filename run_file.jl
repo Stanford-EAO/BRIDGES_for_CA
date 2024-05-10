@@ -17,7 +17,7 @@ Pkg.add("YAML")
 # Pkg.add("Plots")
 
 using DataFrames, CSV, Tables, Clustering, Distances, Dates, Random, JuMP, YAML
-using Gurobi
+#using Gurobi
 # using NBInclude, Plots
 
 include("core/Parameters/parameters.jl")
@@ -39,7 +39,7 @@ include("core/data_imports.jl")
 
 # Read clustering file
 include("core/clustering.jl")
-
+#=
 # Define optimization program
 m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 30,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
     "LogToConsole" => 1, "ScaleFlag" => 1,
@@ -55,6 +55,6 @@ include("core/optimize.jl")
 
 # Read export file
 include("core/data_exports.jl")
-
+=#
 println("Success!")
 
