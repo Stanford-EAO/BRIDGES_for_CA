@@ -1,6 +1,6 @@
 # Running BRIDGES
 
-The goal of this section is to provide **instructions on running BRIDGES**. BRIDGES can be run on your **local machine** or on a **high-performance computing cluster**. For running the full optimization model at a high temporal resolution (> 2 investment periods, > 2 representative days) we strongly recommend using a computing cluster. Moreover, we distinguish between running the **data preprocessing pipeline**, i.e., the Snakemake workflow that generates the input data for the optimization model, and running the **julia optimization model** (see section "Project structure").
+The goal of this section is to provide **instructions on running BRIDGES**. BRIDGES can be run on your **local machine** or on a **high-performance computing cluster**. For running the full optimization model at a high temporal resolution (e.g., > 3 investment periods, > 3 representative days) we strongly recommend using a computing cluster. Moreover, we distinguish between running the **data preprocessing pipeline**, i.e., the Snakemake workflow that generates the input data for the optimization model, and running the **julia optimization model** (see section "Project structure").
 
 ## Running BRIDGES on your computer
 
@@ -53,7 +53,7 @@ This assumes that all required input files exist in the folder `BRIDGES_for_CA/D
 1. Make sure you have a recent version of **Julia** installed. Install otherwise. (If you want to execute the actual optimization on your personal computer, also install Gurobi. See "Tip" below.)
 2. In a terminal window, navigate to the root folder `BRIDGES_for_CA`.
 3. Start julia by typing `julia`.
-4. Have a look at the file `BRIDGES_for_CA/run_file.jl`. Make sure the `Pkg.add("SomePackageName")` commands at the top of the file are active and not commented. (If you are certain that the listed packages are already installed in your julia environment, they don't need to be active - this saves computation time. You can check for installed julia packages by running `]` to enter the package manager and `status` to get a list of the installed packages.)
+4. Have a look at the file `BRIDGES_for_CA/run_file.jl`. Make sure the `Pkg.add("SomePackageName")` commands at the top of the file are active and not commented. (If you are certain that the listed packages are already installed in your julia environment from a previous run, they don't need to be active - this saves computation time. You can check for installed julia packages by running `]` to enter the package manager and `status` to get a list of the installed packages.)
 5. To run the optimization model, type the following in the julia command line:
 ```
 include("run_file.jl")
@@ -66,14 +66,14 @@ This will run the optimization and generate the output files.
 
 ## Running BRIDGES on Stanford's Sherlock cluster
 
-There exist two ways to connect to Sherlock. Either through **Sherlock's web interface** or by **connecting VS Code and Sherlock** so that the folder structure on Sherlock appears as "normal" workspace folder in VS code. Learn how to connect to Sherlock by reading "Introduction to Sherlock". Then, follow the steps below to run BRIDGES.
+There exist two ways to connect to Sherlock. Either through **Sherlock's "OnDemand" web interface** or by **connecting VS Code and Sherlock** so that the folder structure on Sherlock appears as "normal" workspace folder in VS code. Learn how to connect to Sherlock by reading "Introduction to Sherlock". Then, follow the steps below to run BRIDGES.
 
-### Running the data preprocessing pipeline and the optimization model
+### Running the data preprocessing pipeline and/or the optimization model
 
 1. Connect to Sherlock as described in "Introduction to Sherlock".
 2. Copy the `BRIDGES_for_CA` repository to your Sherlock Home Directory.
 3. Have a look at the file `BRIDGES_for_CA/run_file.jl`. Make sure all lines are active. After running the model once, the `Pkg.add("")` lines can be deactivated using comments - this saves computation time.
-4. Now, have a look at the file `BRIDGES_for_CA/my_job.script`. In the line `#SBATCH --mail-user=XYZ@stanford.edu` include your email address. Return to this file and adjust the `#SBATCH` options, if your run fails because of insufficient computing power (you will know from the "slurm files" as described below). The file should look something like this (**note that there might have been updates to the file since this documentation was written**):
+4. Now, have a look at the file `BRIDGES_for_CA/my_job.script`. In the line `#SBATCH --mail-user=XYZ@stanford.edu` include your email address. Return to this file and adjust the `#SBATCH` options, if your run fails because of insufficient computing power (you will know from the "slurm files" as described below). The file should look something like this (note that there might have been minor updates to the file since this documentation was written):
 ``` title="BRIDGES_for_CA/my_job.script"
 #!/bin/bash
 
@@ -100,7 +100,7 @@ snakemake -s "./DataPreprocessing/Snakefile" --cores all --use-conda --conda-fro
 # Run the optimization model
 srun julia run_file.jl
 ```
-5. In the same file: If you want to run only the data preprocessing pipeline or only the optimization model, use comments to deactivate the corresponding commands: 
+5. In the same file: **If you want to run only the data preprocessing pipeline or only the optimization model**, use comments to deactivate the corresponding commands: 
 ```
 # Run the data preprocessing pipeline
 snakemake -s "./DataPreprocessing/Snakefile" --cores all --use-conda --conda-frontend conda     # deactivate this line to only run the optimization model (the input files must be present)
@@ -121,5 +121,5 @@ pip3 install --user snakemake==7.32.4
 !!! note
 
     * At the time of writing this documentation, an incompatibility between snakemake and the newest version of the package "pulp" exists. For now, proceed without worrying but if you run into issues, come back and simply downgrade pulp using the command `pip install --force-reinstall -v "pulp==2.7.0"`.
-    * Running Snakemake on the cluster with the flag `--use-conda` (see "Introduction to Snakemake" why that is necessary) requires the installation of `conda`, `miniconda`, or `mamba` on Sherlock. Generally, the high-performance computing team [discourages the installation of conda/miniconda/mamba on the cluster](https://www.sherlock.stanford.edu/docs/software/using/anaconda/), however, after reaching out, the team confirmed that for our use case the installation of `miniconda` (since it is smaller than `conda`) makes sense. They recommended installation in the `$GROUP_HOME` directory as there is more storage available and the software is available for all users of that group. **For Adam Brandt's group's Sherlock folder, miniconda is now installed - so no need for action for his students.**
+    * Running Snakemake on the cluster with the flag `--use-conda` (see "Introduction to Snakemake" why that is necessary) requires the installation of `conda`, `miniconda`, or `mamba` on Sherlock. Generally, the high-performance computing team [discourages the installation of conda/miniconda/mamba on the cluster](https://www.sherlock.stanford.edu/docs/software/using/anaconda/), however, after reaching out, the team confirmed that for our use case the installation of `miniconda` (since it is smaller than `conda`) makes sense. They recommended installation in the `$GROUP_HOME` directory as there is more storage available and the software is available for all users of that group. **For Adam Brandt's group's Sherlock folders, miniconda is now installed - so no need for action for his students.**
     * Other energy system models are structured so that they are run by a single snakemake command instead of separate commands for data preprocessing and optimization. For this case, Snakemake provides a command to include all information from the "my_job.script" file into the snakemake command instead of having a script file with the snakemake command in it. See [here](https://hackmd.io/@bluegenes/BJPrrj7WB) for more information. 

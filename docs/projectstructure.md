@@ -23,11 +23,9 @@ The `BRIDGES_for_CA/config.yml` file is the one-stop main configuration file for
 
 BRIDGES uses three types of raw data: (1) Data sets that are available online and can be donwloaded automatically in machine-readible formats, such as `.csv`. (2) Data sets that were assembeled manually or extracted from other sources and cannot be accessed through a download link. (3) Constants that were collected from a variety of data sources such as journal articles, scientific reports or technical specifications.
 
-::: DataPreprocessing.scripts.storage.dummy_generate_storage_network.copy_profile
-
 These three types of raw data are stored in the following locations:
 
-1. **Downloadable data sets** are not per se stored in the BRIDGES repository but rather downloaded by the Snakemake workflow upon execution using the download links provided in the main configuration file `BRIDGES_for_CA/config.yml`. The datasets are then stored in `BRIDGES_for_CA/Data/RawData`. If not deleted, you might still find the downloadable datasets in this folder.
+1. **Downloadable data sets** are not per se stored in the BRIDGES repository but rather downloaded by the Snakemake workflow upon execution using the download links provided in the main configuration file `BRIDGES_for_CA/config.yml`. The datasets are then stored in `BRIDGES_for_CA/Data/RawData`. If not deleted, you might still find the downloadable datasets in this folder. We try to not delete these datasets as websources may become unavailable.
 2. **Non-downloadable data sets** are kept in `BRIDGES_for_CA/Data/NonDownloadableData`. The Snakemake workflow will look for them in this directory.
 3. **Constants** are kept in the main configuration file `BRIDGES_for_CA/config.yml` where they should be accompanied with a brief explanation and a source information.
 
@@ -37,7 +35,7 @@ The data preprocessing pipeline is implemented using Snakemake. In the Snakemake
 
 All rules are stored in the `Snakefile` (`BRIDGES_for_CA/DataPreprocessing/Snakefile`) or are imported to the Snakefile from other rule files (`BRIDGES_for_CA/DataPreprocessing/rules`). While it is possible to have all rules in the Snakefile, it is customary to organize them in multiple rule files. The action that a rule takes (e.g., a download, a manipulation) is defined in a script (.py, .jl, etc.) or as shell command. The scripts are stored in `BRIDGES_for_CA/DataPreprocessing/scripts`.
 
-## Input data
+## Input data to the optimization model
 
 BRIDGES uses two types of input data to the optimization model: (1) Data sets that have been placed in the folder `BRIDGES_for_CA/Data` by the data preprocessing pipeline. (2) Constants kept in the main configuration file `BRIDGES_for_CA/config.yml` where they should be accompanied with a brief explanation and a source information. (3) The hyperparameters of the optimization model that determine the structure of the model (e.g., the number of representative days, toggles to turn on specific model features).
 
@@ -56,7 +54,7 @@ The optimization model is located in `BRIDGES_for_CA/run_file.jl`. Instead of in
 
     Actually, `data_exports.jl` currently exports to `BRIDGES_for_CA/core/Output`?!
 
-## Model output data
+## Output data of the optimization model
 
 BRIDGES makes the results of the optimization model available in `BRIDGES_for_CA/Output`. These data sets contain the optimal values of key decision variables. Individual plotting scripts can be written to analyze and visualize the identified transition path. 
 
