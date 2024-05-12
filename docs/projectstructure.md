@@ -9,11 +9,11 @@ The BRIDGES model consists of two modules as depicted in Figure 1. The **data pr
   <figcaption>Figure 1: Structure of BRIDGES</figcaption>
 </figure>
 
-Let's see how this structure is reflected in the code.
+Let's discuss each of these building blocks see how this structure is reflected in the code.
 
 ## Configuration file
 
-The `BRIDGES_for_CA/config.yml` file is the one-stop main configuration file for the BRIDGES model. It contains hyperparameters of the model such as the number of representative days or toggles to switch on and off specific model features. It also holds constants that are used in the data preprocessing pipeline or the optimization model, as explained below. In summary, the configuration file is the "control center" from where scenario analyses can be conducted by modifying model hyperparameters or constants. 
+The `BRIDGES_for_CA/core/Parameters/config.yml` file is the one-stop main configuration file for the BRIDGES model. It contains hyperparameters of the model such as the number of representative days or toggles to switch on and off specific model features. It also holds constants that are used in the data preprocessing pipeline or the optimization model, as explained below. In summary, the configuration file is the "control center" from where scenario analyses can be conducted by modifying model hyperparameters or constants. 
 
 !!! tip "To-Do"
 
@@ -25,9 +25,9 @@ BRIDGES uses three types of raw data: (1) Data sets that are available online an
 
 These three types of raw data are stored in the following locations:
 
-1. **Downloadable data sets** are not per se stored in the BRIDGES repository but rather downloaded by the Snakemake workflow upon execution using the download links provided in the main configuration file `BRIDGES_for_CA/config.yml`. The datasets are then stored in `BRIDGES_for_CA/Data/RawData`. If not deleted, you might still find the downloadable datasets in this folder. We try to not delete these datasets as websources may become unavailable.
+1. **Downloadable data sets** are not per se stored in the BRIDGES repository but rather downloaded by the Snakemake workflow upon execution using the download links provided in the main configuration file `BRIDGES_for_CA/core/Parameters/config.yml`. The datasets are then stored in `BRIDGES_for_CA/Data/RawData`. If not deleted, you might still find the downloadable datasets in this folder. We try to not delete these datasets as websources may become unavailable.
 2. **Non-downloadable data sets** are kept in `BRIDGES_for_CA/Data/NonDownloadableData`. The Snakemake workflow will look for them in this directory.
-3. **Constants** are kept in the main configuration file `BRIDGES_for_CA/config.yml` where they should be accompanied with a brief explanation and a source information.
+3. **Constants** are kept in the main configuration file `BRIDGES_for_CA/core/Parameters/config.yml` where they should be accompanied with a brief explanation and a source information.
 
 ## Data preprocessing pipeline
 
@@ -37,13 +37,13 @@ All rules are stored in the `Snakefile` (`BRIDGES_for_CA/DataPreprocessing/Snake
 
 ## Input data to the optimization model
 
-BRIDGES uses two types of input data to the optimization model: (1) Data sets that have been placed in the folder `BRIDGES_for_CA/Data` by the data preprocessing pipeline. (2) Constants kept in the main configuration file `BRIDGES_for_CA/config.yml` where they should be accompanied with a brief explanation and a source information. (3) The hyperparameters of the optimization model that determine the structure of the model (e.g., the number of representative days, toggles to turn on specific model features).
+BRIDGES uses two types of input data to the optimization model: (1) Data sets that have been placed in the folder `BRIDGES_for_CA/Data` by the data preprocessing pipeline. (2) Constants kept in the main configuration file `BRIDGES_for_CA/core/Parameters/config.yml` where they should be accompanied with a brief explanation and a source information. (3) The hyperparameters of the optimization model that determine the structure of the model (e.g., the number of representative days, toggles to turn on specific model features).
 
 ## Optimization model
 
 The optimization model is located in `BRIDGES_for_CA/run_file.jl`. Instead of including the model as one long script, it is organized in a collection of julia scripts that are imported from `BRIDGES_for_CA/core`:
 
-* `parameters.jl` imports the constants from the configuration file `BRIDGES_for_CA/config.yml` and turns them into julia variables. A few first computations are performed.
+* `parameters.jl` imports the constants from the configuration file `BRIDGES_for_CA/core/Parameters/config.yml` and turns them into julia variables. A few first computations are performed.
 * `data_imports.jl` imports the input data sets from `BRIDGES_for_CA/Data`. A few first computations are performed.
 * `clustering.jl` identifies the representative days based on hourly demand profiles and hourly renewable generation profiles.
 * `cons_capacity.jl`, `cons_dispatch.jl`, `cons_flow.jl`, `cons_policy.jl` contain the definitions of the optimization variables and constraints in julia.JuMP syntax.
@@ -66,22 +66,24 @@ BRIDGES makes the results of the optimization model available in `BRIDGES_for_CA
 ## Summary & File tree
 
     BRIDGES_for_CA:
-    │   config.yaml                     # Main configration file of BRIDGES. Includes model hyperparameters and constants used in the optimization model or the data preprocessing. Modify this file for scenario analysis.
-    │   mkdocs.yml                      # Set layout of documentation here.
-    │   my_job.script                   # Used to request resources and run BRIDGES on the Sherlock cluster. Runs the data preprocessing (`insert command`) and the optimization (`srun julia run_file.jl`). For details see "Running BRIDGES".
     │   README.md                       # Read me.
+    │   my_job.script                   # Used to request resources and run BRIDGES on the Sherlock cluster. Runs the data preprocessing (`snakemake -s "./DataPreprocessing/Snakefile" --cores all --use-conda --conda-frontend conda`) and the optimization (`srun julia run_file.jl`). For details see "Running BRIDGES".
     │   run_file.jl                     # Run this file to run the optimization model. For details see "Running BRIDGES".
+    │   mkdocs.yml                      # Set layout of documentation here.
     │   
     ├───core                            # Contains optimization model. The julia scripts are imported into `run_file.jl`.   
-    │       clustering.jl               # Script that identifies representative days using a clustering algorithm.
-    │       cons_capacity.jl            # Script that contains definition of optimization variables and constraints.
-    │       cons_dispatch.jl            # Script that contains definition of optimization variables and constraints.
-    │       cons_flow.jl                # Script that contains definition of optimization variables and constraints.
-    │       cons_policy.jl              # Script that contains definition of optimization variables and constraints.
-    │       data_exports.jl             # Script that reads optimization results and creates model output data at `BRIDGES_for_CA/Output`.
-    │       data_imports.jl             # Script that loads input data (data sets) to the optimization model from `BRIDGES_for_CA/Data`.
-    │       optimize.jl                 # Script that contains objective function of optimization.
-    │       parameters.jl               # Script that loads input data (constants) and model hyperparameters to the optimization model from `BRIDGES_for_CA/config.yml` and turns them into julia constants available in the other scripts.
+    │   │   clustering.jl               # Script that identifies representative days using a clustering algorithm.
+    │   │   cons_capacity.jl            # Script that contains definition of optimization variables and constraints.
+    │   │   cons_dispatch.jl            # Script that contains definition of optimization variables and constraints.
+    │   │   cons_flow.jl                # Script that contains definition of optimization variables and constraints.
+    │   │   cons_policy.jl              # Script that contains definition of optimization variables and constraints.
+    │   │   data_exports.jl             # Script that reads optimization results and creates model output data at `BRIDGES_for_CA/Output`.
+    │   │   data_imports.jl             # Script that loads input data (data sets) to the optimization model from `BRIDGES_for_CA/Data`.
+    │   │   optimize.jl                 # Script that contains objective function of optimization.
+    │   │   
+    │   └───Parameters
+    │           config.yaml             # Main configration file of BRIDGES. Includes model hyperparameters and constants used in the optimization model or the data preprocessing. Modify this file for scenario analysis or create alternative config files (e.g., config_somescenario.yaml).
+    │           parameters.jl           # Script that loads input data (constants) and model hyperparameters to the optimization model from `BRIDGES_for_CA/Parameters/config.yml` and turns them into julia constants available in the other scripts.
     │
     ├───Data
     │   │   ...                         # Stores input data sets for the optimization model. Files here are generated by the data preprocessing pipeline (Snakemake workflow).
@@ -92,7 +94,7 @@ BRIDGES makes the results of the optimization model available in `BRIDGES_for_CA
     ├───DataPreprocessing               # Contains the data preprocessing pipeline (Snakemake workflow)
     │   │   Snakefile                   # Run this file to run the data preprocessing pipeline. For details see "Running BRIDGES".
     │   │
-    │   ├───rules                       # Contains the Snakemake rules that make up the data preprocessing pipeline. Rule files are imported into the Snakefile (`BRIDGES_for_CA/DataPreprocessing/Snakefile`).
+    │   ├───rules                       # Contains the Snakemake rules that make up the data preprocessing pipeline. Rule files (.smk) are imported into the main Snakefile (`BRIDGES_for_CA/DataPreprocessing/Snakefile`).
     │   └───scripts                     # Contains the scripts that are used by the Snakemake rules.
     │
     ├───docs                            # Contains the documentation of BRIDGES. 

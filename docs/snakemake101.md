@@ -305,4 +305,4 @@ Snakemake offers a vast majority of options. This section mentions a few that mi
 
 3. **Protect important files:** Similarly, important interim files as well as the final target files can be *protected* to prevent them from accidental deletion. For more infos, see [here](https://snakemake.readthedocs.io/en/stable/tutorial/advanced.html#step-6-temporary-and-protected-files).
 
-4.. **Logging:** Specify a path where Snakemake creates log files for rules. For more infos, see [here](https://snakemake.readthedocs.io/en/stable/tutorial/advanced.html#step-5-logging).
+4. **Logging:** Specify a path where Snakemake creates log files for rules. For more infos, see [here](https://snakemake.readthedocs.io/en/stable/tutorial/advanced.html#step-5-logging).
