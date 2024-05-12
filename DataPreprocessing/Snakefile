@@ -4,7 +4,8 @@ BRIDGES_path = "C:/Users/mheyer/Code_Stanford/BRIDGES_for_CA/"      # for Runnin
 #BRIDGES_path =  "/home/users/mheyer/BRIDGES_for_CA/"               # for Running on Sherlock
 
 # Provide path to parameter file. Contents are available in all rules and scripts via "xyz = config['some_key']".
-configfile: "".join([BRIDGES_path, "core/Parameters/config_default.yaml"])
+CONFIG_FILE_NAME = "config_default" # this line is updated by the run_file.jl automatically when running other scenarios
+configfile: "".join([BRIDGES_path, "core/Parameters/", CONFIG_FILE_NAME, ".yaml"])
 #configfile: workflow.source_path("../config.yaml")
 
 # Integrate other snakefiles into the main snakefile.

@@ -2,7 +2,7 @@
 # turns them into parameters that are accessible in the BRIDGES core scripts.
 # In a few cases first calculations are performed on the parameters.
 
-config = YAML.load_file("core/Parameters/config_default.yaml")
+config = YAML.load_file("core/Parameters/"*CONFIG_FILE_NAME*".yaml")
 
 foldername = config["params"]["foldername"]
 

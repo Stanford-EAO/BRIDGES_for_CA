@@ -20,26 +20,28 @@ using DataFrames, CSV, Tables, Clustering, Distances, Dates, Random, JuMP, YAML
 #using Gurobi
 # using NBInclude, Plots
 
-include("core/Parameters/parameters.jl")
-#=
-# Read parameter file
+# Choose desired config file (CONFIG_FILE_NAME is used in Snakefile and parameters.jl)
 if length(ARGS) == 0
-    param_folder = "core/Parameters/parameters_default.jl"
-    println(param_folder)
-    include(param_folder)
+    CONFIG_FILE_NAME = "config_default"
 else
-    param_folder = raw"core/Parameters/parameters_"*ARGS[1]*".jl"
-    println(param_folder)
-    include(param_folder)
+    CONFIG_FILE_NAME = ARGS[1]
 end
-=#
+lines = readlines("DataPreprocessing/Snakefile")
+lineindex = findfirst(startswith("CONFIG_FILE_NAME ="), lines)
+lines[lineindex] = "CONFIG_FILE_NAME = \"" * CONFIG_FILE_NAME * "\""
+open("DataPreprocessing/Snakefile", "w") do file
+    foreach(line -> println(file, line), lines)
+end
+
+# Read parameters from config file
+include("core/Parameters/parameters.jl")
 
 # Read data import file
 include("core/data_imports.jl")
 
 # Read clustering file
 include("core/clustering.jl")
-#=
+
 # Define optimization program
 m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 30,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
     "LogToConsole" => 1, "ScaleFlag" => 1,
@@ -55,6 +57,6 @@ include("core/optimize.jl")
 
 # Read export file
 include("core/data_exports.jl")
-=#
+
 println("Success!")
 
