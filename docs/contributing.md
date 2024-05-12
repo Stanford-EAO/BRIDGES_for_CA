@@ -1,15 +1,23 @@
-# Contributing to BRIDGES
+# Access and Contributing
 
-!!! Warning
-    **Just a draft.** On this page, mention the following:
+## Access to BRIDGES
 
-    * Currently repo is not published and not open to external contributions.
-    * Write a "How to get started" section. Point to Snakemake/Sherlock/MkDocs ... introductions.
-    * Define steps that need to be done as part of pull requests (run tests, update documentation, maybe have a change log file to keep track of changes over versions)
-    * Write something about using Git flow.
-    * List coding conventions.
+The BRIDGES code repository in not publicly available at the moment. However, if you are interested in collaborating, please do not hesitate to [reach out](contact.md). An early version of the BRIDGES model was published [here](https://www.sciencedirect.com/science/article/pii/S266679242200004X) and provides a good first insight into the underlying equations.
 
-## Coding conventions
+
+## Contributing and Coding conventions
+
+### Getting started
+
+Once you have access to the BRIDGES repository, we recommend reading through the sections "BRIDGES' structure" and "Running BRIDGES". The "Introduction to" sections offer more details and tutorials for the tools we are using.
+
+### Gitflow
+
+In large parts, we follow the Gitflow branching model as methodology to develop our code. Find more information [here](https://nvie.com/posts/a-successful-git-branching-model/).
+
+!!! ToDo
+    Define steps that need to be done as part of pull requests (run tests, update documentation, maybe have a change log file to keep track of changes over versions)
+
 
 ### Python and Julia
 

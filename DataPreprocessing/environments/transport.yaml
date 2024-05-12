@@ -1,0 +1,8 @@
+name: transport
+channels:
+    - conda-forge
+dependencies:
+    - pandas=1.3.5
+    - pip=22.3.1
+    - pip:
+        - openpyxl==3.0.10

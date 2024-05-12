@@ -559,3 +559,59 @@ for i = 1:T_inv
         FOM_APPLIANCES[i,a] = FOMLookup[index, Int(Years[i]-2017)]
     end
 end
+
+################################################################################
+### GAS DISTRIBUTION UTILITY FINANCIAL ASSUMPTIONS ###
+################################################################################
+
+# The parameter "equity" "debt" "shareFOM" "ReinvestmentRate" "AvgDepreciation" were loaded in a previous script and are available.
+
+# Specify the number of residential and commercial customers on each distribution system
+# Residential system costs are estimated at $350/customer-year
+# Commercial system costs are estimated at $1200/cust.-year
+Customers = CSV.read("$(foldername)/CustomersOnDistSystem.csv",DataFrame)
+N_ResCust = Customers[:,2]
+N_CommCust = Customers[:,3]
+Costs_GasDistSys = 350*N_ResCust + 1200*N_CommCust                             # Dollars per distsyst. per year
+
+# For gas distribution retirement evaluation, we need to estimate the potential avoided costs
+# of gas system maintenance and reinvestment. To do this, we use the estimated revenue requirement
+# and how it evolves across the planning time horizon using a simplified set of assumptions.
+RR_est = Costs_GasDistSys                                                                   # Each distribution system has an associated total revenue requirement [$/year]
+
+# Here, we assess the potential annual costs of gas system maintenance, depreciation, and reinvestment
+# for two cases: business as usual (BAU) and Accelerated Depreciation (AccDep).
+BAUGasSyst_FixedCosts = zeros(length(N_ResCust),T_inv)
+AccDepGasSyst_FixedCosts = zeros(length(N_ResCust),T_inv,T_inv)
+
+println("Estimated Revenue Requirement = $(sum(RR_est)) per year")
+RB_est = ((1-shareFOM)*RR_est/(equity + AvgDepreciation))
+println("Estimated Ratebase = $(sum(RB_est))")
+for i = 2:T_inv
+    depTimeHorizon = Years[i] - Years[1]
+    syd = depTimeHorizon*(depTimeHorizon+1)/2
+    nb = RB_est
+    depTimeHorizon_remaining = Years[i] - Years[1]
+    for j = 1:T_inv-1
+        cost = zeros(length(N_ResCust))
+        if j < i
+            for y = 1:(Years[j+1]-Years[j])
+                cost = cost + depTimeHorizon_remaining/syd*RB_est + nb*debt
+                nb = nb - depTimeHorizon_remaining/syd*RB_est
+                depTimeHorizon_remaining = depTimeHorizon_remaining - 1
+            end
+            AccDepGasSyst_FixedCosts[:,i,j] = cost/(Years[j+1]-Years[j])
+        end
+        if j >= i
+            AccDepGasSyst_FixedCosts[:,i,j] .= 0
+        end
+    end
+    BAUGasSyst_FixedCosts[:,i] = sum(RR_est*shareFOM + (equity+AvgDepreciation)*((1-AvgDepreciation+ReinvestmentRate)^y)*((1-shareFOM)*RR_est/(equity + AvgDepreciation)) for y = (AllYears[i]-BaseYear+1):(AllYears[i+1]-BaseYear))/(AllYears[i+1]-AllYears[i])
+    println("BAU Gas Costs = $(sum(BAUGasSyst_FixedCosts[d,i] for d = 1:length(N_ResCust)))")
+    println("ShutDown Gas Costs = $(sum(AccDepGasSyst_FixedCosts[d,i,:] for d = 1:length(N_ResCust)))")
+end
+
+BAUGasSyst_FixedCosts[:,1] = RR_est
+# If you retire the gas system in investment period 1, then you must pay off the entire rate base in this year
+AccDepGasSyst_FixedCosts[:,1,1] = RB_est
+println("")
