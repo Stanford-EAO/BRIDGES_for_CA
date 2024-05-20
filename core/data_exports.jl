@@ -95,10 +95,13 @@ for i = 1:T_inv
     EmissionsAndCosts[22,i] = sum(weights[i,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[i]
     EmissionsAndCosts[23,i] = JuMP.value.(excess_powerEmissions[i])
     EmissionsAndCosts[24,i] = JuMP.value.(excess_gasEmissions[i])
-
-    EmissionsAndCosts[26,i] = EI_ElecSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g0]) for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_powerEmissions[i])
-    EmissionsAndCosts[27,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
-    EmissionsAndCosts[28,i] = EF_NG*(JuMP.value.(CleanGas_powersector[i]))
+    if consider_refrigerants >= 1
+        EmissionsAndCosts[26,i] = JuMP.value.(excess_refEmissions[i])
+        EmissionsAndCosts[27,i] = sum(JuMP.value.(appliance_leak[i,a] for a = 1:APPLIANCES))
+    end
+    # EmissionsAndCosts[26,i] = EI_ElecSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g0]) for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_powerEmissions[i])
+    # EmissionsAndCosts[27,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
+    # EmissionsAndCosts[28,i] = EF_NG*(JuMP.value.(CleanGas_powersector[i]))
 
 end
 
@@ -135,7 +138,7 @@ for i = 1:T_inv
      GenerationSave[i,GEN+P2G+9] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
 end
 
-HourlyGenFullSave = zeros(T_inv*8760,GEN+STORAGE_ELEC+P2G+1)
+HourlyGenFullSave = zeros(T_inv*8760,GEN+STORAGE_ELEC+P2G+2)
 HourlyLoadFullSave = zeros(T_inv*8760,4)
 HourlyStoredElecFullSave = zeros(T_inv*8760,STORAGE_ELEC)
 HourlyTransmissionFullSave = zeros(T_inv*8760,EDGES_ELEC)
@@ -150,6 +153,7 @@ for i = 1:T_inv
         HourlyGenFullSave[count:count+t_ops-1, GEN+1:GEN+STORAGE_ELEC] = (JuMP.value.(charging_ELEC[i,j,:,:])-JuMP.value.(discharging_ELEC[i,j,:,:]))
         HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+1:GEN+STORAGE_ELEC+P2G] = JuMP.value.(P2G_dispatch[i,j,:,:].*transpose(ones(P2G)-ISBIOMETHANE))
         HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+P2G+1] = sum(JuMP.value.(curtailmentRE[i,j,:,:]), dims = 2)
+        HourlyGenFullSave[count:count+t_ops-1, GEN+STORAGE_ELEC+P2G+2] = sum((VOM_GEN[i,g]+HeatRate[g]*FuelCosts[i,g])*JuMP.value.(generation[i,j,:,g]) for g = 1:GEN) + sum((StartUpCosts[g]+StartupFuel[g]*FuelCosts[i,g])*JuMP.value.(startup_GEN[i,j,:,g])  for g = 1:GEN) 
         HourlyLoadFullSave[count:count+t_ops-1, 1] = sum(Demand_ELEC[i,j,:,:], dims = 2)
         HourlyLoadFullSave[count:count+t_ops-1, 2] = sum(Demand_GAS[i,j,:,:], dims = 2)
         HourlyLoadFullSave[count:count+t_ops-1, 3] = sum(BaselineDemand_ELEC[i,j,:,:], dims = 2)
@@ -196,10 +200,10 @@ CSV.write("$(top_dir)/HOURLY_GENERATION.csv",Tables.table(HourlyGenFullSave'), w
 CSV.write("$(top_dir)/HOURLY_LOAD.csv",Tables.table(HourlyLoadFullSave'), writeheader = true)
 CSV.write("$(top_dir)/HOURLY_ELECTRIC_TRANSMISSION.csv",Tables.table(HourlyTransmissionFullSave'), writeheader = true)
 
-CSV.write("$(top_dir)/HOURLY_GAS_STOREDENERGY.csv",Tables.table(HourlyStoredGasEnergyFullSave'), writeheader = true)
-CSV.write("$(top_dir)/DAILY_GAS_SOC.csv",Tables.table(DailyGasSOCFullSave'), writeheader = true)
-CSV.write("$(top_dir)/HOURLY_ELEC_STOREDENERGY.csv",Tables.table(HourlyStoredElecFullSave'), writeheader = true)
-CSV.write("$(top_dir)/DAILY_GAS_TRANSMISSION.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_GAS_STOREDENERGY.csv",Tables.table(HourlyStoredGasEnergyFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/DAILY_GAS_SOC.csv",Tables.table(DailyGasSOCFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/HOURLY_ELEC_STOREDENERGY.csv",Tables.table(HourlyStoredElecFullSave'), writeheader = true)
+# CSV.write("$(top_dir)/DAILY_GAS_TRANSMISSION.csv",Tables.table(DailyGasTransmissionFullSave'), writeheader = true)
 
 CSV.write("$(top_dir)/REPDAYS.csv",Tables.table(RepDays[1,:]), writeheader = true)
 CSV.write("$(top_dir)/ADDELECFLOW.csv",Tables.table(addflow_TRANS_ELEC), writeheader = true)
@@ -209,8 +213,6 @@ CSV.write("$(top_dir)/PEAKDEMANDINC.csv",Tables.table(JuMP.value.(PeakDistDemand
 if gasdistretirement_allowed == 1
     CSV.write("$(top_dir)/DISTRETIRE.csv",Tables.table(JuMP.value.(distSysRetirement_GAS)), writeheader = true)
 end
-
-
 
 # ## then let's find the indeces of the different P2G
 # idx_PowerToCH4  = PrimeMover_P2G .!= fill("Electrolysis", length(PrimeMover_P2G))
