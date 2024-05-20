@@ -158,7 +158,7 @@ cost_case = ""
 ### Offsets
 maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
 maxOffsets_gas = 0.0*ones(T_inv) 
-maxOffsets = 0.10*ones(T_inv)
+maxOffsets = 0.05*ones(T_inv)
 initialEmissions = 115*1e6                    # tCO2
 
 # offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
