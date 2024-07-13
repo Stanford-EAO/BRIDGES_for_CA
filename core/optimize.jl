@@ -19,7 +19,7 @@
     + sum(AMMORTIZED_ELECTrans[e] for e = 1:EDGES_ELEC)/1000
     + sum(weights[i,T]*8760/t_ops*sum(costOfGasStorage/1000*sum(charging_GAS[i,T,t,s] for s = 1:STORAGE_GAS) for t = 1:t_ops) for T = 1:T_ops) 
     + sum(weights[i,T]*8760*CommodityCost_NG[i,T]/1000*sum(SUPPLY_GAS_slack[i,T,n] for n = 1:NODES_GAS) for T = 1:T_ops)
-    + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i])
+    + gasdistsyst_Cost[i] + offsets_Cost[i]/1000*(excess_powerEmissions[i] + excess_gasEmissions[i] + excess_refEmissions[i])
     + sum(sum(max(min((Years[i0]+EconomicLifetime_ELECTrans)-Years[i],1),0)*(CRF_ELECTrans+ElecTransmissionOperatingCosts)*CAPEX_ELECTrans[e]*addflow_TRANS_ELEC[i0,e] for i0 = 1:i)/1000 for e = 1:EDGES_ELEC)) for i = 1:T_inv))
 
 status = optimize!(m)

@@ -42,6 +42,10 @@ InitialAppliancePopulation = EndUseAppliances[:,7]  # Initial appliance populati
 ApplianceLifetime = EndUseAppliances[:,8]           # Expected appliance lifetime [years]
 IS_HYBRID = EndUseAppliances[:,9]                   # Indicator for whether the appliance is hybrid gas-electric
 upgrade_cost = EndUseAppliances[:,10]               # Building infrastructure upgrade costs associated with transitioning to this appliance [$]
+APP_avg_charge = EndUseAppliances[:,12]             # [lbs refrigerant]
+APP_eol_charge = EndUseAppliances[:,13]             # [lbs refrigerant]
+APP_annual_leak = EndUseAppliances[:,14]            # [%/year]
+APP_eol_loss = EndUseAppliances[:,15]               # [% at EOL]
 CRF_APPLIANCES = (WACC_APPLIANCES.*(1+WACC_APPLIANCES).^ApplianceLifetime)./((1+WACC_APPLIANCES).^ApplianceLifetime .- 1)   # Capital recovery factor [yr^-1] for annualizing appliance investments
 
 ## Create a matrix that maps each appliance to the energy service that it satisfies

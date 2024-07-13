@@ -77,19 +77,17 @@ gasApps = cat(gasApps, collect(65+32:80+32), dims =(1))
 gasApps = cat(gasApps, collect(65+32*2:80+32*2), dims =(1))
 GASAPPS = length(gasApps)
 unitsremaining_APPS_historical[T_inv,gasApps] .= 0
-# CSV.write("remaining2.csv",Tables.table(unitsremaining_APPS_historical[:,:]), writeheader = true)
 
 # See Eq. 2.5 in Von Wald thesis
 ###############################################################################
 @constraint(m, [I = 1:T_inv, a = 1:APPLIANCES], unitsremaining_APPS[I,a] == unitsremaining_APPS_historical[I,a] + sum(unitsbuilt_APPS[i0,a] - unitsretired_APPS[i0,a] for i0 = 1:I))
-
-@constraint(m, [I = 1, a = 1:APPLIANCES], unitsretired_APPS[I,a] <= forceretire_multiplier * (InitialAppliancePopulation[a]/1000 - unitsremaining_APPS_historical[I,a]))
-
+@constraint(m, [I = 1, a = 1:APPLIANCES], unitsretired_APPS[I,a] == 0)
+# @constraint(m, [I = 1:T_inv], sum(unitsbuilt_APPS[I,a] for a = 1:APPLIANCES) <= sum(InitialAppliancePopulation[a]/1000 - unitsremaining_APPS_historical[I,a] for a = 1:APPLIANCES))
+@constraint(m, [I = 1:T_inv], sum(unitsremaining_APPS[I,a] for a = 1:APPLIANCES) <= 1.0005*sum(InitialAppliancePopulation[a]/1000 for a = 1:APPLIANCES))
 if T_inv > 1
     @constraint(m, [I = 2:T_inv, a = 1:APPLIANCES], unitsretired_APPS[I,a] <= forceretire_multiplier* (sum(round(cumulativefailurefrac[a,v,I],digits = 4)*unitsbuilt_APPS[v,a] for v = 1:I-1) - sum(unitsretired_APPS[i0,a] for i0 = 1:I-1)))
     @constraint(m, [I = 2:T_inv, a = 1:APPLIANCES], unitsretired_APPS[I,a] >= sum(round(cumulativefailurefrac[a,v,I],digits = 4)*unitsbuilt_APPS[v,a] for v = 1:I-1) - sum(unitsretired_APPS[i0,a] for i0 = 1:I-1))
 end
-
 if force_retire_gasApps == 1
     if T_inv == 5
         @constraint(m, [I = T_inv, a = gasApps], unitsremaining_APPS[I,a] <= unitsremaining_APPS_historical[I,a])

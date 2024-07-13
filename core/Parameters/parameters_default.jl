@@ -33,6 +33,9 @@ hybrids_allowed = 0
 bounding_steady_states = 0              # default 0
 toggle_variableNatGasPrice = true
 force_retire_gasApps = 0
+allsector_emissions_constraint = 1
+consider_refrigerants = 1       # MUST set allsector_emissions_constraint = 1 too
+# 1 = CARB aligned, 2 = beyond CARB, 3 = worse case
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -153,12 +156,13 @@ CleanCosts = "Mid"
 cost_case = ""
 
 ### Offsets
-offsets_case = "NoOffsets"  # where No offsets = 0, Unlimited Offsets = 1.0
 maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
 maxOffsets_gas = 0.0*ones(T_inv) 
+maxOffsets = 0.05*ones(T_inv)
+initialEmissions = 115*1e6                    # tCO2
 
 # offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
-offsets_Cost = [650, 500, 550, 500, 450]
+offsets_Cost = [650, 600, 550, 500, 450]  
 
 GasQuality = "Nodal" # "Annual", "No"
 
@@ -176,6 +180,7 @@ EITrajectory = "MidEI"
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
 EI_ElecSector = [200,150,100,50,0]   # kg/MWh electricity generated
 EI_GasSector = [200,150,100,50,0]   # kg/MWh gas delivered (to core customers)
+TotalEmissions_Allowed = [115, 80, 60, 30, 0]   # total MMTCO2 from electricity generated AND gas delivered (to core customers)
 if EITrajectory == "SlowEI"
     global EI_ElecSector = [500,500,250,250,0]  # kg/MWh electricity generated
     global EI_GasSector = [200,200,90,90,0.0]   # kg/MWh gas delivered (to core customers)
@@ -330,10 +335,17 @@ println("Linked generation: ", LINKED_PERIODS_GENOPS)
 println("Steady state elec: ", STEADYSTATE_ELEC)
 println("Steady state gas: ", STEADYSTATE_GAS)
 
-println("EI trajectory electric: ", EI_ElecSector)
-println("EI trajectory gas: ", EI_GasSector)
-println("Max offset electric: ", maxOffsets_elec)
-println("Max offset gas: ", maxOffsets_gas)
+println("Constraint emissions of all sector: ", allsector_emissions_constraint)
+if allsector_emissions_constraint == 1
+    println("Total emissions allowed [MMTCO2e]: ", TotalEmissions_Allowed)
+    println("Max offset as % initial emissions: ", maxOffsets)
+    println("Initial emissions [MMTCO2e]: ", initialEmissions/1e6)
+else
+    println("EI trajectory electric: ", EI_ElecSector)
+    println("EI trajectory gas: ", EI_GasSector)
+    println("Max offset electric: ", maxOffsets_elec)
+    println("Max offset gas: ", maxOffsets_gas)
+end
 println("Offset cost: ", offsets_Cost)
 
 println("Gas quality: ", GasQuality)
@@ -357,6 +369,7 @@ println("NG New Build: ", techScenario_NGCC)
 println("")
 
 println("Appliance ban by 2045: ", force_retire_gasApps)
+println("Consider refrigerants: ", consider_refrigerants)
 
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)
