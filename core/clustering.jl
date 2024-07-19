@@ -107,7 +107,10 @@ end
 # re-shaped into the required indexing format for optimization
 #################################################################
 BaselineDemand_ELEC = zeros(T_inv, T_ops, t_ops, NODES_ELEC)
-BaselineDemand_GAS = zeros(T_inv, T_ops, t_ops, NODES_GAS)
+### RONDO EDIT
+# formerly: BaselineDemand_GAS; now renamed to BaselineDemand_HEAT
+BaselineDemand_HEAT = zeros(T_inv, T_ops, t_ops, NODES_GAS)
+### RONDO EDIT
 HourlyVRE_full = copy(HourlyVRE)
 HourlyVRE = zeros(T_ops, t_ops, GEN)
 ApplianceProfiles_GAS = zeros(T_ops, t_ops, APPLIANCES)
@@ -124,7 +127,7 @@ for t = 1:T_inv
             BaselineDemand_ELEC[t,i,:,n] = (1+LoadGrowthRate)^(Years[t]-BaseYear).*D_Elec[start_hour:end_hour,n]
         end
         for n = 1:NODES_GAS
-            BaselineDemand_GAS[t,i,:,n] = (1+LoadGrowthRate)^(Years[t]-BaseYear).*D_Gas[start_hour:end_hour,n]
+            BaselineDemand_HEAT[t,i,:,n] = (1+LoadGrowthRate)^(Years[t]-BaseYear).*D_Gas[start_hour:end_hour,n]
         end
         for g = 1:GEN
             HourlyVRE[i,:,g] = HourlyVRE_full[start_hour:end_hour,g]
@@ -155,6 +158,23 @@ STORAGE_GAS_NodalLoc_ELEC = zeros(NODES_ELEC, STORAGE_GAS)
 STORAGE_GAS_NodalLoc_GAS = zeros(NODES_GAS, STORAGE_GAS)
 APPLIANCES_NodalLoc_ELEC = zeros(NODES_ELEC, APPLIANCES)
 APPLIANCES_NodalLoc_GAS = zeros(NODES_GAS, APPLIANCES)
+### RONDO EDIT
+STORAGE_HEAT_NodalLoc_HEAT = zeros(NODES_ELEC, STORAGE_HEAT)
+NodalLoc_ELEC = HeatStorage[:,1]
+NodalLoc_HEAT = HeatStorage[:,2]
+for s = 1:STORAGE_HEAT
+ STORAGE_HEAT_NodalLoc_HEAT[findfirst(occursin.([string(NodalLoc_HEAT[s])],REGIONS_ELEC)),s] = 1
+end
+#
+P2H_NodalLoc_ELEC = zeros(NODES_ELEC, P2H)
+P2H_NodalLoc_GAS  = zeros(NODES_GAS, P2H)
+NodalLoc_ELEC = PowerToHeat[:,1]
+NodalLoc_GAS  = PowerToHeat[:,2]
+for d = 1:P2H
+    P2H_NodalLoc_ELEC[findfirst(occursin.([string(NodalLoc_ELEC[d])],REGIONS_ELEC)),d] = 1
+    P2H_NodalLoc_GAS[findfirst(occursin.([string(NodalLoc_GAS[d])],REGIONS_GAS)),d] = 1
+end
+### RONDO EDIT
 
 NodalLoc_ELEC = Generators[:,1]
 NodalLoc_GAS = Generators[:,2]

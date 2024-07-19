@@ -142,6 +142,11 @@ for a = 1:APPLIANCES
     APPLIANCES_NodalLoc_GAS[findfirst(occursin.([string(Loc_GAS[a])],REGIONS_GAS)),a] = 1
 end
 
+### RONDO EDIT
+maxBuild_mult = 1 #6e3
+maxBuild_mult_tot = maxBuild_mult
+### RONDO EDIT
+
 
 ################################################################################
 # Transmission interchanges
@@ -152,7 +157,9 @@ MAXFLOW_ELEC = TransmissionLinks_ELEC[:,3].*transmission_multiplier
 Line_Rating = TransmissionLinks_ELEC[:,4].*transmission_multiplier
 Line_Reactance = TransmissionLinks_ELEC[:,5]
 ExistingUnits_ElecTrans = TransmissionLinks_ELEC[:,6]
-MaxNewUnits_ElecTrans = TransmissionLinks_ELEC[:,7]
+### RONDO EDIT
+MaxNewUnits_ElecTrans = TransmissionLinks_ELEC[:,7] * maxBuild_mult
+### RONDO EDIT
 Length_ElecTrans = TransmissionLinks_ELEC[:,8]                          # m
 EconomicLifetime_ELECTrans = 50                                         # years
 CAPEX_ELECTrans = ElecTransmissionCapitalCosts.*Length_ElecTrans        # $/MW-m * m => $/MW
@@ -232,16 +239,15 @@ end
 GEN = length(Generators[:, :1])
 PrimeMover_GEN = Generators[:,4]
 Fuel_GEN = Generators[:,5]
-NumUnits_GEN = Generators[:,6]                  # [units]
-UnitSize_GEN = Generators[:,7]                  # [MW]
 ## add geothermal capacity anyway?
 # increase geothermal
 idx_geothermal = Generators[!, "Prime Mover"] .== fill("Geothermal EGS", size(Generators[!, 8],1), size(Generators[!, 8],2))    
 idx_geothermal = [all(row) for row in eachrow(idx_geothermal)]
+# previously 4/20
+Generators[idx_geothermal, 8] = vec( fill(4 * 1.0, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
+Generators[idx_geothermal, 9] = vec( fill(20 * 1.0, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
 #
-Generators[idx_geothermal, 8] = vec( fill(4, size(Generators[idx_geothermal, 8],1), size(Generators[idx_geothermal, 8],2)) )
-Generators[idx_geothermal, 9] = vec( fill(20, size(Generators[idx_geothermal, 9],1), size(Generators[idx_geothermal, 9],2)) )
-#
+
 # retirement by 2030 or 2045: force them to build no new nuclear
 if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
     idx_nuclear = Generators[!, "Prime Mover"] .== fill("Nuclear", size(Generators[!, 8],1), size(Generators[!, 8],2))    
@@ -249,9 +255,12 @@ if techScenario_Nuclear == "2030" || techScenario_Nuclear == "2045"
     #
     Generators[idx_nuclear, 8] = vec( fill(0, size(Generators[idx_nuclear, 8],1), size(Generators[idx_nuclear, 8],2)) )
     Generators[idx_nuclear, 9] = vec( fill(0, size(Generators[idx_nuclear, 9],1), size(Generators[idx_nuclear, 9],2)) )
+    # NEW FOR Retirement FOR 1 inv period *****
+    # Generators[idx_nuclear, 6] = vec( fill(0, size(Generators[idx_nuclear, 6],1), size(Generators[idx_nuclear, 6],2)) )
 end
 if techScenario_NGCC == "No"
     ng_primemovers = ["Natural Gas CC-CCS","Natural Gas CC","Natural Gas CT"]
+    # ng_primemovers = ["Natural Gas CC-CCS"]
     for i = 1:length(ng_primemovers)
         idx_ngccs = Generators[!, "Prime Mover"] .== fill(ng_primemovers[i], size(Generators[!, 8],1), size(Generators[!, 8],2))    
         idx_ngccs = [all(row) for row in eachrow(idx_ngccs)]
@@ -274,8 +283,11 @@ elseif techScenario_OffshoreWind == "No Offshore"
     Generators[idx_offshorewind, 9] = vec( fill(0, size(Generators[idx_offshorewind, 9],1), size(Generators[idx_offshorewind, 9],2)) )
 end
 #
-MaxNewUnitsAnnual_GEN = Generators[:,8].*br     # [units/year]
-MaxNewUnitsTotal_GEN = Generators[:,9].*br      # [units]
+#
+NumUnits_GEN = Generators[:,6]                  # [units]
+UnitSize_GEN = Generators[:,7]                  # [MW]
+MaxNewUnitsAnnual_GEN = Generators[:,8].*br * maxBuild_mult     # [units/year]
+MaxNewUnitsTotal_GEN = Generators[:,9].*br * maxBuild_mult_tot      # [units]
 Pmin_GEN = Generators[:,10]                     # [p.u.]
 Pmax_GEN = Generators[:,11]                     # [p.u.]
 RampDownRate_GEN = Generators[:,12]             # [p.u.]
@@ -300,14 +312,16 @@ RetirementYear_GEN = min.(Generators[:,24]+Lifetime_GEN,Generators[:,25])
 CRF_GEN = (WACC.*(1+WACC).^EconomicLifetime_GEN)./((1+WACC).^EconomicLifetime_GEN .- 1)
 
 
+### P2G
 PowerToGas = CSV.read("$(foldername)/PowerToGas$(system).csv",DataFrame)
-
+#
 P2G = length(PowerToGas[:, :1])
+#
 PrimeMover_P2G = PowerToGas[:,4]
 NumUnits_P2G = PowerToGas[:,5]                  # [units]
 UnitSize_P2G = PowerToGas[:,6]                  # [MW]
-MaxNewUnitsAnnual_P2G = PowerToGas[:,7].*br     # [units/year]
-MaxNewUnitsTotal_P2G = PowerToGas[:,8].*br      # [units]
+MaxNewUnitsAnnual_P2G = PowerToGas[:,7].*br * maxBuild_mult * 1.0    # [units/year]
+MaxNewUnitsTotal_P2G = PowerToGas[:,8].*br * maxBuild_mult_tot * 1.0     # [units]
 Pmin_P2G = PowerToGas[:,9]                      # [p.u.]
 Pmax_P2G = PowerToGas[:,10]                     # [p.u.]
 RampDownRate_P2G = PowerToGas[:,11]             # [p.u.]
@@ -324,8 +338,36 @@ MoleFracs_P2G = Matrix(PowerToGas[:,23:24])             # [%]
 CRF_P2G = (WACC.*(1+WACC).^EconomicLifetime_P2G)./((1+WACC).^EconomicLifetime_P2G .- 1)
 RetirementYear_P2G = min.(PowerToGas[:,21]+Lifetime_P2G, PowerToGas[:,22])
 
-ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
 
+### RONDO EDIT
+### P2H
+PowerToHeat = CSV.read("$(foldername)/PowerToHeat$(system).csv",DataFrame)
+#
+P2H = length(PowerToHeat[:, :1])
+#
+PrimeMover_P2H = PowerToHeat[:,4]
+NumUnits_P2H = PowerToHeat[:,5]                  # [units]
+UnitSize_P2H = PowerToHeat[:,6]                  # [MW]
+MaxNewUnitsAnnual_P2H = PowerToHeat[:,7].*br     # [units/year]
+MaxNewUnitsTotal_P2H = PowerToHeat[:,8].*br      # [units]
+Pmin_P2H = PowerToHeat[:,9]                      # [p.u.]
+Pmax_P2H = PowerToHeat[:,10]                     # [p.u.]
+RampDownRate_P2H = PowerToHeat[:,11]             # [p.u.]
+RampUpRate_P2H = PowerToHeat[:,12]               # [p.u.]
+MinUpTime_P2H = PowerToHeat[:,13]                # [hours]
+MinDownTime_P2H = PowerToHeat[:,14]              # [hours]
+eta_P2H = PowerToHeat[:,15]                      # [MJ heat/MJ elec.]
+EconomicLifetime_P2H = PowerToHeat[:,16]         # [years]
+Lifetime_P2H = PowerToHeat[:,17]                 # [years]
+CRF_P2H = (WACC.*(1+WACC).^EconomicLifetime_P2H)./((1+WACC).^EconomicLifetime_P2H .- 1)
+RetirementYear_P2H = min.(PowerToHeat[:,18]+Lifetime_P2H, PowerToHeat[:,19])
+### RONDO EDIT
+
+
+
+
+### Electrical Storage
+ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
 ### choose storage options
 # formEnergy
 if FormEnergy_allowed == 0
@@ -350,8 +392,8 @@ STORAGE_ELEC = length(ElectricalStorage[:, :1])
 PrimeMover_STORAGE_ELEC = ElectricalStorage[:,4]
 NumUnits_STORAGE_ELEC = ElectricalStorage[:,5]                  # [units]
 UnitSize_STORAGE_ELEC = ElectricalStorage[:,6]                  # [MW]
-MaxNewUnitsAnnual_STORAGE_ELEC = ElectricalStorage[:,7].*br     # [units/year]
-MaxNewUnitsTotal_STORAGE_ELEC = ElectricalStorage[:,8].*br      # [units]
+MaxNewUnitsAnnual_STORAGE_ELEC = ElectricalStorage[:,7].*br * maxBuild_mult     # [units/year]
+MaxNewUnitsTotal_STORAGE_ELEC = ElectricalStorage[:,8].*br  * maxBuild_mult_tot     # [units]
 duration_ELEC = ElectricalStorage[:,9]                          # [hours]
 eta_charging_ELEC = ElectricalStorage[:,10]                     # [%]
 eta_discharging_ELEC = ElectricalStorage[:,11]                  # [%]
@@ -361,15 +403,48 @@ Lifetime_STORAGE_ELEC = ElectricalStorage[:,14]                 # [years]
 CRF_STORAGE_ELEC = (WACC.*(1+WACC).^EconomicLifetime_STORAGE_ELEC)./((1+WACC).^EconomicLifetime_STORAGE_ELEC .- 1)
 RetirementYear_STORAGE_ELEC = min.(ElectricalStorage[:,15]+Lifetime_STORAGE_ELEC,ElectricalStorage[:,16])
 
+### RONDO EDIT
+#
+HeatStorage = CSV.read("$(foldername)/Storage_HEAT$(system).csv",DataFrame)
+#
+H2Heating_allowed = 0
+# hydrogen for heating
+if H2Heating_allowed == 0
+    idx_allowed = HeatStorage[!, "Prime Mover"] .!= fill("Hydrogen-to-Heat", size(HeatStorage[!, "Prime Mover"],1), size(HeatStorage[!, "Prime Mover"],2))
+    idx_allowed = [all(row) for row in eachrow(idx_allowed)]
+    HeatStorage = HeatStorage[idx_allowed,:]
+end
+#
+STORAGE_HEAT = length(HeatStorage[:, :1])
+PrimeMover_STORAGE_HEAT = HeatStorage[:,4]
+NumUnits_STORAGE_HEAT = HeatStorage[:,5]                  # [units]
+UnitSize_STORAGE_HEAT = HeatStorage[:,6]                  # [MWh]   *** energy capacity
+MaxNewUnitsAnnual_STORAGE_HEAT = HeatStorage[:,7].*br * maxBuild_mult     # [units/year]
+MaxNewUnitsTotal_STORAGE_HEAT = HeatStorage[:,8].*br  * maxBuild_mult_tot     # [units]
+#
+maxCharge_HEAT    = HeatStorage[:,9]                          # [MW]
+maxDischarge_HEAT = HeatStorage[:,10]                          # [MW]
+#
+eta_charging_HEAT = HeatStorage[:,11]                     # [%]
+eta_discharging_HEAT = HeatStorage[:,12]                  # [%]
+eta_loss_HEAT = HeatStorage[:,13]                         # [%]
+EconomicLifetime_STORAGE_HEAT = HeatStorage[:,14]         # [years]
+Lifetime_STORAGE_HEAT = HeatStorage[:,15]                 # [years]
+CRF_STORAGE_HEAT = (WACC.*(1+WACC).^EconomicLifetime_STORAGE_HEAT)./((1+WACC).^EconomicLifetime_STORAGE_HEAT .- 1)
+RetirementYear_STORAGE_HEAT = min.(HeatStorage[:,16]+Lifetime_STORAGE_HEAT,HeatStorage[:,17])
+### RONDO EDIT
 
+
+
+#
 GasStorage = CSV.read("$(foldername)/Storage_GAS$(system).csv",DataFrame)
-
+#
 STORAGE_GAS = length(GasStorage[:, :1])
 PrimeMover_STORAGE_GAS = GasStorage[:,4]
 NumUnits_STORAGE_GAS = GasStorage[:,5]                          # [units]
 UnitSize_STORAGE_GAS = GasStorage[:,6]                          # [MW]
-MaxNewUnitsAnnual_STORAGE_GAS = GasStorage[:,7]                 # [units/year]
-MaxNewUnitsTotal_STORAGE_GAS = GasStorage[:,8]                  # [units]
+MaxNewUnitsAnnual_STORAGE_GAS = GasStorage[:,7] * maxBuild_mult                 # [units/year]
+MaxNewUnitsTotal_STORAGE_GAS = GasStorage[:,8]  * maxBuild_mult_tot                 # [units]
 duration_GAS = GasStorage[:,9]                                  # [hours]
 eta_charging_GAS = GasStorage[:,10]                             # [%]
 eta_discharging_GAS = GasStorage[:,11]                          # [%]
@@ -431,6 +506,15 @@ CAPEX_STORAGE_ELEC = zeros(T_inv,STORAGE_ELEC)
 FOM_STORAGE_ELEC = zeros(T_inv,STORAGE_ELEC)
 CAPEX_APPLIANCES = zeros(T_inv, APPLIANCES)
 FOM_APPLIANCES = zeros(T_inv, APPLIANCES)
+### RONDO EDIT
+CAPEX_STORAGE_HEAT = zeros(T_inv,STORAGE_HEAT)
+FOM_STORAGE_HEAT = zeros(T_inv,STORAGE_HEAT)
+#
+CAPEX_P2H = zeros(T_inv,P2H)
+FOM_P2H = zeros(T_inv,P2H)
+VOM_P2H = zeros(T_inv,P2H)
+### RONDO EDIT
+
 
 ## Apply cost multipliers for different energy storage cost scenarios
 ################################################################################
@@ -548,6 +632,42 @@ for i = 1:T_inv
         index = scen[index[1]]
         FOM_STORAGE_ELEC[i,s] = FOMLookup[index, Int(Years[i]-2019)]
     end
+    ### RONDO EDIT
+    for s = 1:STORAGE_HEAT
+        subset = findall(in([PrimeMover_STORAGE_HEAT[s]]),CAPEXLookup.Technology)
+        scen = findall(in([PrimeMover_STORAGE_HEAT[s]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),CAPEXLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        CAPEX_STORAGE_HEAT[i,s] = CAPEXLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_STORAGE_HEAT[s]]),FOMLookup.Technology)
+        scen = findall(in([PrimeMover_STORAGE_HEAT[s]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),FOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        FOM_STORAGE_HEAT[i,s] = FOMLookup[index, Int(Years[i]-2019)]
+    end
+    for d = 1:P2H
+        subset = findall(in([PrimeMover_P2H[d]]),CAPEXLookup.Technology)
+        scen = findall(in([PrimeMover_P2H[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),CAPEXLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        CAPEX_P2H[i,d] = CAPEXLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_P2H[d]]),FOMLookup.Technology)
+        scen = findall(in([PrimeMover_P2H[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),FOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        FOM_P2H[i,d] = FOMLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_P2H[d]]),VOMLookup.Technology)
+        scen = findall(in([PrimeMover_P2H[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),VOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        VOM_P2H[i,d] = VOMLookup[index, Int(Years[i]-2019)]
+    end
+    ### RONDO EDIT
     for a = 1:APPLIANCES
         subset = findall(in([PrimeMover_APPLIANCES[a]]),CAPEXLookup.Technology)
         scen = findall(in([PrimeMover_APPLIANCES[a]]),CostScenarios.Technology)

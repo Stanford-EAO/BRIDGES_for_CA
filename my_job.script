@@ -2,19 +2,19 @@
 
 #SBATCH --job-name=BRIDGES
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=youremail@stanford.edu
+#SBATCH --mail-user=dimi3@stanford.edu
 
-#SBATCH --time=2:00:00
+#SBATCH --time=2:29:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=150GB
+#SBATCH --mem=100GB
 #SBATCH --cpus-per-task=46
 #SBATCH --partition=serc
-
+#SBATCH -o Output/SLURM/slurm-%j.out
 
 # Load modules here
 ml load julia
-ml load gurobi
+ml load gurobi/11.0.2
 
 # Run your script
 srun julia run_file.jl

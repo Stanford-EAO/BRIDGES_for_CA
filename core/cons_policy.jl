@@ -132,6 +132,6 @@ end
 @variable(m, PeakDemand[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
 @variable(m, PeakDistDemand[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
 @variable(m, PeakDistDemandInc[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDemand[I,n] >= Demand_ELEC[I,T,t,n] + sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) + sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDemand[I,n] >= Demand_ELEC[I,T,t,n] + sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) + sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) + sum(P2H_NodalLoc_ELEC[n,d]*P2H_dispatch[I,T,t,d] for d = 1:P2H))
 @constraint(m, [I = 1:T_inv, t = 1:8760, n = 1:NODES_ELEC], PeakDistDemand[I,n] >= D_Elec[t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfilesELEC[t,a] for a = 1:APPLIANCES))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDistDemandInc[I,n] >= Demand_ELEC[I,T,t,n] - BaselineDemand_ELEC[I,T,t,n])

@@ -30,6 +30,26 @@
 # elec storage operating costs, FOM + VOM
 @variable(m, costs_ELECSTORAGEoperating[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_ELECSTORAGEoperating[I] == sum(UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i0,s]-unitsretired_STORAGE_ELEC[i0,s] for i0 = 1:I))*FOM_STORAGE_ELEC[I,s] for s = 1:STORAGE_ELEC) )
+#
+### RONDO EDIT
+# heat storage capital costs, ammortized to each investment period
+@variable(m, costs_HEATSTORAGEcapital[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_HEATSTORAGEcapital[I] == sum(UnitSize_STORAGE_HEAT[s]*sum(unitsbuilt_STORAGE_HEAT[i0,s]*max(min((Years[i0]+EconomicLifetime_STORAGE_HEAT[s])-Years[I],1),0)*CRF_STORAGE_HEAT[s]*CAPEX_STORAGE_HEAT[i0,s] for i0 = 1:I) for s = 1:STORAGE_HEAT) )
+# heat storage operating costs, FOM + VOM
+@variable(m, costs_HEATSTORAGEoperating[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_HEATSTORAGEoperating[I] == sum(UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i0,s]-unitsretired_STORAGE_HEAT[i0,s] for i0 = 1:I))*FOM_STORAGE_HEAT[I,s] for s = 1:STORAGE_HEAT) )
+#
+# POWER TO HEAT
+# P2H operating costs
+@variable(m, costs_P2Hoperating[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_P2Hoperating[I] == sum(UnitSize_P2H[d]*(NumUnits_P2H[d] + sum(unitsbuilt_P2H[i0,d]-unitsretired_P2H[i0,d] for i0 = 1:I))*FOM_P2H[I,d] for d = 1:P2H) 
+                                                     + sum(weights[I,T]*8760/t_ops*sum(sum(VOM_P2H[I,d]/1000*P2H_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:P2H) for T = 1:T_ops) )
+# P2H capital costs, ammortized to each investment period
+@variable(m, costs_P2Hcapital[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_P2Hcapital[I] == sum(UnitSize_P2H[d]*sum(unitsbuilt_P2H[i0,d]*max(min((Years[i0]+EconomicLifetime_P2H[d])-Years[I],1),0)*CRF_P2H[d]*CAPEX_P2H[i0,d] for i0 = 1:I) for d = 1:P2H) )
+#
+### RONDO EDIT
+#
 # appliances costs
 @variable(m, costs_appliances[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_appliances[I] ==  sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[I],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + applianceInfrastructureCosts[i0,a]) for i0 = 1:I)/1000 for a = 1:APPLIANCES) )
@@ -61,6 +81,14 @@
     # ELEC Storage
     + costs_ELECSTORAGEcapital[i]
     + costs_ELECSTORAGEoperating[i]
+    ### RONDO EDIT
+    # Heat Storage
+    + costs_HEATSTORAGEcapital[i]
+    + costs_HEATSTORAGEoperating[i]
+    # P2H
+    + costs_P2Hcapital[i]
+    + costs_P2Hoperating[i]
+    ### RONDO EDIT
     # Appliances
     + costs_appliances[i]
     # P2G

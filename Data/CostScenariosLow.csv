@@ -7,18 +7,18 @@ Solar PV,Mid
 Wind,Mid
 UtilityPV,Mid
 LandbasedWind,Mid
-GasFiredWH,Mid
-ElecHeatPumpWH,Mid
-ElecHeatPump_SpaceHeat,Mid
-GasFurnace_SpaceHeat,Mid
-GasRange_Res,Mid
-ElecInduction_Res,Mid
-GasRange_Comm,Mid
-ElecInduction_Comm,Mid
-GasFurnace_SpaceHeatComm,Mid
-ElecHeatPump_SpaceHeatComm,Mid
-GasFiredWHComm,Mid
-ElecHeatPumpWHComm,Mid
+GasFiredWH,Low
+ElecHeatPumpWH,Low
+ElecHeatPump_SpaceHeat,Low
+GasFurnace_SpaceHeat,Low
+GasRange_Res,Low
+ElecInduction_Res,Low
+GasRange_Comm,Low
+ElecInduction_Comm,Low
+GasFurnace_SpaceHeatComm,Low
+ElecHeatPump_SpaceHeatComm,Low
+GasFiredWHComm,Low
+ElecHeatPumpWHComm,Low
 LPGHybridElecHeatPump_SpaceHeatComm,Mid
 HybridElecHeatPump_SpaceHeatComm,Mid
 HybridElecHeatPump_SpaceHeat,Mid
@@ -49,12 +49,3 @@ OffshoreWind,Mid
 Res Solar PV,Mid
 Comm Solar PV,Mid
 Geothermal EGS,Mid
-Pumped hydro storage,Mid
-Multi-day storage,Mid
-AC_GasFurnace,Mid
-AC_ElecHeatPump_SpaceHeat,Mid
-AC_GasFurnaceComm,Mid
-AC_HeatPump_SpaceHeatComm,Mid
-Rondo Heat Battery,Mid
-Hydrogen-to-Heat,Mid
-Electric Boiler,Mid
