@@ -96,7 +96,7 @@ num = ""
 
 ### Biomethane
 biomethane = "Mid"
-max_biomethane_share = 0.1      # annual system-wide limitation on biomethane production (as a share of initial core gas demands)
+max_biomethane_share = 0.065      # annual system-wide limitation on biomethane production (as a share of initial core gas demands)
 if biomethane == "High"
     global max_biomethane_share = 0.50
 end
