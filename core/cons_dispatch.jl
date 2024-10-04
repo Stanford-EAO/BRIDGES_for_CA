@@ -19,6 +19,12 @@
 @variable(m, shutdown_P2H[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H] >= 0)       # [no. units]
 ### RONDO EDIT
 
+# CDR
+@variable(m, CDR_dispatch[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR] >= 0)       # [tCO2_removed]
+@variable(m, commit_CDR[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR] >= 0)         # [no. units]
+@variable(m, startup_CDR[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR] >= 0)        # [no. units]
+@variable(m, shutdown_CDR[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR] >= 0)       # [no. units]
+
 
 ### Startup and shutdown events
 # See Eq. 2.22a/2.22e in Von Wald thesis
@@ -40,6 +46,15 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:P2H], commit_P2H[I,T,t,d] == commit_P2H[I,T,t-1,d] + startup_P2H[I,T,t,d] - shutdown_P2H[I,T,t,d])
 ### RONDO EDIT
 
+# CDR
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], commit_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], startup_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], shutdown_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:CDR], commit_CDR[I,T,t,d] == commit_CDR[I,T,t-1,d] + startup_CDR[I,T,t,d] - shutdown_CDR[I,T,t,d])
+
+
+
+
 ### Min and Max generation constraints
 # See Eq. 2.22b/2.22c in Von Wald thesis
 ################################################################################
@@ -51,6 +66,10 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], P2H_dispatch[I,T,t,d] >= Pmin_P2H[d]*UnitSize_P2H[d]*commit_P2H[I,T,t,d])
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], P2H_dispatch[I,T,t,d] <= Pmax_P2H[d]*UnitSize_P2H[d]*commit_P2H[I,T,t,d])
 ### RONDO EDIT
+
+# CDR
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], CDR_dispatch[I,T,t,d] >= Pmin_CDR[d]*UnitSize_CDR[d]*commit_CDR[I,T,t,d])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], CDR_dispatch[I,T,t,d] <= Pmax_CDR[d]*UnitSize_CDR[d]*commit_CDR[I,T,t,d])
 
 
 ### Constraints on fixed profile generation resources

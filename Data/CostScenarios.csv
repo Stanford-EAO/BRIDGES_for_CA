@@ -58,3 +58,5 @@ AC_HeatPump_SpaceHeatComm,Mid
 Rondo Heat Battery,Mid
 Hydrogen-to-Heat,Mid
 Electric Boiler,Mid
+DAC-LS,Mid
+DAC-SS,Mid

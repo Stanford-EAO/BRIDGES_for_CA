@@ -32,6 +32,11 @@
 @variable(m, unitsremaining_APPS[I = 1:T_inv, a = 1:APPLIANCES] >= 0)   # [thousands of units]
 @variable(m, unitsretired_APPS[I = 1:T_inv, a = 1:APPLIANCES] >= 0)     # [thousands of units]
 
+# CDR
+@variable(m, 0 <= unitsbuilt_CDR[I = 1:T_inv, d = 1:CDR] <= MaxNewUnitsAnnual_CDR[d])                                       # [units]
+@variable(m, 0 <= unitsretired_CDR[I = 1:T_inv, d = 1:CDR])                                                                 # [units]
+@constraint(m, [d = 1:CDR], sum(unitsbuilt_CDR[i,d] for i = 1:T_inv) <= MaxNewUnitsTotal_CDR[d])                            # [units]
+
 
 ###############################################################################
 ### Retirement functions for generators, p2g, p2h, and storage units
@@ -79,6 +84,14 @@ end
 if T_inv > 1
     @constraint(m, [I = 2:T_inv, s = 1:STORAGE_GAS], unitsretired_STORAGE_GAS[I,s] <= NumUnits_STORAGE_GAS[s] + sum(unitsbuilt_STORAGE_GAS[i0,s] - unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:I-1))
     @constraint(m, [I = 2:T_inv, s = 1:STORAGE_GAS], unitsretired_STORAGE_GAS[I,s] >= NumUnits_STORAGE_GAS[s]*max(min(Years[I] - RetirementYear_STORAGE_GAS[s],1),0) + sum(unitsbuilt_STORAGE_GAS[i0,s]*max(min(Years[I] - (Years[i0] + Lifetime_STORAGE_GAS[s]),1),0) for i0 = 1:I-1)  -  sum(unitsretired_STORAGE_GAS[i0,s]  for i0 = 1:I-1))
+end
+
+# CDR
+@constraint(m, [I = 1, d = 1:CDR], unitsretired_CDR[I,d] <= NumUnits_CDR[d] + unitsbuilt_CDR[I,d])
+@constraint(m, [I = 1, d = 1:CDR], unitsretired_CDR[I,d] >= NumUnits_CDR[d]*max(min(Years[I] - RetirementYear_CDR[d],1),0))
+if T_inv > 1
+    @constraint(m, [I = 2:T_inv, d = 1:CDR], unitsretired_CDR[I,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i0,d] - unitsretired_CDR[i0,d]  for i0 = 1:I-1))
+    @constraint(m, [I = 2:T_inv, d = 1:CDR], unitsretired_CDR[I,d] >= NumUnits_CDR[d]*max(min(Years[I] - RetirementYear_CDR[d],1),0) + sum(unitsbuilt_CDR[i0,d]*max(min(Years[I] - (Years[i0] + Lifetime_CDR[d]),1),0) for i0 = 1:I-1) - sum(unitsretired_CDR[i0,d] for i0 = 1:I-1))
 end
 
 
@@ -142,13 +155,6 @@ end
 #
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_fromGAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
 
-# create similar equations for baseline demand met by clean/direct heat: BaselineDemand_fromDirectHeat
-# could add to it later something like hydrogen burning from pipeline or from existing P2G; rather than storage
-# could also constrain this by BaselineDemand_HEAT
-@variable(m, 0 <= BaselineDemand_fromDirectHeat[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
-# sum of both BaselineDemands == BaselineDemand_HEAT; which is an input
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_HEAT[I,T,t,n] == BaselineDemand_fromGAS[I,T,t,n] + BaselineDemand_fromDirectHeat[I,T,t,n] )
-#
 
 
 # To permit sensitivity testing to disallowing hybrid appliance strategies

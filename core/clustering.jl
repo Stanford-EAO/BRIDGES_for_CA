@@ -176,6 +176,16 @@ for d = 1:P2H
 end
 ### RONDO EDIT
 
+# CDR
+CDR_NodalLoc_ELEC = zeros(NODES_ELEC, CDR)
+CDR_NodalLoc_GAS  = zeros(NODES_GAS, CDR)
+NodalLoc_ELEC = carbonDioxideRemoval[:,1]
+NodalLoc_GAS  = carbonDioxideRemoval[:,2]
+for d = 1:CDR
+    CDR_NodalLoc_ELEC[findfirst(occursin.([string(NodalLoc_ELEC[d])],REGIONS_ELEC)),d] = 1
+    CDR_NodalLoc_GAS[findfirst(occursin.([string(NodalLoc_GAS[d])],REGIONS_GAS)),d] = 1
+end
+
 NodalLoc_ELEC = Generators[:,1]
 NodalLoc_GAS = Generators[:,2]
 for g = 1:GEN

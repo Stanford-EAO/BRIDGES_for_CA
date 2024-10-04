@@ -70,6 +70,10 @@
 @variable(m, costs_distribution[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_distribution[I] == Cost_DistributionInfrastructure*sum(PeakDistDemandInc[I,n] for n = 1:NODES_ELEC) )
 
+# CDR apital costs, ammortized to each investment period
+@variable(m, costs_CDRcapital[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_CDRcapital[I] == sum(UnitSize_CDR[d]/1000*8760*sum(unitsbuilt_CDR[i0,d]*max(min((Years[i0]+EconomicLifetime_CDR[d])-Years[I],1),0)*CRF_CDR[d]*CAPEX_CDR[i0,d] for i0 = 1:I) for d = 1:CDR) )
+#
 
 
 
@@ -103,6 +107,8 @@
     + costs_NGimports[i]
     + gasdistsyst_Cost[i] + costs_CO2offsets[i]
     + costs_transmission[i] + costs_gasStorage[i]
+    # CDR
+    + costs_CDRcapital[i]
     ) for i = 1:T_inv)
     )
 

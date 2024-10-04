@@ -49,8 +49,23 @@ end
                                                                         - Demand_ELEC[I,T,t,n] 
                                                                         - sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) 
                                                                         - sum(P2H_NodalLoc_ELEC[n,d]*P2H_dispatch[I,T,t,d] for d = 1:P2H)
-                                                                        - sum(STORAGE_HEAT_NodalLoc_HEAT[n,s] * charging_HEAT[I,T,t,s] for s = 1:STORAGE_HEAT) >= 0)
+                                                                        - sum(STORAGE_HEAT_NodalLoc_HEAT[n,s] * charging_HEAT[I,T,t,s] for s = 1:STORAGE_HEAT)
+                                                                        - sum(CDR_NodalLoc_ELEC[n,d]*CDR_dispatch[I,T,t,d]*elecConsumed_CDR[d] for d = 1:CDR) >= 0)
 ### RONDO EDIT
+
+
+###############################################################################
+### Energy Balance for industrial heat
+# See Eq. 2.19 in Von Wald thesis
+###############################################################################
+# create similar equations for baseline demand met by clean/direct heat: BaselineDemand_fromDirectHeat
+# could add to it later something like hydrogen burning from pipeline or from existing P2G; rather than storage
+# could also constrain this by BaselineDemand_HEAT
+@variable(m, 0 <= BaselineDemand_fromDirectHeat[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
+# sum of both BaselineDemands == BaselineDemand_HEAT; which is an input
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_HEAT[I,T,t,n] + sum(CDR_NodalLoc_GAS[n,d]*CDR_dispatch[I,T,t,d]*heatConsumed_CDR[d] for d = 1:CDR) == BaselineDemand_fromGAS[I,T,t,n] + BaselineDemand_fromDirectHeat[I,T,t,n] )
+#
+
 
 
 ###############################################################################
@@ -144,8 +159,8 @@ end
                                                             - sum(Demand_GAS[I,T,t,n] + sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) - sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G) for t = 1:t_ops)/t_ops == 0)
 
 
-## Heat Energy Balance
-# See Eq. TBD, in Saad thesis
+## Direct Heat Energy Balance
+# See Eq. TBD, in some thesis
 ###############################################################################
 ### RONDO EDIT
 # this is where we incorporate BaselineDemand_fromDirectHeat in a heat energy balance for each node

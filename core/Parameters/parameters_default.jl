@@ -136,7 +136,7 @@ if costScenario_FeAir == "Low"
     global cost_FeAir_multiplier = 0.75
 end
 if costScenario_FeAir == "High"
-    global cost_FeAir_multiplier = 2 #21.5/14  # comparing both white papers from Form Energy
+    global cost_FeAir_multiplier = 21.5/14  # comparing both white papers from Form Energy
 end
 # Hydrogen
 costScenario_HydrogenStorage = "Mid"
@@ -158,7 +158,7 @@ cost_case = ""
 ### Offsets
 maxOffsets_elec = 0.0*ones(T_inv)                  # % of gross emissions
 maxOffsets_gas = 0.0*ones(T_inv) 
-maxOffsets = 0.05*ones(T_inv)
+maxOffsets = 0.00*ones(T_inv)
 initialEmissions = 115*1e6                    # tCO2
 
 offsets_Cost = [650, 600, 550, 500, 450]                        # $/tCO2e
@@ -325,6 +325,10 @@ nonGasHeat_ON = 1
 fraction_electrifiableHeat = 70 / 100
 simpleHeatElectrification_ON = 1   # simple == without heat storage
 #
+
+### CDR
+carbonDioxideRemoval_ON = 1
+
 
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####

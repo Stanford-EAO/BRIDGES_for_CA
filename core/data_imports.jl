@@ -365,6 +365,35 @@ RetirementYear_P2H = min.(PowerToHeat[:,18]+Lifetime_P2H, PowerToHeat[:,19])
 
 
 
+### CDR
+carbonDioxideRemoval = CSV.read("$(foldername)/CarbonDioxideRemoval_CDR3.csv",DataFrame)
+#
+CDR = length(carbonDioxideRemoval[:, :1])
+#
+PrimeMover_CDR = carbonDioxideRemoval[:,4]
+NumUnits_CDR = carbonDioxideRemoval[:,5]                  # [units]
+UnitSize_CDR = carbonDioxideRemoval[:,6]                  # [tCO2/h]
+MaxNewUnitsAnnual_CDR = carbonDioxideRemoval[:,7].*br * carbonDioxideRemoval_ON     # [units/year]
+MaxNewUnitsTotal_CDR = carbonDioxideRemoval[:,8].*br  * carbonDioxideRemoval_ON       # [units]
+Pmin_CDR = carbonDioxideRemoval[:,9]                      # [p.u.]
+Pmax_CDR = carbonDioxideRemoval[:,10]                     # [p.u.]
+RampDownRate_CDR = carbonDioxideRemoval[:,11]             # [p.u.]
+RampUpRate_CDR = carbonDioxideRemoval[:,12]               # [p.u.]
+MinUpTime_CDR = carbonDioxideRemoval[:,13]                # [hours]
+MinDownTime_CDR = carbonDioxideRemoval[:,14]              # [hours]
+#
+elecConsumed_CDR = carbonDioxideRemoval[:,15]             # [MWh_e/tCO2_removed]
+heatConsumed_CDR = carbonDioxideRemoval[:,16]             # [MWh_th/tCO2_removed]
+minCapacityFactor_CDR = carbonDioxideRemoval[:,17]        # [-]
+maxCapacityFactor_CDR = carbonDioxideRemoval[:,18]        # [-]
+#
+EconomicLifetime_CDR = carbonDioxideRemoval[:,19]         # [years]
+Lifetime_CDR = carbonDioxideRemoval[:,20]                 # [years]
+CRF_CDR = (WACC.*(1+WACC).^EconomicLifetime_CDR)./((1+WACC).^EconomicLifetime_CDR .- 1)
+RetirementYear_CDR = min.(carbonDioxideRemoval[:,21]+Lifetime_CDR, carbonDioxideRemoval[:,22])
+
+
+
 
 ### Electrical Storage
 ElectricalStorage = CSV.read("$(foldername)/Storage_ELEC$(system).csv",DataFrame)
@@ -490,9 +519,9 @@ LHV_P2G = sum(MoleFracs_P2G.*transpose(MolarMass.*LHV), dims = 2)./MolarMass_P2G
 ################################################################################
 ### CAPEX, FOM, VOM, and fuel costs
 ################################################################################
-CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup.csv",DataFrame)
-FOMLookup = CSV.read("$(foldername)/FOMLookup.csv",DataFrame)
-VOMLookup = CSV.read("$(foldername)/VOMLookup.csv",DataFrame)
+CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup_CDR3.csv",DataFrame)
+FOMLookup = CSV.read("$(foldername)/FOMLookup_CDR3.csv",DataFrame)
+VOMLookup = CSV.read("$(foldername)/VOMLookup_CDR3.csv",DataFrame)
 FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp.csv",DataFrame)
 
 CAPEX_GEN = zeros(T_inv,GEN)
@@ -514,6 +543,10 @@ CAPEX_P2H = zeros(T_inv,P2H)
 FOM_P2H = zeros(T_inv,P2H)
 VOM_P2H = zeros(T_inv,P2H)
 ### RONDO EDIT
+#
+CAPEX_CDR = zeros(T_inv,CDR)
+FOM_CDR = zeros(T_inv,CDR)
+VOM_CDR = zeros(T_inv,CDR)
 
 
 ## Apply cost multipliers for different energy storage cost scenarios
@@ -559,7 +592,7 @@ println("")
 
 ## Assign the appropriate cost scenario based on CleanElecCosts and CleanGasCosts
 ################################################################################
-CostScenarios = CSV.read("$(foldername)/CostScenarios.csv",DataFrame)
+CostScenarios = CSV.read("$(foldername)/CostScenarios_CDR3.csv",DataFrame)
 
 if CleanCosts == "Low"
     global CostScenarios = CSV.read("$(foldername)/CostScenariosLow$(cost_case).csv",DataFrame)
@@ -681,5 +714,26 @@ for i = 1:T_inv
         index = findall(in(subset),scen)
         index = scen[index[1]]
         FOM_APPLIANCES[i,a] = FOMLookup[index, Int(Years[i]-2019)]
+    end
+    # CDR
+    for d = 1:CDR
+        subset = findall(in([PrimeMover_CDR[d]]),CAPEXLookup.Technology)
+        scen = findall(in([PrimeMover_CDR[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),CAPEXLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        CAPEX_CDR[i,d] = CAPEXLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_CDR[d]]),FOMLookup.Technology)
+        scen = findall(in([PrimeMover_CDR[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),FOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        FOM_CDR[i,d] = FOMLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_CDR[d]]),VOMLookup.Technology)
+        scen = findall(in([PrimeMover_CDR[d]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),VOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        VOM_CDR[i,d] = VOMLookup[index, Int(Years[i]-2019)]
     end
 end
