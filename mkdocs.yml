@@ -1,14 +1,12 @@
 site_name: BRIDGES Documentation
 nav: # determines order of pages
   - Home: index.md
-  - Access and Contributing: contributing.md
-  - BRIDGES' structure: projectstructure.md
+  - Project structure: projectstructure.md
   - Running BRIDGES: runningbridges.md
+  - Contributing to BRIDGES: contributing.md
   - Introduction to Snakemake: snakemake101.md
   - Introduction to Sherlock: sherlock101.md
-  - Introduction to MkDocs: mkdocs101.md
-  - Publications: publications.md
-  - Contact us: contact.md
+  - Introduction to MkDocs: mkdocs101.md  
 theme:
   name: material
   features:

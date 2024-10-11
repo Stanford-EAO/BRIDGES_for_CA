@@ -2,23 +2,19 @@
 
 #SBATCH --job-name=BRIDGES
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=your_username@stanford.edu
+#SBATCH --mail-user=dimi3@stanford.edu
 
-#SBATCH --time=2:00:00
+#SBATCH --time=2:29:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=150GB
+#SBATCH --mem=100GB
 #SBATCH --cpus-per-task=46
 #SBATCH --partition=serc
-
+#SBATCH -o Output/SLURM/slurm-%j.out
 
 # Load modules here
-ml load julia               # required for both the data preprocessing and the optimization
-ml load gurobi              # required for the optimization
-#ml load python/3.9.0        # required for the data preprocessing. Snakemake needs Python >3.5. Activate this line, if your Sherlock uses an older version of Python (check with "python --version").
+ml load julia
+ml load gurobi/11.0.2
 
-# Run the data preprocessing pipeline
-#snakemake -s "./DataPreprocessing/Snakefile" --cores all --use-conda --conda-frontend conda     # executes the data preprocessing pipeline that creates the input files for the optimization
-
-# Run the optimization model
+# Run your script
 srun julia run_file.jl
