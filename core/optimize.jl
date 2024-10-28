@@ -70,10 +70,19 @@
 @variable(m, costs_distribution[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_distribution[I] == Cost_DistributionInfrastructure*sum(PeakDistDemandInc[I,n] for n = 1:NODES_ELEC) )
 
-# CDR apital costs, ammortized to each investment period
+# CDR capital costs, ammortized to each investment period
 @variable(m, costs_CDRcapital[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_CDRcapital[I] == sum(UnitSize_CDR[d]/1000*8760*sum(unitsbuilt_CDR[i0,d]*max(min((Years[i0]+EconomicLifetime_CDR[d])-Years[I],1),0)*CRF_CDR[d]*CAPEX_CDR[i0,d] for i0 = 1:I) for d = 1:CDR) )
 #
+# CDR operating costs
+@variable(m, costs_CDRoperating[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_CDRoperating[I] == sum(UnitSize_CDR[d]/1000*8760 * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i0,d]-unitsretired_CDR[i0,d] for i0 = 1:I))*FOM_CDR[I,d] for d = 1:CDR)
+                                                     + sum(weights[I,T]*8760/t_ops*sum(sum(VOM_CDR[I,d]/1000*CDR_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:CDR) for T = 1:T_ops) )
+
+
+# carbon tax
+@variable(m, costs_carbonTax[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_carbonTax[I] == carbonTax_power * (powerEmissions[I]) * 1e6 + carbonTax_gas * (gasEmissions[I] + appEmissions[I]) * 1e6 )
 
 
 
@@ -108,7 +117,9 @@
     + gasdistsyst_Cost[i] + costs_CO2offsets[i]
     + costs_transmission[i] + costs_gasStorage[i]
     # CDR
-    + costs_CDRcapital[i]
+    + costs_CDRcapital[i] + costs_CDRoperating[i]
+    # carbon tax
+    + costs_carbonTax[i] / 1e3
     ) for i = 1:T_inv)
     )
 

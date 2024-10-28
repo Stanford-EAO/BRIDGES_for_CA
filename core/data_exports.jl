@@ -230,22 +230,26 @@ for i=1:T_inv
 end
 
 ## then let's find the indeces of the different P2G
-idx_PowerToCH4  = PrimeMover_P2G .!= fill("Electrolysis", length(PrimeMover_P2G))
+idx_PowerToCH4  = PrimeMover_P2G .== fill("Net-zero CH4", length(PrimeMover_P2G))
+idx_biomethane  = PrimeMover_P2G .== fill("Biomethane", length(PrimeMover_P2G))
 idx_PowerToH2   = PrimeMover_P2G .== fill("Electrolysis", length(PrimeMover_P2G))
 
 # concatenate
 capPowerToCH4_array  = vcat(transpose(preCapacity_P2G[idx_PowerToCH4]), invCapacity_P2G[:,idx_PowerToCH4])
+capBiomethane_array  = vcat(transpose(preCapacity_P2G[idx_biomethane]), invCapacity_P2G[:,idx_biomethane])
 capPowerToH2_array   = vcat(transpose(preCapacity_P2G[idx_PowerToH2]), invCapacity_P2G[:,idx_PowerToH2])
 
 # find sum
 capPowerToCH4 = sum(capPowerToCH4_array, dims=2)
+capBiomethane = sum(capBiomethane_array, dims=2)
 capPowerToH2  = sum(capPowerToH2_array, dims=2)
 
 # Specify column names as strings
-column_names_P2G = ["Power-to-CH4", "Power-to-H2"]
+column_names_P2G = ["Power-to-CH4", "Biomethane", "Power-to-H2"]
 
 # Convert data to 1-dimensional arrays
 capPowerToCH4  = vec(capPowerToCH4)
+capBiomethane  = vec(capBiomethane)
 capPowerToH2   = vec(capPowerToH2)
 
 
@@ -274,6 +278,39 @@ column_names_P2H = ["Electric Boiler"]
 
 # Convert data to 1-dimensional arrays
 capP2H_elecBoiler  = vec(capP2H_elecBoiler)
+
+
+
+### CDR [tCO2 / y]
+preCapacity_CDR = NumUnits_CDR .* UnitSize_CDR * 8760
+# define array based on inv periods
+invCapacity_CDR = zeros(T_inv, length(preCapacity_CDR))
+# loop
+for i=1:T_inv
+    #
+    netForInvP = UnitSize_CDR .* 8760 .* sum( JuMP.value.(unitsbuilt_CDR[invP,:]) - JuMP.value.(unitsretired_CDR[invP,:]) for invP = 1:i)
+    invCapacity_CDR[i,:] = preCapacity_CDR[:] + netForInvP[:]
+end
+
+## then let's find the indeces of the different CDR
+idx_CDR_DACLS  = PrimeMover_CDR .== fill("DAC-LS", length(PrimeMover_CDR))
+idx_CDR_DACSS  = PrimeMover_CDR .== fill("DAC-SS", length(PrimeMover_CDR))
+
+
+# concatenate
+capCDR_DACLS_array  = vcat(transpose(preCapacity_CDR[idx_CDR_DACLS]), invCapacity_CDR[:,idx_CDR_DACLS])
+capCDR_DACSS_array  = vcat(transpose(preCapacity_CDR[idx_CDR_DACSS]), invCapacity_CDR[:,idx_CDR_DACSS])
+
+# find sum
+capCDR_DACLS = sum(capCDR_DACLS_array, dims=2)
+capCDR_DACSS = sum(capCDR_DACSS_array, dims=2)
+
+# Specify column names as strings
+column_names_CDR = ["DAC-LS", "DAC-SS"]
+
+# Convert data to 1-dimensional arrays
+capCDR_DACLS  = vec(capCDR_DACLS)
+capCDR_DACSS  = vec(capCDR_DACSS)
 
 
 
@@ -377,7 +414,9 @@ capFeBattery = vec(capFeBattery)
 
 # Create a DataFrame with column names and data
 df = DataFrame(column_names[1] => capLiBattery, column_names[2] => capPHS, column_names[3] => capH2Storage, column_names[4] => capFeBattery,
-               column_names_P2G[1] => capPowerToCH4, column_names_P2G[2] => capPowerToH2, column_names_P2H[1] => capP2H_elecBoiler)
+               column_names_P2G[1] => capPowerToCH4, column_names_P2G[2] => capBiomethane, column_names_P2G[3] => capPowerToH2, 
+               column_names_P2H[1] => capP2H_elecBoiler,
+               column_names_CDR[1] => capCDR_DACLS, column_names_CDR[2] => capCDR_DACSS)
 
 #
 resultName   = "$(top_dir)/STORAGE_POWER_CAPACITIES"
@@ -428,22 +467,45 @@ function process_gasOutput(gas_output, outputName)
     CSV.write(outputName, df)
 end
 
-### P2G
-P2G_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*eta_P2G[d] for d=1:P2G) )
+# ### P2G
+# P2G_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*eta_P2G[d] for d=1:P2G) )
+# # Specify the path to the CSV file where you want to save the data
+# resultName   = "$(top_dir)/P2G_HOURLY"
+# temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+# scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+# #
+# outputName = string(resultName, temporalName, scenarioName,".csv")
+# ##
+# process_gasOutput(P2G_output, outputName)
+
+### P2CH4, includes H2 if H2 blending is on
+P2CH4_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*eta_P2G[d] * (1 - ISBIOMETHANE[d]) for d=1:P2G) )
 # Specify the path to the CSV file where you want to save the data
-resultName   = "$(top_dir)/P2G_HOURLY"
+resultName   = "$(top_dir)/GAS_P2CH4_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_gasOutput(P2G_output, outputName)
+process_gasOutput(P2CH4_output, outputName)
+
+### Biomethane
+Biomethane_output = JuMP.value.( sum(P2G_dispatch[:,:,:,d]*eta_P2G[d] * ISBIOMETHANE[d] for d=1:P2G) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/GAS_Biomethane_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(Biomethane_output, outputName)
+
 
 ### Imports
 Imports_output = JuMP.value.( sum(SUPPLY_GAS_slack[:,:,n] for n=1:NODES_GAS) )
 Imports_output = cat([Imports_output for _ in 1:24]..., dims=3)
 # Specify the path to the CSV file where you want to save the data
-resultName   = "$(top_dir)/Imports_HOURLY"
+resultName   = "$(top_dir)/GAS_Imports_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
@@ -455,7 +517,7 @@ process_gasOutput(Imports_output, outputName)
 ### Charging
 Charging_output = JuMP.value.( sum(charging_GAS[:,:,:,s] for s = 1:STORAGE_GAS) )
 # Specify the path to the CSV file where you want to save the data
-resultName   = "$(top_dir)/Charging_HOURLY"
+resultName   = "$(top_dir)/GAS_Charging_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
@@ -466,7 +528,7 @@ process_gasOutput(Charging_output, outputName)
 ### Discharging
 Discharging_output = JuMP.value.( sum(discharging_GAS[:,:,:,s] for s = 1:STORAGE_GAS) )
 # Specify the path to the CSV file where you want to save the data
-resultName   = "$(top_dir)/Discharging_HOURLY"
+resultName   = "$(top_dir)/GAS_Discharging_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
@@ -474,16 +536,40 @@ outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
 process_gasOutput(Discharging_output, outputName)
 
-### Demand
-Demand_output = JuMP.value.( sum(sum(NominalGasOfftakes[:,:,:,n,g]*LHV[g]*MolarMass[g] for g=1:GAS_COMPONENTS) for n=1:NODES_GAS) )
+### ALL Demand
+TotalDemand_output = JuMP.value.( sum(sum(NominalGasOfftakes[:,:,:,n,g]*LHV[g]*MolarMass[g] for g=1:GAS_COMPONENTS) for n=1:NODES_GAS) )
 # Specify the path to the CSV file where you want to save the data
-resultName   = "$(top_dir)/Demand_HOURLY"
+resultName   = "$(top_dir)/GAS_TotalDemand_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_gasOutput(Demand_output, outputName)
+process_gasOutput(TotalDemand_output, outputName)
+
+### Heat Gas Demand; i.e. not for power plants
+HeatDemand_output = JuMP.value.( sum(Demand_GAS[:,:,:,n] for n=1:NODES_GAS) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/GAS_HeatDemand_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(HeatDemand_output, outputName)
+
+
+### CDR
+CDR_output = JuMP.value.( sum(CDR_dispatch[:,:,:,d] for d=1:CDR) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/CO2_CDR_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(CDR_output, outputName)
+
 
 
 ##########################################################################
@@ -628,6 +714,16 @@ outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
 process_gasOutput(ELEC_Demand_output, outputName)
 
+### CDR
+ELEC_CDR_output = JuMP.value.( sum(CDR_dispatch[:,:,:,d] * elecConsumed_CDR[d] for d = 1:CDR) )
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/ELEC_CDR_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(ELEC_CDR_output, outputName)
 
 
 
@@ -1057,7 +1153,7 @@ end
 
 
 
-function process_storageUnitsOutput(gas_output, outputName)
+function process_storageUnitsOutput(gas_output, outputName, storageType)
     # Determine the column names for each slice in the third dimension
     column_names = String[]  # Initialize as an empty string array
     for i = 1:size(gas_output, 1)
@@ -1095,7 +1191,7 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_storageUnitsOutput(invCapacity_Built_CZ_ELEC, outputName)
+process_storageUnitsOutput(invCapacity_Built_CZ_ELEC, outputName, storageType)
 
 ### Built
 # Specify the path to the CSV file where you want to save the data
@@ -1105,7 +1201,7 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_storageUnitsOutput(invCapacity_Ret_CZ_ELEC, outputName)
+process_storageUnitsOutput(invCapacity_Ret_CZ_ELEC, outputName, storageType)
 
 
 
@@ -1169,7 +1265,7 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_storageUnitsOutput(invCapacity_Total_CZ_ELEC, outputName)
+process_storageUnitsOutput(invCapacity_Total_CZ_ELEC, outputName, storageType)
 
 
 
@@ -1298,9 +1394,47 @@ process_genUnitsOutput(invCapacity_Ret_CZ_GEN, outputName)
 output_costEmissions = Dict{String, Vector}()
 #
 ## emissions
-key = "Emissions"
-emissions_invPeriod = JuMP.value.(powerEmissions + gasEmissions + appEmissions)
+key = "Total Emissions"
+if consider_refrigerants == 1
+    emissions_invPeriod = JuMP.value.(powerEmissions + gasEmissions + appEmissions)
+else
+    emissions_invPeriod = JuMP.value.(powerEmissions + gasEmissions)
+end
 output_costEmissions[key] = emissions_invPeriod
+
+## power emissions
+key = "Power Emissions"
+emissions_invPeriod = JuMP.value.(powerEmissions)
+output_costEmissions[key] = emissions_invPeriod
+
+## gas emissions
+key = "Gas Emissions"
+emissions_invPeriod = JuMP.value.(gasEmissions)
+output_costEmissions[key] = emissions_invPeriod
+
+if consider_refrigerants == 1
+    ## app emissions
+    key = "Appliances Emissions"
+    emissions_invPeriod = JuMP.value.(appEmissions)
+    output_costEmissions[key] = emissions_invPeriod
+end
+
+## excess power emissions
+key = "Excess Power Emissions"
+emissions_invPeriod = JuMP.value.(excess_powerEmissions)
+output_costEmissions[key] = emissions_invPeriod
+
+## excess gas emissions
+key = "Excess Gas Emissions"
+emissions_invPeriod = JuMP.value.(excess_gasEmissions)
+output_costEmissions[key] = emissions_invPeriod
+
+if consider_refrigerants == 1
+    ## excess app emissions
+    key = "Excess Appliances Emissions"
+    emissions_invPeriod = JuMP.value.(excess_refEmissions)
+    output_costEmissions[key] = emissions_invPeriod
+end
 
 ## gen
 key = "Cost_Generation_Capital"
@@ -1527,7 +1661,7 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_storageUnitsOutput(invCapacity_Built_CZ_HEAT, outputName)
+process_storageUnitsOutput(invCapacity_Built_CZ_HEAT, outputName, storageType)
 
 ### Retired
 # Specify the path to the CSV file where you want to save the data
@@ -1537,7 +1671,7 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 #
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
-process_storageUnitsOutput(invCapacity_Ret_CZ_HEAT, outputName)
+process_storageUnitsOutput(invCapacity_Ret_CZ_HEAT, outputName, storageType)
 
 
 
@@ -1645,16 +1779,26 @@ HEAT_single                 = JuMP.value.( BaselineDemand_HEAT[:,:,:,:] )
 ### DIRECT HEAT: from RHB
 HEAT_DirectHeatFromRHB_single = JuMP.value.( sum(discharging_HEAT[:,:,:,s] * eta_discharging_HEAT[s] for s = 1:STORAGE_HEAT ) )
 ### DIRECT HEAT: from Electric Boiler
-HEAT_DirectHeatFromeBoiler_single = JuMP.value.( sum(P2H_dispatch[:,:,:,d]*eta_P2H[d] for d=1:P2H) ) 
+HEAT_DirectHeatFromeBoiler_single = JuMP.value.( sum(P2H_dispatch[:,:,:,d]*eta_P2H[d] for d = 1:P2H) ) 
+
+# this one is different than others; it is an addition to the baseline heat; so so baseline is no longer == direct heat + gas ; alone
+### Heat for CDR
+HEAT_CDR_fromGas        = JuMP.value.( CDR_Demand_fromGAS[:,:,:,:] )
+HEAT_CDR_fromDirectHeat = JuMP.value.( CDR_Demand_fromDirectHeat[:,:,:,:] )
+HEAT_CDR_single          = JuMP.value.( CDR_Demand_HEAT[:,:,:,:] )
+
 
 
 ###
 #
-HEAT_metByGas_total        = sum(HEAT_metByGas_single[:,:,:,:], dims=4)
-HEAT_metByDirectHeat_total = sum(HEAT_metByDirectHeat_single[:,:,:,:], dims=4)
-HEAT_total                 = sum(HEAT_single[:,:,:,:], dims=4)
-HEAT_DirectHeat_RHB        = HEAT_DirectHeatFromRHB_single
-HEAT_DirectHeat_eBoiler    = HEAT_DirectHeatFromeBoiler_single
+HEAT_metByGas_total         = sum(HEAT_metByGas_single[:,:,:,:], dims=4)
+HEAT_metByDirectHeat_total  = sum(HEAT_metByDirectHeat_single[:,:,:,:], dims=4)
+HEAT_total                  = sum(HEAT_single[:,:,:,:], dims=4)
+HEAT_DirectHeat_RHB         = HEAT_DirectHeatFromRHB_single
+HEAT_DirectHeat_eBoiler     = HEAT_DirectHeatFromeBoiler_single
+HEAT_metByGas_forCDR        = sum(HEAT_CDR_fromGas[:,:,:,:], dims=4)
+HEAT_metByDirectHeat_forCDR = sum(HEAT_CDR_fromDirectHeat[:,:,:,:], dims=4)
+HEAT_CDR_total              = sum(HEAT_CDR_single[:,:,:,:], dims=4)
 
 
 ## GAS
@@ -1694,7 +1838,7 @@ outputName = string(resultName, temporalName, scenarioName,".csv")
 process_gasOutput(HEAT_DirectHeat_RHB, outputName)
 
 
-## TOTAL HEAT
+## TOTAL HEAT; without CDR
 resultName   = "$(top_dir)/BaselineDemand_total_HOURLY"
 temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
 scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
@@ -1702,3 +1846,146 @@ scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
 outputName = string(resultName, temporalName, scenarioName,".csv")
 ##
 process_gasOutput(HEAT_total, outputName)
+
+
+## HEAT due to CDR from Gas
+resultName   = "$(top_dir)/CDR_HeatDemand_fromGas_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(HEAT_metByGas_forCDR, outputName)
+
+## HEAT due to CDR from Heat
+resultName   = "$(top_dir)/CDR_HeatDemand_fromDirectHeat_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(HEAT_metByDirectHeat_forCDR, outputName)
+
+
+## HEAT due to CDR TOTAL
+resultName   = "$(top_dir)/CDR_HeatDemand_total_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_gasOutput(HEAT_CDR_total, outputName)
+
+
+
+
+
+
+##########################################################################
+####################### GENERATION BY PRIME MOVER ########################
+##########################################################################
+#
+primveMoverTypes = unique(PrimeMover_GEN)
+#
+flow_output = JuMP.value.( generation )
+flow_output2D = zeros(size(flow_output, 3), size(flow_output, 1) * size(flow_output, 2) * length(primveMoverTypes) )
+#
+global counter = 1
+# Determine the column names for each slice in the third dimension
+column_names = String[]  # Initialize as an empty string array
+for i = 1:size(flow_output, 1)
+    prefix = "InvPeriod_$(i)"
+    for j = 1:size(flow_output, 2)
+        suffix = "RepDay_$(j)"
+        for k = 1:length(primveMoverTypes)
+            # create name
+            suffix2 = "$(primveMoverTypes[k])"
+            push!(column_names, string(prefix, "+", suffix, "+", suffix2))
+            # fill matrix
+            bool_primeMover = PrimeMover_GEN .== primveMoverTypes[k]
+            flow_output2D[:,counter] = JuMP.value.( sum(generation[i,j,:,g] for g in 1:length(bool_primeMover) if bool_primeMover[g]) )
+            # update counter
+            global counter = counter + 1
+        end
+    end
+end
+
+# Create a DataFrame with column names
+df = DataFrame(flow_output2D, column_names)
+#
+resultName   = "$(top_dir)/ByPrimeMover_GENERATION_HOURLY"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+outputName = string(resultName, temporalName, scenarioName,".csv")
+# Save the DataFrame to a CSV file
+CSV.write(outputName, df)
+
+
+
+
+
+
+
+
+
+##########################################################################
+###################### CARBON DIOXIDE REMOVAL TECH #######################
+##########################################################################
+##########################################################################
+# 
+### CDR units by node and type in final year **ONLY**
+##
+#### CDR Capacity in tCO2/y
+preCapacity_CDR = (NumUnits_CDR .* UnitSize_CDR * 8760)
+# define array based on inv periods
+invCapacity_CDR = zeros(1, length(preCapacity_CDR))
+# loop
+for i=T_inv
+    #
+    netForInvP = UnitSize_CDR .* 8760 .* sum( JuMP.value.(unitsbuilt_CDR[invP,:]) - JuMP.value.(unitsretired_CDR[invP,:]) for invP = 1:i)
+    invCapacity_CDR[1,:] = preCapacity_CDR[:] + netForInvP[:]
+end
+
+# find types 
+nodeNumber = unique(carbonDioxideRemoval[:,1])
+CDRType = unique(PrimeMover_CDR)
+# find number of storage types and nodes
+numNodes = length(nodeNumber)
+CDRTypes = length(CDRType)
+#
+invCapacity_Total_CZ_CDR = zeros(1, CDRTypes, numNodes)
+#
+for i = T_inv
+    # # generate local version of built/ret for inv period I
+    net_InvPeriod = invCapacity_CDR[1,:]
+    #
+    for j = 1:CDRTypes
+        # find indexing based on storage type
+        idx_CDR = PrimeMover_CDR .== fill(CDRType[j], length(PrimeMover_CDR))
+        for k = 1:numNodes
+            # find indexing based on node
+            idx_Node = carbonDioxideRemoval[:,1] .== fill(nodeNumber[k], length(carbonDioxideRemoval[:,1]))
+            # intersection
+            idx_intersection = idx_CDR .& idx_Node
+            # find intersection and then add to 
+            resultsTotal_intersection = net_InvPeriod[idx_intersection]
+            #
+            resultsTotal_array = zeros(length(idx_intersection))
+            resultsTotal_array[findall(idx_intersection .== 1)] = resultsTotal_intersection
+            #
+            # add to matrix
+            invCapacity_Total_CZ_CDR[1,j,k] = sum(resultsTotal_array)
+        end
+    end
+end
+
+
+### NetCapacity
+# Specify the path to the CSV file where you want to save the data
+resultName   = "$(top_dir)/NetCapacity_CDR_PerNode"
+temporalName = string("_$(T_inv)","Inv","+","$(N_Periods)","RepDays")
+scenarioName = string("_MDS","$(FormEnergy_allowed)","+","PHS","$(PHS_allowed)")
+#
+outputName = string(resultName, temporalName, scenarioName,".csv")
+##
+process_storageUnitsOutput(invCapacity_Total_CZ_CDR, outputName, CDRType)

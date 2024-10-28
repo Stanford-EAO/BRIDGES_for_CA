@@ -51,6 +51,8 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], startup_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], shutdown_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:CDR], commit_CDR[I,T,t,d] == commit_CDR[I,T,t-1,d] + startup_CDR[I,T,t,d] - shutdown_CDR[I,T,t,d])
+# capacity factor constraint for CDR
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], sum(weights[I,T]*8760/t_ops*sum(CDR_dispatch[I,T,t,d] for t = 1:t_ops) for T = 1:T_ops) <= maxCapacityFactor_CDR[d] * 8760 * UnitSize_CDR[d] * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I)) )
 
 
 

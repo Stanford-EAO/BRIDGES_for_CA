@@ -37,6 +37,19 @@ allsector_emissions_constraint = 1
 consider_refrigerants = 1       # MUST set allsector_emissions_constraint = 1 too
 # 1 = CARB aligned, 2 = beyond CARB, 3 = worse case
 
+
+#
+#
+### for when allsector_emissions_constraint == 2
+if allsector_emissions_constraint == 2
+    # set carbon price in $/tCO2
+    carbonTax_power = 0
+    carbonTax_gas   = 0
+else
+    carbonTax_power = 0  # $/tCO2
+    carbonTax_gas   = 0  # $/tCO2
+end
+
 ################################################################################
 #### CLUSTERING PARAMETERS ####
 
@@ -328,6 +341,7 @@ simpleHeatElectrification_ON = 1   # simple == without heat storage
 
 ### CDR
 carbonDioxideRemoval_ON = 1
+noSolidSorbent = 0
 
 
 ################################################################################
@@ -354,6 +368,11 @@ println("Steady state gas: ", STEADYSTATE_GAS)
 println("Constraint emissions of all sector: ", allsector_emissions_constraint)
 if allsector_emissions_constraint == 1
     println("Total emissions allowed [MMTCO2e]: ", TotalEmissions_Allowed)
+    println("Max offset as % initial emissions: ", maxOffsets)
+    println("Initial emissions [MMTCO2e]: ", initialEmissions/1e6)
+elseif allsector_emissions_constraint == 2
+    println("Carbon Tax for power sector: ", carbonTax_power)
+    println("Carbon Tax for gas sector: ", carbonTax_gas)
     println("Max offset as % initial emissions: ", maxOffsets)
     println("Initial emissions [MMTCO2e]: ", initialEmissions/1e6)
 else
@@ -407,3 +426,4 @@ println("")
 ### RONDO EDIT
 
 println("Starting SOC: ", SOC_fraction)
+###

@@ -62,8 +62,16 @@ end
 # could add to it later something like hydrogen burning from pipeline or from existing P2G; rather than storage
 # could also constrain this by BaselineDemand_HEAT
 @variable(m, 0 <= BaselineDemand_fromDirectHeat[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
+# also CDR: CDR_Demand_fromDirectHeat
+@variable(m, 0 <= CDR_Demand_fromDirectHeat[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
+
+
 # sum of both BaselineDemands == BaselineDemand_HEAT; which is an input
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_HEAT[I,T,t,n] + sum(CDR_NodalLoc_GAS[n,d]*CDR_dispatch[I,T,t,d]*heatConsumed_CDR[d] for d = 1:CDR) == BaselineDemand_fromGAS[I,T,t,n] + BaselineDemand_fromDirectHeat[I,T,t,n] )
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_HEAT[I,T,t,n] == BaselineDemand_fromGAS[I,T,t,n] + BaselineDemand_fromDirectHeat[I,T,t,n] )
+# same, but for CDR
+@variable(m, 0 <= CDR_Demand_HEAT[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], CDR_Demand_HEAT[I,T,t,n] == CDR_Demand_fromGAS[I,T,t,n] + CDR_Demand_fromDirectHeat[I,T,t,n] )
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], CDR_Demand_HEAT[I,T,t,n] == sum(CDR_NodalLoc_GAS[n,d]*CDR_dispatch[I,T,t,d]*heatConsumed_CDR[d] for d = 1:CDR) )
 #
 
 
@@ -163,9 +171,9 @@ end
 # See Eq. TBD, in some thesis
 ###############################################################################
 ### RONDO EDIT
-# this is where we incorporate BaselineDemand_fromDirectHeat in a heat energy balance for each node
+# this is where we incorporate BaselineDemand_fromDirectHeat & CDR_Demand_fromDirectHeat in a heat energy balance for each node
 # here we add the index of t = 1:t_ops; no need to average over t_ops
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n]
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n] + CDR_Demand_fromDirectHeat[I,T,t,n]
                                                                          - sum( P2H_NodalLoc_ELEC[n,d] * P2H_dispatch[I,T,t,d] * eta_P2H[d] for d = 1:P2H)
                                                                          - sum( STORAGE_HEAT_NodalLoc_HEAT[n,s] * discharging_HEAT[I,T,t,s] * eta_discharging_HEAT[s] for s = 1:STORAGE_HEAT) 
                                                                          == 0 )
@@ -175,10 +183,13 @@ if nonGasHeat_ON == 1
         @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], discharging_HEAT[I,T,t,s] == 0 )
         # Refer to cons_capacity.jl
         @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n] <= fraction_electrifiableHeat * BaselineDemand_HEAT[I,T,t,n] )
+        # there is no similar constraint ^^ for CDR
+
     end
 else
     # toggle for non-gas heat:
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n] == 0)
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], CDR_Demand_fromDirectHeat[I,T,t,n] == 0)
 end
 
 ### RONDO EDIT

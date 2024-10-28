@@ -367,6 +367,13 @@ RetirementYear_P2H = min.(PowerToHeat[:,18]+Lifetime_P2H, PowerToHeat[:,19])
 
 ### CDR
 carbonDioxideRemoval = CSV.read("$(foldername)/CarbonDioxideRemoval_CDR3.csv",DataFrame)
+# filter
+if noSolidSorbent == 1
+    # remove solid sorbent
+    idx_allowed = carbonDioxideRemoval[!, "Prime Mover"] .!= fill("DAC-SS", size(carbonDioxideRemoval[!, "Prime Mover"],1), size(carbonDioxideRemoval[!, "Prime Mover"],2))
+    idx_allowed = [all(row) for row in eachrow(idx_allowed)]
+    carbonDioxideRemoval = carbonDioxideRemoval[idx_allowed,:]
+end
 #
 CDR = length(carbonDioxideRemoval[:, :1])
 #

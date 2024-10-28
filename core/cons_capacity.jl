@@ -95,6 +95,7 @@ if T_inv > 1
 end
 
 
+
 ###############################################################################
 ### Retirement and replacement functions for end-use appliances
 # See Eq. 2.10-2.13 in Von Wald thesis
@@ -152,8 +153,10 @@ end
 ### RONDO EDIT
 # add new variable for baseline demand met by gas: BaselineDemand_fromGas
 @variable(m, 0 <= BaselineDemand_fromGAS[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
+# now for CDR
+@variable(m, 0 <= CDR_Demand_fromGAS[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS])
 #
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_fromGAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], Demand_GAS[I,T,t,n] == BaselineDemand_fromGAS[I,T,t,n] + CDR_Demand_fromGAS[I,T,t,n] + 1000*sum(APPLIANCES_NodalLoc_GAS[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfiles_GAS[T,t,a] for a = 1:APPLIANCES))
 
 
 
