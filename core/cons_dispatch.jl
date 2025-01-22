@@ -52,9 +52,22 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], shutdown_CDR[I,T,t,d] <= NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:CDR], commit_CDR[I,T,t,d] == commit_CDR[I,T,t-1,d] + startup_CDR[I,T,t,d] - shutdown_CDR[I,T,t,d])
 # capacity factor constraint for CDR
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], sum(weights[I,T]*8760/t_ops*sum(CDR_dispatch[I,T,t,d] for t = 1:t_ops) for T = 1:T_ops) <= maxCapacityFactor_CDR[d] * 8760 * UnitSize_CDR[d] * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I)) )
-
-
+if CDRcapFactorLimit_ON == 1
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:CDR], sum(weights[I,T]*8760/t_ops*sum(CDR_dispatch[I,T,t,d] for t = 1:t_ops) for T = 1:T_ops) <= maxCapacityFactor_CDR[d] * 8760 * UnitSize_CDR[d] * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I)) )
+end
+# running all day constraint for CDR
+if CDRrunAllDay_ON == 1
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:P2H], CDR_dispatch[I,T,t,d] == CDR_dispatch[I,T,1,d])
+end
+# enforced policy build
+if DACPolicyTargets_ON == 1
+    # 2nd investment period == 2030 
+    @constraint(m, [I = 2], DAC_2030_Target <= sum(weights[I,T]*8760/t_ops*sum(sum(CDR_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:CDR) for T = 1:T_ops) )
+    # @constraint(m, [I = 2], DAC_2030_Target <= sum(UnitSize_CDR[d] * 8760 * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I)) for d = 1:CDR) )
+    # 5th investment period == 2045
+    @constraint(m, [I = 5], DAC_2045_Target <= sum(weights[I,T]*8760/t_ops*sum(sum(CDR_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:CDR) for T = 1:T_ops) )
+    # @constraint(m, [I = 5], DAC_2045_Target <= sum(UnitSize_CDR[d] * 8760 * (NumUnits_CDR[d] + sum(unitsbuilt_CDR[i,d] - unitsretired_CDR[i,d] for i = 1:I)) for d = 1:CDR) )
+end
 
 
 ### Min and Max generation constraints

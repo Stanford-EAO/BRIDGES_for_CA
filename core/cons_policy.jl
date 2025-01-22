@@ -10,6 +10,12 @@ else
     excess_refEmissions = zeros(T_inv)
 end
 
+if methaneLeak_ON == 1
+    excess_fugitiveMethaneEmissions = zeros(T_inv)
+else
+    excess_fugitiveMethaneEmissions = zeros(T_inv)
+end
+
 ### Nominal allocation of net-zero emissions gas consumption to each sector, 
 # not to exceed the amount of gaseous energy consumed by that sector
 # See Eq. 2.62 in Von Wald thesis
@@ -30,7 +36,7 @@ end
 @variable(m, excess_powerEmissions[I = 1:T_inv] >= 0)
 @variable(m, excess_gasEmissions[I = 1:T_inv] >= 0)
 if allsector_emissions_constraint >= 1
-    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] <= maxOffsets[I]*initialEmissions)
+    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] + excess_fugitiveMethaneEmissions[I] <= maxOffsets[I]*initialEmissions)
 else
     @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] <= maxOffsets_elec[I]*(sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)))
     @constraint(m, [I = 1:T_inv], excess_gasEmissions[I] <= maxOffsets_gas[I]*(sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)))
@@ -40,26 +46,33 @@ end
 # See Eq. 2.60 in Von Wald thesis
 ################################################################################
 if allsector_emissions_constraint == 1
-    @variable(m, powerEmissions[I = 1:T_inv] >= 0)          # MMTCO2
-    @variable(m, gasEmissions[I = 1:T_inv] >= 0)            # MMTCO2
-    @variable(m, appEmissions[I = 1:T_inv] >= 0)            # MMTCO2
+    @variable(m, powerEmissions[I = 1:T_inv] >= 0)              # MMTCO2
+    @variable(m, gasEmissions[I = 1:T_inv] >= 0)                # MMTCO2
+    @variable(m, appEmissions[I = 1:T_inv] >= 0)                # MMTCO2
+    @variable(m, fugitiveMethaneEmissions[I = 1:T_inv] >= 0)    # MMTCO2
     # CDR
     @variable(m, removedEmissions_CDR[I = 1:T_inv] >= 0)            # MMTCO2
     @constraint(m, [I = 1:T_inv], removedEmissions_CDR[I] == sum(weights[I,T]*8760/t_ops*sum(sum( CDR_dispatch[I,T,t,d]  for d = 1:CDR) for t = 1:t_ops) for T = 1:T_ops) / 1e6 )     # divide by 1e6 to get MMTCO2
     
     #
-    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] <= TotalEmissions_Allowed[I] + removedEmissions_CDR[I])     # MMTCO2
+    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] + fugitiveMethaneEmissions[I] <= TotalEmissions_Allowed[I] + removedEmissions_CDR[I])     # MMTCO2
     @constraint(m, [I = 1:T_inv], sum(appliance_leak[I,a] for a = 1:APPLIANCES)*1e6 <= appEmissions[I]*1e6 + excess_refEmissions[I])     # MMTCO2
-    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]   <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
-    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])    
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I] <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])
+    # fugitive methane
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(SUPPLY_GAS_slack[I,T,n]*t_ops for n = 1:NODES_GAS) for T = 1:T_ops) * methane_leakage / EnergyContent_methane * GWP100_methane <= fugitiveMethaneEmissions[I]*1e6 + excess_fugitiveMethaneEmissions[I])     # MMTCO2
+
 elseif allsector_emissions_constraint == 0
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
-# case where we impose no emissio constraint
+
+# case where we impose no emission constraint
 elseif allsector_emissions_constraint == 2
     @variable(m, powerEmissions[I = 1:T_inv] >= 0)          # MMTCO2
     @variable(m, gasEmissions[I = 1:T_inv] >= 0)            # MMTCO2
     @variable(m, appEmissions[I = 1:T_inv] >= 0)            # MMTCO2
+    @variable(m, fugitiveMethaneEmissions[I = 1:T_inv] >= 0)    # MMTCO2
+
     # CDR
     @variable(m, removedEmissions_CDR[I = 1:T_inv] >= 0)            # MMTCO2
     @constraint(m, [I = 1:T_inv], removedEmissions_CDR[I] == sum(weights[I,T]*8760/t_ops*sum(sum( CDR_dispatch[I,T,t,d]  for d = 1:CDR) for t = 1:t_ops) for T = 1:T_ops) / 1e6 )     # divide by 1e6 to get MMTCO2
@@ -68,7 +81,10 @@ elseif allsector_emissions_constraint == 2
     #
     @constraint(m, [I = 1:T_inv], sum(appliance_leak[I,a] for a = 1:APPLIANCES)*1e6 <= appEmissions[I]*1e6 + excess_refEmissions[I])     # MMTCO2
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]   <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
-    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])    
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])
+    # fugitive methane
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum(CDR_Demand_fromGAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) * methane_leakage / EnergyContent_methane * GWP100_methane <= fugitiveMethaneEmissions[I]*1e6 + excess_fugitiveMethaneEmissions[I])     # MMTCO2
+
 end
 
 ### Maximum biomethane production and use of sustainable bio-energy. 
@@ -154,3 +170,4 @@ end
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDemand[I,n] >= Demand_ELEC[I,T,t,n] + sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) + sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) + sum(P2H_NodalLoc_ELEC[n,d]*P2H_dispatch[I,T,t,d] for d = 1:P2H) + sum(CDR_NodalLoc_ELEC[n,d]*CDR_dispatch[I,T,t,d]*elecConsumed_CDR[d] for d = 1:CDR) )
 @constraint(m, [I = 1:T_inv, t = 1:8760, n = 1:NODES_ELEC], PeakDistDemand[I,n] >= D_Elec[t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfilesELEC[t,a] for a = 1:APPLIANCES))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDistDemandInc[I,n] >= Demand_ELEC[I,T,t,n] - BaselineDemand_ELEC[I,T,t,n])
+

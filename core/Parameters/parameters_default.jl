@@ -341,7 +341,30 @@ simpleHeatElectrification_ON = 1   # simple == without heat storage
 
 ### CDR
 carbonDioxideRemoval_ON = 1
-noSolidSorbent = 0
+# do remove solid sorbent; 0 == keep solid sorbent
+noSolidSorbent = 0 * carbonDioxideRemoval_ON
+# do we enforce capacity factor limit
+CDRcapFactorLimit_ON = 1 * carbonDioxideRemoval_ON
+# do we enforce continous running during a day
+CDRrunAllDay_ON = 1 * carbonDioxideRemoval_ON
+# do we enforced 5.5 Mt DAC build by 2030 && 73.5 Mt by 2045?
+DACPolicyTargets_ON = 0 * carbonDioxideRemoval_ON
+DAC_2030_Target = 5.5e6     # 5.5  Mt
+DAC_2045_Target = 73.5e6    # 73.5 Mt
+# how much methane is leaked if DAC uses fossil-gas
+# when more than DAC is added, we need to add the methaneLeak as column in CDR file
+methaneLeak_ON = 1 * carbonDioxideRemoval_ON
+if methaneLeak_ON == 1
+    methane_leakage = 2 / 100 # 2 % methane leak
+else
+    methane_leakage = 0 / 100
+end
+GWP100_methane = 28
+EnergyContent_methane = 55 / 3600 * 1e3 # MJ/kg --> MWh / t, ~15 MWh/t
+
+
+
+
 
 
 ################################################################################
@@ -424,6 +447,13 @@ println("")
 println("")
 #
 ### RONDO EDIT
+
+### DAC
+println("Is Carbon Dioxide Removal ON?: ", carbonDioxideRemoval_ON)
+println("If yes, which case?: ", CDR_case)
+println("Are policy targets enforced?: ", DACPolicyTargets_ON)
+println("IRA DAC 45Q tax credit value: ", IRA_DAC_taxCredit)
+
 
 println("Starting SOC: ", SOC_fraction)
 ###
