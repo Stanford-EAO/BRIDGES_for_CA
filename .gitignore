@@ -20,6 +20,10 @@ Plots/*
 ######################
 DataPreprocessing/.snakemake
 
+# Slurm files #
+######################
+*.out
+
 # Personal working files #
 ##########################
 personal_working_files/*
