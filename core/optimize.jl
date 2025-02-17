@@ -53,6 +53,9 @@
 # appliances costs
 @variable(m, costs_appliances[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_appliances[I] ==  sum(sum(CRF_APPLIANCES[a]*max(min((Years[i0]+ApplianceLifetime[a])-Years[I],1),0)*(CAPEX_APPLIANCES[i0,a]*unitsbuilt_APPS[i0,a]*1000 + applianceInfrastructureCosts[i0,a]) for i0 = 1:I)/1000 for a = 1:APPLIANCES) )
+@variable(m, costs_transport[I = 1:T_inv])
+@constraint(m, [I = 1:T_inv], costs_transport[I]  ==  sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(CAPEX_TRANSPORT[i0,tr]*unitsbuilt_TRANSPORT[i0,tr]*1000 + transportInfrastructureCosts[i0,tr] + nonElectricFuelCost[i0,tr])  for i0 =1:i) for tr = 1:TRANSPORTS)
+
 # P2G operating costs
 @variable(m, costs_P2Goperating[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_P2Goperating[I] == sum(UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d]-unitsretired_P2G[i0,d] for i0 = 1:I))*FOM_P2G[I,d] for d = 1:P2G) 
@@ -91,6 +94,8 @@
     ### RONDO EDIT
     # Appliances
     + costs_appliances[i]
+    # Transport
+    + costs_transport[i]
     # P2G
     + costs_P2Gcapital[i]
     + costs_P2Goperating[i]

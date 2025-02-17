@@ -18,6 +18,7 @@ rule run_all:
     message: "Create the following target files."
     input: 
         "".join([BRIDGES_path, "Data/TransportProfiles_ELECNetworkCold.csv"]),
+        "".join([BRIDGES_path, "Data/Transport_Supplementary.csv"]),
         "".join([BRIDGES_path, "Data/ApplianceProfiles_ELECNetworkCold.csv"]),
         "".join([BRIDGES_path, "Data/Storage_ELECNetwork.csv"])
 

@@ -51,6 +51,8 @@ else
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
 end
+# Transport sector (emission constraint in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t))
+@constraint(m, [I = 1:T_inv], transport_emissions[I] <= EC_TransportSector[I])
 
 ### Maximum biomethane production and use of sustainable bio-energy. 
 # Total bio-energy constraint is included in the case where net-zero emissions fuel production units can be used to generate methane or LPG fuel
@@ -118,13 +120,25 @@ if T_inv > 1
     @constraint(m,[I = 2:T_inv, a = 1:APPLIANCES], applianceInfrastructureCosts[I,a] >= 1000*(unitsbuilt_APPS[I,a] - sum(round(cumulativefailurefrac[a,v,I]-cumulativefailurefrac[a,v,I-1],digits = 4)*unitsbuilt_APPS[v,a] for v = 1:I-1))*upgrade_cost[a])
 end
 
+@variable(m, transportInfrastructureCosts[I = 1:T_inv, tr = 1:TRANSPORTS] >= 0)
+@constraint(m,[I = 1, tr = 1:TRANSPORTS], transportInfrastructureCosts[I,tr] >= unitsbuilt_TRANSPORT[I,tr]*1000*upgrade_cost_Transport[tr])
+if T_inv > 1 # (units built in I - units failed in I) * upggrade cost ... units failed are substracted as an approximation for the effect that not each new built car triggers home upgrades. 
+    @constraint(m,[I = 2:T_inv, tr = 1:TRANSPORTS], transportInfrastructureCosts[I,tr] >= 1000*(unitsbuilt_TRANSPORT[I,tr] - sum(round(cumulativefailurefrac_Transport[tr,v,I]-cumulativefailurefrac_Transport[tr,v,I-1],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I-1))*upgrade_cost_Transport[tr])
+end
+
+# Costs for production of fuels that are not electricity, approximated by retail price
+@variable(m, nonElectricFuelCost[I = 1:T_inv, tr = 1:TRANSPORTS] >= 0)
+# Units:                                                                                                           mi/car/yr                  MJ/mile                                   $/MJ
+@constraint(m,[I = 1:T_inv, tr = 1:TRANSPORTS], nonElectricFuelCost[I,tr] == unitsremaining_TRANSPORT[I,tr]*1000 * VMT[tr,string(Years[I])] * VehicleFuelEconomy[tr,string(Years[I])] * FuelCost_NonElectricTransport[tr,string(Years[I])])
+
+
 ###############################################################################
 # Generalized distribution capital costs associated with peak electrical demand
 # See Eq. 2.67/2.68 in Von Wald thesis
 # Currently implement a few different approaches to compute:
 # (a) the total peak power demand at each node
 # (b) the peak distribution-level demand at each node
-# (c) the peak incremental distribution-level demand due to appliance electrification (i.e., above baseline demand)
+# (c) the peak incremental distribution-level demand due to appliance and transport electrification (i.e., above baseline demand)
 # Current version uses PeakDistDemandInc in objective function, but an argument could be made
 # that the peak costs should be evaluated with respect to system-wide coincident peak, as opposed to
 # the sum of individual nodal peaks.

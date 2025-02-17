@@ -8,20 +8,25 @@
 
 DemandClustering = copy(D_Elec)
 for n = 1:NODES_ELEC
-    DemandClustering[:,n] = DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_ELEC[n,a]*ApplianceProfilesELEC[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES)
+    DemandClustering[:,n] = DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_ELEC[n,a]*ApplianceProfilesELEC[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES) +  sum(TRANSPORT_NodalLoc_ELEC[n,tr]*TransportProfilesELEC[:,tr]*InitialTransportPopulation[tr] for tr = 1:TRANSPORTS)
+    # DemandClustering[:,n] = DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_ELEC[n,a]*ApplianceProfilesELEC[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES)
 end
 DemandClustering = sum(DemandClustering, dims = 2)
 DemandClustering = (DemandClustering.- minimum(DemandClustering))./(maximum(DemandClustering) - minimum(DemandClustering))
 LOAD_ELEC = reshape(DemandClustering, (HOURS_PER_PERIOD, Periods_Per_Year))
+
 DemandClustering = copy(D_Gas)
 for n = 1:NODES_GAS
+    # Transport not (yet) added for gas
     DemandClustering[:,n] = DemandClustering[:,n] +  sum(APPLIANCES_NodalLoc_GAS[n,a]*ApplianceProfilesGAS[:,a]*InitialAppliancePopulation[a] for a = 1:APPLIANCES)
 end
 DemandClustering = sum(DemandClustering, dims = 2)
 DemandClustering = (DemandClustering.- minimum(DemandClustering))./(maximum(DemandClustering) - minimum(DemandClustering))
 LOAD_GAS = reshape(DemandClustering, (HOURS_PER_PERIOD, Periods_Per_Year))
+
 ProfilesClustering = unique(HourlyVRE, dims = 2)
 HourlyVREProfilesClustering = reshape(ProfilesClustering, (HOURS_PER_PERIOD, Periods_Per_Year,length(ProfilesClustering[1,:])))
+
 global ClusteringData = vcat(LOAD_ELEC,  LOAD_GAS)
 for x = 1:length(ProfilesClustering[1,:])
     global ClusteringData = vcat(ClusteringData, HourlyVREProfilesClustering[:,:,x])
@@ -115,6 +120,8 @@ HourlyVRE_full = copy(HourlyVRE)
 HourlyVRE = zeros(T_ops, t_ops, GEN)
 ApplianceProfiles_GAS = zeros(T_ops, t_ops, APPLIANCES)
 ApplianceProfiles_ELEC = zeros(T_ops, t_ops, APPLIANCES)
+#TransportProfiles_GAS = zeros(T_ops, t_ops, TRANSPORTS)
+TransportProfiles_ELEC = zeros(T_ops, t_ops, TRANSPORTS)
 
 fuelPrice_res_GAS = zeros(T_inv, T_ops, t_ops)
 fuelPrice_com_GAS = zeros(T_inv, T_ops, t_ops)
@@ -135,6 +142,10 @@ for t = 1:T_inv
         for a =1:APPLIANCES
             ApplianceProfiles_ELEC[i,:,a] = round.(ApplianceProfilesELEC[start_hour:end_hour,a], digits = 8)
             ApplianceProfiles_GAS[i,:,a] = round.(ApplianceProfilesGAS[start_hour:end_hour,a], digits = 8)
+        end
+        for tr =1:TRANSPORTS
+            TransportProfiles_ELEC[i,:,tr] = round.(TransportProfilesELEC[start_hour:end_hour,tr], digits = 8)
+            #TransportProfiles_GAS[i,:,tr] = round.(TransportProfilesGAS[start_hour:end_hour,tr], digits = 8)
         end
         fuelPrice_res_GAS[t,i,:] = NGprices_timeSeries[start_hour:end_hour,1]
     end
@@ -175,6 +186,8 @@ for d = 1:P2H
     P2H_NodalLoc_GAS[findfirst(occursin.([string(NodalLoc_GAS[d])],REGIONS_GAS)),d] = 1
 end
 ### RONDO EDIT
+TRANSPORT_NodalLoc_ELEC = zeros(NODES_ELEC, TRANSPORTS)
+#TRANSPORT_NodalLoc_GAS = zeros(NODES_GAS, TRANSPORTS)
 
 NodalLoc_ELEC = Generators[:,1]
 NodalLoc_GAS = Generators[:,2]
@@ -205,6 +218,12 @@ NodalLoc_GAS = EndUseAppliances[:,2]
 for a = 1:APPLIANCES
  APPLIANCES_NodalLoc_ELEC[findfirst(occursin.([string(NodalLoc_ELEC[a])],REGIONS_ELEC)),a] = 1
  APPLIANCES_NodalLoc_GAS[findfirst(occursin.([string(NodalLoc_GAS[a])],REGIONS_GAS)),a] = 1
+end
+NodalLoc_ELEC = Transport[:,1]
+#NodalLoc_GAS = Transport[:,2]
+for tr = 1:TRANSPORTS
+ TRANSPORT_NodalLoc_ELEC[findfirst(occursin.([string(NodalLoc_ELEC[tr])],REGIONS_ELEC)),tr] = 1
+ #TRANSPORT_NodalLoc_GAS[findfirst(occursin.([string(NodalLoc_GAS[tr])],REGIONS_GAS)),tr] = 1
 end
 
 ################################################################################

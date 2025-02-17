@@ -21,6 +21,8 @@ def generate_transport_network(path_vehicle_population: str,
             Location for generated transport network csv file. 
     """
 
+    number_of_nodes = 16
+
     df_vehicle_population = pd.read_excel(path_vehicle_population, sheet_name='ZIP')
     df = df_vehicle_population
     df_mapping_zip_climatezone = pd.read_excel(path_mapping_zip_climatezone)
@@ -61,20 +63,20 @@ def generate_transport_network(path_vehicle_population: str,
     df_Hybrid_summedByClimateZone.set_index('Building CZ', inplace=True)
 
     # Create empty data frame for TransportNetwork.csv
-    columns = 'Node_ELEC','Node_GAS','DistID_ELEC','DistID_GAS','Service Name','Converter Name','Converter Count [no.]','Lifetime [years]','is_hybrid [bin.]','Upgrade Cost (Low) [$]','Upgrade Cost (High) [$]', 'VMT [mi/yr/vehicle]', 'Carbon Intensity [kgCO2/mile]'
+    columns = 'Node_ELEC','Node_GAS','DistID_ELEC','DistID_GAS','Service Name','Converter Name','Converter Count [no.]','Lifetime [years]','is_hybrid [bin.]','Upgrade Cost (Low) [$]','Upgrade Cost (High) [$]'
     df_transport_network = pd.DataFrame(columns=columns)
 
     # Populate the transport network at each node (i.e., climate zone) with the characteristics of each transportation type/converter technology including vehicle count
     considered_transport_types = {
-        'Veh_Road_LDA_Gasoline': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.257},
-        'Veh_Road_LDA_Diesel': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.206},
-        'Veh_Road_LDA_HybridElec': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 200, 'Upgrade Cost (High) [$]': 200, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.134},
-        'Veh_Road_LDA_NaturalGas': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.390},
-        'Veh_Road_LDA_HydrogenFC': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.255}, #0
-        'Veh_Road_LDA_Elec': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 500, 'Upgrade Cost (High) [$]': 500, 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0}
+        'Veh_Road_LDA_Gasoline': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0}, # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.257
+        'Veh_Road_LDA_Diesel': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0}, # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.206
+        'Veh_Road_LDA_HybridElec': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 200, 'Upgrade Cost (High) [$]': 200}, # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.134
+        'Veh_Road_LDA_NaturalGas': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0}, # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.390
+        'Veh_Road_LDA_HydrogenFC': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 0, 'Upgrade Cost (High) [$]': 0}, # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0.255  # or 0
+        'Veh_Road_LDA_Elec': {'Service Name': 'Transp_PassMiles', 'Lifetime [years]': 14, 'is_hybrid [bin.]': 0, 'Upgrade Cost (Low) [$]': 500, 'Upgrade Cost (High) [$]': 500} # , 'VMT [mi/yr/vehicle]': 18836, 'Carbon Intensity [kgCO2/mile]': 0
         }
     for converter in considered_transport_types:
-        for climate_zone in range(1,17):
+        for climate_zone in range(1,number_of_nodes+1):
             considered_transport_types[converter]['Node_ELEC'] = climate_zone
             considered_transport_types[converter]['Node_GAS'] = climate_zone
             considered_transport_types[converter]['DistID_ELEC'] = climate_zone

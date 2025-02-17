@@ -40,9 +40,6 @@ hybrids_allowed = config["params"]["hybrids_allowed"]
 bounding_steady_states = config["params"]["bounding_steady_states"] # default 0
 toggle_variableNatGasPrice = config["params"]["toggle_variableNatGasPrice"]
 force_retire_gasApps = config["params"]["force_retire_gasApps"]
-allsector_emissions_constraint = config["params"]["allsector_emissions_constraint"]
-consider_refrigerants = config["params"]["consider_refrigerants"]
-
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -160,6 +157,13 @@ if costScenario_HydrogenStorage == "High"
 end
 
 
+### Transport
+transport_scenario_zevmandate = config["params"]["transport_scenario_zevmandate"]
+transport_scenario_stockshare = config["params"]["transport_scenario_stockshare"]
+transport_scenario_vmt = config["params"]["transport_scenario_vmt"]
+transport_scenario_fuelcarbonintensity = config["params"]["transport_scenario_fuelcarbonintensity"]
+transport_scenario_fueleconomy = config["params"]["transport_scenario_fueleconomy"]
+
 buildingretrofits = config["params"]["buildingretrofits"]                                   # "Low" or "High" cost of building retrofit
 transportretrofits = config["params"]["transportretrofits"]                                 # "Low" or "High" cost of building retrofit
 
@@ -171,8 +175,6 @@ cost_case = config["params"]["cost_case"]
 offsets_case = config["params"]["offsets_case"]                                             # where No offsets = 0, Unlimited Offsets = 1.0
 maxOffsets_elec = config["params"]["maxOffsets_elec"] * ones(T_inv)                         # % of gross emissions
 maxOffsets_gas = config["params"]["maxOffsets_gas"] * ones(T_inv)
-maxOffsets = config["params"]["maxOffsets"] * ones(T_inv)
-initialEmissions = config["params"]["initialEmissions"]                    # tCO2
 
 offsets_Cost = config["params"]["offsets_Cost"]                                             # $/tCO2e  
 
@@ -195,14 +197,16 @@ EI_GasSector = config["params"]["EI_GasSector_scenarios"]["MidEI"]              
 
 TotalEmissions_Allowed = config["params"]["TotalEmissions_Allowed"]
 
-
+EC_TransportSector = config["params"]["EC_TransportSector_scenarios"]["MidEI"]              # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
 if EITrajectory == "SlowEI"
     global EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["SlowEI"]            # kg/MWh electricity generated
     global EI_GasSector = config["params"]["EI_GasSector_scenarios"]["SlowEI"]              # kg/MWh gas delivered (to core customers)
+    global EC_TransportSector = config["params"]["EC_TransportSector_scenarios"]["SlowEI"]  # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
 end
 if EITrajectory == "FastEI"
     global EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["FastEI"]            # kg/MWh electricity generated
     global EI_GasSector = config["params"]["EI_GasSector_scenarios"]["FastEI"]              # kg/MWh gas delivered (to core customers)
+    global EC_TransportSector = config["params"]["EC_TransportSector_scenarios"]["FastEI"]  # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
 end
 
 H2molfrac_max = config["params"]["H2molfrac_max"]

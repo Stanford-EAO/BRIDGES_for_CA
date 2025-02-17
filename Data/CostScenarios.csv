@@ -58,3 +58,9 @@ AC_HeatPump_SpaceHeatComm,Mid
 Rondo Heat Battery,Mid
 Hydrogen-to-Heat,Mid
 Electric Boiler,Mid
+Veh_Road_LDA_Gasoline,Mid
+Veh_Road_LDA_Elec,Mid
+Veh_Road_LDA_Diesel,Mid
+Veh_Road_LDA_HybridElec,Mid
+Veh_Road_LDA_NaturalGas,Mid
+Veh_Road_LDA_HydrogenFC,Mid

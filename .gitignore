@@ -10,7 +10,18 @@ core/Output
 # Plotting script #
 ######################
 AppliancesPaper_Plot.ipynb
+TransportPaper_Plot.ipynb
+
+# Plots # 
+######################
+Plots/*
 
 # Snakemake metafiles #
 ######################
 DataPreprocessing/.snakemake
+
+# Personal working files #
+##########################
+personal_working_files/*
+
+

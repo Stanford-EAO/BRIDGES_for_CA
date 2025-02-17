@@ -223,7 +223,6 @@ if LINKED_PERIODS_STORAGE == 1
 
     # electric: start at zero or at max capacity
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,Int(Periods_Per_Year),s] == SOC_fraction*UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i,s] - unitsretired_STORAGE_ELEC[i,s] for i = 1:I))*duration_ELEC[s])
-
     
     ### RONDO EDIT
     # HEAT

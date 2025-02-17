@@ -147,6 +147,166 @@ maxBuild_mult = 1 #6e3
 maxBuild_mult_tot = maxBuild_mult
 ### RONDO EDIT
 
+################################################################################
+# Transport demands
+################################################################################
+Transport = CSV.read("$(foldername)/Transport$(system)$(num).csv",DataFrame)
+Transport_Supplementary = CSV.read("$(foldername)/Transport_Supplementary.csv",DataFrame)
+TRANSPORTS = length(Transport[:, :1])                   # Number of transport classes modeled
+TransportServices = Transport[:,5]                      # End-use services satisfied by each transport class
+PrimeMover_Transport = Transport[:,6]                   # Technology type for each transport class
+InitialTransportPopulation = Transport[:,7]             # Initial vehicle population [no. units]
+TransportLifetime = Transport[:,8]                      # Expected vehicle lifetime [years]
+IS_HYBRID_Transport = Transport[:,9]                    # Indicator for whether the transport class is hybrid gas-electric
+upgrade_cost_Transport = Transport[:,10]                # Building infrastructure upgrade costs associated with transitioning to this transport class [$]
+if transportretrofits == "High"
+    global upgrade_cost_Transport = Transport[:,11]
+end
+CRF_TRANSPORT = (WACC_TRANSPORT.*(1+WACC_TRANSPORT).^TransportLifetime)./((1+WACC_TRANSPORT).^TransportLifetime .- 1)   # Capital recovery factor [yr^-1] for annualizing transportation investments
+
+# VMT scenarios (VMT [mile/yr/vehicle] for each region and each vehicle type)
+if transport_scenario_vmt == "EMFAC" # EMFAC, Scoping_Plan_BAU, Scoping_Plan_Proposed
+    VMT = Transport_Supplementary[(Transport_Supplementary.Data_type .== "VMT_[mi/yr/vehicle]") .& (Transport_Supplementary.Scenario .== "EMFAC"), :] # Filter relevant data
+elseif transport_scenario_vmt == "Scoping_Plan_BAU"
+    VMT = Transport_Supplementary[(Transport_Supplementary.Data_type .== "VMT_[mi/yr/vehicle]") .& (Transport_Supplementary.Scenario .== "Scoping_Plan_BAU"), :]
+elseif transport_scenario_vmt == "Scoping_Plan_Proposed"
+    VMT = Transport_Supplementary[(Transport_Supplementary.Data_type .== "VMT_[mi/yr/vehicle]") .& (Transport_Supplementary.Scenario .== "Scoping_Plan_Proposed"), :]
+end
+
+# Carbon intensity scenarios (Carbon intensity [kgCO2/MJ] for each region and vehicle type)
+if transport_scenario_fuelcarbonintensity == "EMFAC" # EMFAC, LCFS_current, LCFS_proposed, LCFS_alternative1, LCFS_alternative2
+    CarbonIntensity_TransportFuel = Transport_Supplementary[(Transport_Supplementary.Data_type .== "CarbonIntensity_TransportFuel_[kgCO2e/MJ]") .& (Transport_Supplementary.Scenario .== "EMFAC"), :] # Filter relevant data
+elseif transport_scenario_fuelcarbonintensity == "LCFS_current"
+    CarbonIntensity_TransportFuel = Transport_Supplementary[(Transport_Supplementary.Data_type .== "CarbonIntensity_TransportFuel_[kgCO2e/MJ]") .& (Transport_Supplementary.Scenario .== "LCFS_current"), :]
+elseif transport_scenario_fuelcarbonintensity == "LCFS_proposed"
+    CarbonIntensity_TransportFuel = Transport_Supplementary[(Transport_Supplementary.Data_type .== "CarbonIntensity_TransportFuel_[kgCO2e/MJ]") .& (Transport_Supplementary.Scenario .== "LCFS_proposed"), :]
+elseif transport_scenario_fuelcarbonintensity == "LCFS_alternative1"
+    CarbonIntensity_TransportFuel = Transport_Supplementary[(Transport_Supplementary.Data_type .== "CarbonIntensity_TransportFuel_[kgCO2e/MJ]") .& (Transport_Supplementary.Scenario .== "LCFS_alternative1"), :]
+elseif transport_scenario_fuelcarbonintensity == "LCFS_alternative2"
+    CarbonIntensity_TransportFuel = Transport_Supplementary[(Transport_Supplementary.Data_type .== "CarbonIntensity_TransportFuel_[kgCO2e/MJ]") .& (Transport_Supplementary.Scenario .== "LCFS_alternative2"), :]
+end
+
+# Fuel economy scenarios ([MJ/mile])
+if transport_scenario_fueleconomy == "EMFAC" # EMFAC
+    VehicleFuelEconomy = Transport_Supplementary[(Transport_Supplementary.Data_type .== "VehicleFuelEconomy_[MJ/vehicle/mile]") .& (Transport_Supplementary.Scenario .== "EMFAC"), :] # Filter relevant data
+end
+
+# SORT THE SCENARIO DATAFRAMES so that they has same order as in network file (this matters in cons_capacity.jl)
+fuel_map = Dict("Gasoline" => 1, "Diesel" => 2, "Plug-in Hybrid" => 3, "Natural Gas" => 4, "Hydrogen" => 5, "Electricity" => 6) # Define custom sort order, append this if more technology types, e.g., MHD vehicles.
+VMT.order_column = [fuel_map[fuel_type] + node / 100000 for (fuel_type, node) in zip(VMT.Converter_name, VMT.Node)] # Create a column "order_column" where, e.g., value 2.00006 represents Diesel (2) in node 6. Will run into problems if 100000 nodes or more
+VMT = sort(VMT, :order_column)
+VMT = select(VMT, Not(:order_column))
+CarbonIntensity_TransportFuel.order_column = [fuel_map[fuel_type] + node / 100000 for (fuel_type, node) in zip(CarbonIntensity_TransportFuel.Converter_name, CarbonIntensity_TransportFuel.Node)] # Create a column "order_column" where, e.g., value 2.00006 represents Diesel (2) in node 6. Will run into problems if 100000 nodes or more
+CarbonIntensity_TransportFuel = sort(CarbonIntensity_TransportFuel, :order_column)
+CarbonIntensity_TransportFuel = select(CarbonIntensity_TransportFuel, Not(:order_column))
+VehicleFuelEconomy.order_column = [fuel_map[fuel_type] + node / 100000 for (fuel_type, node) in zip(VehicleFuelEconomy.Converter_name, VehicleFuelEconomy.Node)] # Create a column "order_column" where, e.g., value 2.00006 represents Diesel (2) in node 6. Will run into problems if 100000 nodes or more
+VehicleFuelEconomy = sort(VehicleFuelEconomy, :order_column)
+VehicleFuelEconomy = select(VehicleFuelEconomy, Not(:order_column))
+
+#show(Transport_Supplementary)
+#show(VMT)
+#show(CarbonIntensity_TransportFuel)
+#show(VehicleFuelEconomy)
+
+
+## Create a matrix that maps each transport class to the energy service that it satisfies
+################################################################################
+TRANSPORT_SERVICES = length(unique(Transport[:,5]))
+Transport_ServiceList = unique(Transport[:,5]) # List of all energy services (i.e., passenger miles travlled, freight miles travelled)
+TransportsToServices = zeros(TRANSPORTS,TRANSPORT_SERVICES)
+# For each transport class, tr, put a 1 in the column corresponding to its energy service s
+for tr = 1:TRANSPORTS
+    TransportsToServices[tr,findfirst(occursin.([(TransportServices[tr])],Transport_ServiceList))] = 1
+end
+
+# Pre-compute the cumulative failure fraction for each transport class in each investment period
+# See Eq. 2.9 in Von Wald thesis
+################################################################################
+cumulativefailurefrac_Transport = zeros(TRANSPORTS,T_inv,T_inv)
+failureProb_Transport = zeros(TRANSPORTS,150)
+failureArchive_Transport = failureArchive # Using same evaluation of Poisson distribution as for applicances.
+# First, calculate failure probabilities for each transport class in each year of its lifetime from 1 to 50.
+for tr = 1:TRANSPORTS
+    for i = 1:50
+#       Using Poisson probability distribution to assess failure fractions
+#       failureProb_Transport[tr,i] = exp(-TransportLifetime[a])*(TransportLifetime[tr]^(i))/factorial(i) 
+#       However, the factorial function in Julia won't go over 20! which limits our ability to model long-lived equipment
+#       Instead, we use an exogenous file generated using python's factorial function.
+        failureProb_Transport[tr,i] = failureArchive_Transport[Int(TransportLifetime[tr]),i]
+    end
+    # Ensures that the sum across each row equals 1 (i.e., no transport classes lasts longer than 50 years)
+    failureProb_Transport[tr,50] = 1 - sum(failureProb_Transport[tr,1:49])
+end
+# Second, compute the cumulative failure fraction for each transport type, in each investment year
+# i.e., cumulativefailurefrac_Transport[tr,v,t] corresponds to the cumulative failure fraction of transport classes of type tr
+# that were installed in investment period v, that will fail by investment period t.
+for tr = 1:TRANSPORTS
+    for v = 1:T_inv
+        for t = 1:T_inv
+            cumulativefailurefrac_Transport[tr,v,t] = round(sum(failureProb_Transport[tr,1:max(Years[t]-Years[v],1)]),digits = 4)  # rounding to avoid numerical issues in the optimization program due to small coefficients
+            if t == v
+                cumulativefailurefrac_Transport[tr,v,t] = 0.0
+            end
+        end
+    end
+end
+
+
+## Appliance level energy demand profiles (hourly)
+# In MWh/hr per unit, for each hour in a typical year; then must be clustered down
+################################################################################
+#TransportProfilesGASOLINE2 = CSV.read("$(foldername)/TransportProfiles_GASOLINE$(system)$(region).csv",DataFrame)
+TransportProfilesELEC2 = CSV.read("$(foldername)/TransportProfiles_ELEC$(system)$(region).csv",DataFrame)
+
+#TransportProfilesGASOLINE = zeros(8760,length(TransportProfilesGASOLINE2[1,:]))
+TransportProfilesELEC = zeros(8760,length(TransportProfilesELEC2[1,:]))
+# Rounded to avoid introducing numerical issues
+for i = 1:length(TransportProfilesELEC2[1,:])
+    #TransportProfilesGASOLINE[:,i] = round.(TransportProfilesGASOLINE2[:,i], digits = 8)
+    TransportProfilesELEC[:,i] = round.(TransportProfilesELEC2[:,i], digits = 8)
+end
+
+## Growth rates used for forecasting and back-casting transportation sales
+# Set all growth rates to zero
+################################################################################
+ServicesGrowthRate_Transport = zeros(TRANSPORT_SERVICES,1)      # %\year (for case when switching between transports is allowed to satisy demand)
+HistoricalGrowthRate_Transport = zeros(TRANSPORTS,1)            # %\year (used to compute unitsremaining_Transport_historical[I,tr])
+ForecastGrowthRate_Transport = zeros(TRANSPORTS,1)              # %\year (for case when switching between transports is not allowed, each transport has to be satisfied)
+
+#=
+# Distribution systems are set up to potentially exist at the sub-transmission nodal level
+# i.e., multiple distribution systems may exist and operate independently at the
+# same transmission node.
+################################################################################
+DISTSYS_ELEC = (unique(EndUseAppliances[:,3]))
+DISTSYS_GAS  = (unique(EndUseAppliances[:,4]))
+DIST_ELEC = length(DISTSYS_ELEC)
+DIST_GAS = length(DISTSYS_GAS)
+
+# APP_DistSystemLoc_GAS to tie appliances to gas distribution systems
+# APP_DistSystemLoc_ELEC to tie appliances to electric distribution systems
+APP_DistSystemLoc_ELEC = zeros(DIST_ELEC, APPLIANCES)
+APP_DistSystemLoc_GAS = zeros(DIST_GAS, APPLIANCES)
+
+Loc_ELEC = EndUseAppliances[:,3]
+Loc_GAS = EndUseAppliances[:,4]
+for a = 1:APPLIANCES
+    APP_DistSystemLoc_ELEC[findfirst(occursin.([string(Loc_ELEC[a])],string.(DISTSYS_ELEC))),a] = 1
+    APP_DistSystemLoc_GAS[findfirst(occursin.([string(Loc_GAS[a])],string.(DISTSYS_GAS))),a] = 1
+end
+=#
+
+TRANSPORT_NodalLoc_ELEC = zeros(NODES_ELEC, TRANSPORTS)
+TRANSPORT_NodalLoc_GAS = zeros(NODES_GAS, TRANSPORTS)
+
+Loc_ELEC = Transport[:,1]
+Loc_GAS = Transport[:,2]
+for tr = 1:TRANSPORTS
+    TRANSPORT_NodalLoc_ELEC[findfirst(occursin.([string(Loc_ELEC[tr])],REGIONS_ELEC)),tr] = 1
+    TRANSPORT_NodalLoc_GAS[findfirst(occursin.([string(Loc_GAS[tr])],REGIONS_GAS)),tr] = 1
+end
+
+
 
 ################################################################################
 # Transmission interchanges
@@ -493,7 +653,7 @@ LHV_P2G = sum(MoleFracs_P2G.*transpose(MolarMass.*LHV), dims = 2)./MolarMass_P2G
 CAPEXLookup = CSV.read("$(foldername)/CAPEXLookup.csv",DataFrame)
 FOMLookup = CSV.read("$(foldername)/FOMLookup.csv",DataFrame)
 VOMLookup = CSV.read("$(foldername)/VOMLookup.csv",DataFrame)
-FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp.csv",DataFrame)
+FuelCostLookup = CSV.read("$(foldername)/FuelCostLookUp_wTransport.csv",DataFrame)
 
 CAPEX_GEN = zeros(T_inv,GEN)
 FOM_GEN = zeros(T_inv,GEN)
@@ -682,7 +842,55 @@ for i = 1:T_inv
         index = scen[index[1]]
         FOM_APPLIANCES[i,a] = FOMLookup[index, Int(Years[i]-2019)]
     end
+
+    for tr = 1:TRANSPORTS
+        subset = findall(in([PrimeMover_Transport[tr]]),CAPEXLookup.Technology)
+        scen = findall(in([PrimeMover_Transport[tr]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),CAPEXLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        CAPEX_TRANSPORT[i,tr] = CAPEXLookup[index, Int(Years[i]-2019)]
+        subset = findall(in([PrimeMover_Transport[tr]]),FOMLookup.Technology)
+        scen = findall(in([PrimeMover_Transport[tr]]),CostScenarios.Technology)
+        scen = findall(in([CostScenarios.Cost[scen[1]]]),FOMLookup.Cost)
+        index = findall(in(subset),scen)
+        index = scen[index[1]]
+        FOM_TRANSPORT[i,tr] = FOMLookup[index, Int(Years[i]-2019)]
+    end
 end
+
+# Create dataframe that has cost for transportation fuels (besides electricity, since the generation is included) for years 2020 to 2050 for each transport technology tr
+columnnames = ["Fuel","Cost","2020","2021","2022","2023","2024","2025","2026","2027","2028","2029","2030","2031","2032","2033","2034","2035","2036","2037","2038","2039","2040","2041","2042","2043","2044","2045","2046","2047","2048","2049","2050"]
+FuelCost_NonElectricTransport = DataFrame([[] for _ = columnnames], columnnames)
+function populate_dataframe!(FuelCost_NonElectricTransport::DataFrame, VMT::DataFrame) # VMT dataframe has all transport technologies tr and is therefor used
+    for row in eachrow(VMT)
+        converter = row.Converter_name
+        # Add conditions based on the value in the "Converter" column
+        if converter == "Diesel"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "Diesel_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        elseif converter == "Gasoline"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "Gasoline_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        elseif converter == "Plug-in Hybrid"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "Hybrid_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        elseif converter == "Hydrogen"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "Hydrogen_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        elseif converter == "Natural Gas"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "CNG_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        elseif converter == "Electricity"
+            row_index = findfirst(FuelCostLookup[:, :Fuel] .== "EV_NonElecTransportFuelCost_USDpMJ")
+            push!(FuelCost_NonElectricTransport, FuelCostLookup[row_index, :])
+        end
+    end
+end
+populate_dataframe!(FuelCost_NonElectricTransport, VMT)
+#show(FuelCost_NonElectricTransport)
+
+
 
 ################################################################################
 ### GAS DISTRIBUTION UTILITY FINANCIAL ASSUMPTIONS ###
