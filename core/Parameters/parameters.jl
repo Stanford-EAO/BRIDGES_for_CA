@@ -40,6 +40,9 @@ hybrids_allowed = config["params"]["hybrids_allowed"]
 bounding_steady_states = config["params"]["bounding_steady_states"] # default 0
 toggle_variableNatGasPrice = config["params"]["toggle_variableNatGasPrice"]
 force_retire_gasApps = config["params"]["force_retire_gasApps"]
+allsector_emissions_constraint = config["params"]["allsector_emissions_constraint"]
+consider_refrigerants = config["params"]["consider_refrigerants"]
+
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
@@ -168,6 +171,8 @@ cost_case = config["params"]["cost_case"]
 offsets_case = config["params"]["offsets_case"]                                             # where No offsets = 0, Unlimited Offsets = 1.0
 maxOffsets_elec = config["params"]["maxOffsets_elec"] * ones(T_inv)                         # % of gross emissions
 maxOffsets_gas = config["params"]["maxOffsets_gas"] * ones(T_inv)
+maxOffsets = config["params"]["maxOffsets"] * ones(T_inv)
+initialEmissions = config["params"]["initialEmissions"]                    # tCO2
 
 offsets_Cost = config["params"]["offsets_Cost"]                                             # $/tCO2e  
 
@@ -181,12 +186,16 @@ forceretire_multiplier = config["params"]["forceretire_multiplier"]             
 ################################################################################
 ##### EMISSIONS INTENSITY# ####
 
-EITrajectory= config["params"]["EITrajectory"]
+EITrajectory = config["params"]["EITrajectory"]
 
 # Specify emissions intensity targets for the electricity sector and gas sector with Slow and Fast sensitivity scenarios possible.
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
 EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["MidEI"]                        # kg/MWh electricity generated
 EI_GasSector = config["params"]["EI_GasSector_scenarios"]["MidEI"]                          # kg/MWh gas delivered (to core customers)
+
+TotalEmissions_Allowed = config["params"]["TotalEmissions_Allowed"]
+
+
 if EITrajectory == "SlowEI"
     global EI_ElecSector = config["params"]["EI_ElecSector_scenarios"]["SlowEI"]            # kg/MWh electricity generated
     global EI_GasSector = config["params"]["EI_GasSector_scenarios"]["SlowEI"]              # kg/MWh gas delivered (to core customers)
@@ -273,6 +282,11 @@ H2Storage_allowed = config["params"]["H2Storage_allowed"]
 # starting SOC
 SOC_fraction = config["params"]["SOC_fraction"]
 
+### Heat Storage and nonGasHeat_ON
+nonGasHeat_ON = config["params"]["nonGasHeat_ON"]
+fraction_electrifiableHeat = config["params"]["fraction_electrifiableHeat"]
+simpleHeatElectrification_ON = config["params"]["simpleHeatElectrification_ON"]   # simple == without heat storage
+
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
 
@@ -294,10 +308,17 @@ println("Linked generation: ", LINKED_PERIODS_GENOPS)
 println("Steady state elec: ", STEADYSTATE_ELEC)
 println("Steady state gas: ", STEADYSTATE_GAS)
 
-println("EI trajectory electric: ", EI_ElecSector)
-println("EI trajectory gas: ", EI_GasSector)
-println("Max offset electric: ", maxOffsets_elec)
-println("Max offset gas: ", maxOffsets_gas)
+println("Constraint emissions of all sector: ", allsector_emissions_constraint)
+if allsector_emissions_constraint == 1
+    println("Total emissions allowed [MMTCO2e]: ", TotalEmissions_Allowed)
+    println("Max offset as % initial emissions: ", maxOffsets)
+    println("Initial emissions [MMTCO2e]: ", initialEmissions/1e6)
+else
+    println("EI trajectory electric: ", EI_ElecSector)
+    println("EI trajectory gas: ", EI_GasSector)
+    println("Max offset electric: ", maxOffsets_elec)
+    println("Max offset gas: ", maxOffsets_gas)
+end
 println("Offset cost: ", offsets_Cost)
 
 println("Gas quality: ", GasQuality)
@@ -321,6 +342,7 @@ println("NG New Build: ", techScenario_NGCC)
 println("")
 
 println("Appliance ban by 2045: ", force_retire_gasApps)
+println("Consider refrigerants: ", consider_refrigerants)
 
 println("Multi-day Storage: ", FormEnergy_allowed)
 println("Pumped Hydro Storage: ", PHS_allowed)
@@ -330,6 +352,12 @@ println("")
 println("Li-ion Cost Multiplier: ", cost_LiIon_multiplier)
 println("Fe-Air Cost Multiplier: ", cost_FeAir_multiplier)
 println("H2 Storage Cost Multiplier: ", cost_HydrogenStorage_multiplier)
+println("")
+
+println("Non-gas Heat Allowed: ", nonGasHeat_ON)
+println("Simple Heat Electrification: ", simpleHeatElectrification_ON)
+println("Fraction of Simple Heat Electrification: ", fraction_electrifiableHeat)
+println("")
 println("")
 
 println("Starting SOC: ", SOC_fraction)
