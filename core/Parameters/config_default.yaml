@@ -59,6 +59,9 @@ params:
     bounding_steady_states: 0                   # default 0
     toggle_variableNatGasPrice: true
     force_retire_gasApps: 0
+    allsector_emissions_constraint: 1
+    # 1 = CARB aligned, 2 = beyond CARB, 3 = worse case
+    consider_refrigerants: 1       # MUST set allsector_emissions_constraint = 1 too
 
     ################################################################################
     #### CLUSTERING PARAMETERS ####
@@ -113,8 +116,8 @@ params:
     ### Biomethane
     biomethane: "Mid"
     max_biomethane_share_scenarios:             # Annual system-wide limitation on biomethane production (as a share of initial core gas demands)
-        Low: 0.1
-        Mid: 0.1
+        Low: 0.001
+        Mid: 0.065
         High: 0.5      
 
     ### Industrials
@@ -161,6 +164,8 @@ params:
     offsets_case: "NoOffsets"                   # where No offsets = 0, Unlimited Offsets = 1.0
     maxOffsets_elec: 0.0                        # % of gross emissions
     maxOffsets_gas: 0.0
+    maxOffsets: 0.05
+    initialEmissions: 115000000                    # tCO2
 
     offsets_Cost: [650, 500, 550, 500, 450]     # $/tCO2e  Alternative: [650, 550, 450, 350, 250], [1600, 1400, 1200, 1000, 800]  
 
@@ -186,6 +191,7 @@ params:
         MidEI: [200,150,100,50,0]               # kg/MWh gas delivered (to core customers) #[200,150,50,15,0]
         SlowEI: [200,200,90,90,0.0]             # kg/MWh gas delivered (to core customers)
         FastEI: [200,100,20,2,0.0]              # kg/MWh gas delivered (to core customers)
+    TotalEmissions_Allowed: [115, 80, 60, 30, 0]   # total MMTCO2 from electricity generated AND gas delivered (to core customers)
 
     H2molfrac_max: 0.0
     ADDITIONAL_SLACK_NODE: 18
@@ -244,3 +250,7 @@ params:
     H2Storage_allowed: 1
     # starting SOC
     SOC_fraction: 0.5
+
+    nonGasHeat_ON: 1
+    fraction_electrifiableHeat: 0.7       # 70 / 100
+    simpleHeatElectrification_ON: 1   # simple == without heat storage

@@ -55,3 +55,6 @@ AC_GasFurnace,Mid
 AC_ElecHeatPump_SpaceHeat,Mid
 AC_GasFurnaceComm,Mid
 AC_HeatPump_SpaceHeatComm,Mid
+Rondo Heat Battery,Mid
+Hydrogen-to-Heat,Mid
+Electric Boiler,Mid

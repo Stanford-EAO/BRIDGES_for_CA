@@ -2,6 +2,14 @@
 ### Policy-driven constraints
 ################################################################################
 
+if consider_refrigerants >= 1
+    include("refrigerants.jl")
+    @variable(m, excess_refEmissions[I = 1:T_inv] >= 0)
+else
+    appliance_leak = zeros(T_inv,APPLIANCES)
+    excess_refEmissions = zeros(T_inv)
+end
+
 ### Nominal allocation of net-zero emissions gas consumption to each sector, 
 # not to exceed the amount of gaseous energy consumed by that sector
 # See Eq. 2.62 in Von Wald thesis
@@ -21,15 +29,28 @@
 ################################################################################
 @variable(m, excess_powerEmissions[I = 1:T_inv] >= 0)
 @variable(m, excess_gasEmissions[I = 1:T_inv] >= 0)
-@constraint(m, [I = 1:T_inv], excess_powerEmissions[I] <= maxOffsets_elec[I]*(sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)))
-@constraint(m, [I = 1:T_inv], excess_gasEmissions[I] <= maxOffsets_gas[I]*(sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)))
-
+if allsector_emissions_constraint == 1
+    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] <= maxOffsets[I]*initialEmissions)
+else
+    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] <= maxOffsets_elec[I]*(sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)))
+    @constraint(m, [I = 1:T_inv], excess_gasEmissions[I] <= maxOffsets_gas[I]*(sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)))
+end
 ### Constraints on the emissions intensity of the electric and gas sectors.
 # Here, some emissions from gaseous fuel consumption are offset by the nominal allocation of net-zero emission gas to each sector.
 # See Eq. 2.60 in Von Wald thesis
 ################################################################################
-@constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
-@constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
+if allsector_emissions_constraint == 1
+    @variable(m, powerEmissions[I = 1:T_inv] >= 0)          # MMTCO2
+    @variable(m, gasEmissions[I = 1:T_inv] >= 0)            # MMTCO2
+    @variable(m, appEmissions[I = 1:T_inv] >= 0)            # MMTCO2
+    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] <= TotalEmissions_Allowed[I])     # MMTCO2
+    @constraint(m, [I = 1:T_inv], sum(appliance_leak[I,a] for a = 1:APPLIANCES)*1e6 <= appEmissions[I]*1e6 + excess_refEmissions[I])     # MMTCO2
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]   <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])    
+else
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
+end
 
 ### Maximum biomethane production and use of sustainable bio-energy. 
 # Total bio-energy constraint is included in the case where net-zero emissions fuel production units can be used to generate methane or LPG fuel
@@ -111,6 +132,6 @@ end
 @variable(m, PeakDemand[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
 @variable(m, PeakDistDemand[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
 @variable(m, PeakDistDemandInc[I = 1:T_inv, n = 1:NODES_ELEC] >= 0)
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDemand[I,n] >= Demand_ELEC[I,T,t,n] + sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) + sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDemand[I,n] >= Demand_ELEC[I,T,t,n] + sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) + sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) + sum(P2H_NodalLoc_ELEC[n,d]*P2H_dispatch[I,T,t,d] for d = 1:P2H))
 @constraint(m, [I = 1:T_inv, t = 1:8760, n = 1:NODES_ELEC], PeakDistDemand[I,n] >= D_Elec[t,n] + 1000*sum(APPLIANCES_NodalLoc_ELEC[n,a]*(unitsremaining_APPS[I,a])*ApplianceProfilesELEC[t,a] for a = 1:APPLIANCES))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], PeakDistDemandInc[I,n] >= Demand_ELEC[I,T,t,n] - BaselineDemand_ELEC[I,T,t,n])
