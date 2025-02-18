@@ -177,6 +177,7 @@ cost_case = config["params"]["cost_case"]
 offsets_case = config["params"]["offsets_case"]                                             # where No offsets = 0, Unlimited Offsets = 1.0
 maxOffsets_elec = config["params"]["maxOffsets_elec"] * ones(T_inv)                         # % of gross emissions
 maxOffsets_gas = config["params"]["maxOffsets_gas"] * ones(T_inv)
+maxOffsets = config["params"]["maxOffsets"] * ones(T_inv)
 
 offsets_Cost = config["params"]["offsets_Cost"]                                             # $/tCO2e  
 
