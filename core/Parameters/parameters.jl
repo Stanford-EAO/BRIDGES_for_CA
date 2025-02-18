@@ -40,6 +40,8 @@ hybrids_allowed = config["params"]["hybrids_allowed"]
 bounding_steady_states = config["params"]["bounding_steady_states"] # default 0
 toggle_variableNatGasPrice = config["params"]["toggle_variableNatGasPrice"]
 force_retire_gasApps = config["params"]["force_retire_gasApps"]
+allsector_emissions_constraint = config["params"]["allsector_emissions_constraint"]
+consider_refrigerants = config["params"]["consider_refrigerants"]
 
 ################################################################################
 #### CLUSTERING PARAMETERS ####
