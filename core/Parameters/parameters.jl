@@ -179,6 +179,8 @@ maxOffsets_elec = config["params"]["maxOffsets_elec"] * ones(T_inv)             
 maxOffsets_gas = config["params"]["maxOffsets_gas"] * ones(T_inv)
 maxOffsets = config["params"]["maxOffsets"] * ones(T_inv)
 
+initialEmissions = config["params"]["initialEmissions"]                    # tCO2
+
 offsets_Cost = config["params"]["offsets_Cost"]                                             # $/tCO2e  
 
 GasQuality = config["params"]["GasQuality"]                                                 # "Nodal", "Annual", "No"
