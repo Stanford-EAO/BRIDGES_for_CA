@@ -58,8 +58,7 @@
 
 # P2G operating costs
 @variable(m, costs_P2Goperating[I = 1:T_inv])
-@constraint(m, [I = 1:T_inv], costs_P2Goperating[I] == sum(UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d]-unitsretired_P2G[i0,d] for i0 = 1:I))*FOM_P2G[I,d] for d = 1:P2G) 
-                                                     + sum(weights[I,T]*8760/t_ops*sum(sum(VOM_P2G[I,d]/1000*P2G_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops) )
+@constraint(m, [I = 1:T_inv], costs_P2Goperating[I] == sum(UnitSize_P2G[d]*(NumUnits_P2G[d] + sum(unitsbuilt_P2G[i0,d]-unitsretired_P2G[i0,d] for i0 = 1:I))*FOM_P2G[I,d] for d = 1:P2G) + sum(weights[I,T]*8760/t_ops*sum(sum(VOM_P2G[I,d]/1000*P2G_dispatch[I,T,t,d] for t = 1:t_ops) for d = 1:P2G) for T = 1:T_ops) )
 # P2G capital costs, ammortized to each investment period
 @variable(m, costs_P2Gcapital[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_P2Gcapital[I] == sum(UnitSize_P2G[d]*sum(unitsbuilt_P2G[i0,d]*max(min((Years[i0]+EconomicLifetime_P2G[d])-Years[I],1),0)*CRF_P2G[d]*CAPEX_P2G[i0,d] for i0 = 1:I) for d = 1:P2G) )
