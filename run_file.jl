@@ -17,7 +17,7 @@ Pkg.add("YAML")
 # Pkg.add("Plots")
 
 using DataFrames, CSV, Tables, Clustering, Distances, Dates, Random, JuMP, YAML
-#using Gurobi
+using Gurobi
 # using NBInclude, Plots
 
 # Choose desired config file (CONFIG_FILE_NAME is used in Snakefile and parameters.jl)
@@ -44,8 +44,7 @@ include("core/clustering.jl")
 
 # Define optimization program
 m = Model(optimizer_with_attributes(Gurobi.Optimizer,"Threads" => 30,"BarHomogeneous" => 1,"ScaleFlag"=>2, "FeasibilityTol"=> 0.005, 
-    "LogToConsole" => 1, "ScaleFlag" => 1,
-    "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) #"Presolve"=>2)) #, "NumericFocus"=>2, "Presolve"=>2))
+"LogToConsole" => 1, "ScaleFlag" => 1, "OptimalityTol" => 0.001, "BarConvTol"=> 0.0001, "Method"=> 2, "Crossover"=> 0)) #"Presolve"=>2)) #, "NumericFocus"=>2, "Presolve"=>2))
 
 # Read constraint and optimize file
 include("core/cons_capacity.jl")
@@ -59,4 +58,3 @@ include("core/optimize.jl")
 include("core/data_exports.jl")
 
 println("Success!")
-
