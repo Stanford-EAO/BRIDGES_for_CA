@@ -12,6 +12,13 @@
 @variable(m, startup_P2G[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2G] >= 0)        # [no. units]
 @variable(m, shutdown_P2G[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2G] >= 0)       # [no. units]
 
+### RONDO EDIT
+@variable(m, P2H_dispatch[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H] >= 0)       # [MWh]
+@variable(m, commit_P2H[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H] >= 0)         # [no. units]
+@variable(m, startup_P2H[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H] >= 0)        # [no. units]
+@variable(m, shutdown_P2H[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H] >= 0)       # [no. units]
+### RONDO EDIT
+
 
 ### Startup and shutdown events
 # See Eq. 2.22a/2.22e in Von Wald thesis
@@ -26,6 +33,13 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2G], shutdown_P2G[I,T,t,d] <= NumUnits_P2G[d] + sum(unitsbuilt_P2G[i,d] - unitsretired_P2G[i,d] for i = 1:I))
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:P2G], commit_P2G[I,T,t,d] == commit_P2G[I,T,t-1,d] + startup_P2G[I,T,t,d] - shutdown_P2G[I,T,t,d])
 
+### RONDO EDIT
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], commit_P2H[I,T,t,d] <= NumUnits_P2H[d] + sum(unitsbuilt_P2H[i,d] - unitsretired_P2H[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], startup_P2H[I,T,t,d] <= NumUnits_P2H[d] + sum(unitsbuilt_P2H[i,d] - unitsretired_P2H[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], shutdown_P2H[I,T,t,d] <= NumUnits_P2H[d] + sum(unitsbuilt_P2H[i,d] - unitsretired_P2H[i,d] for i = 1:I))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 2:t_ops, d = 1:P2H], commit_P2H[I,T,t,d] == commit_P2H[I,T,t-1,d] + startup_P2H[I,T,t,d] - shutdown_P2H[I,T,t,d])
+### RONDO EDIT
+
 ### Min and Max generation constraints
 # See Eq. 2.22b/2.22c in Von Wald thesis
 ################################################################################
@@ -33,6 +47,11 @@
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, g = 1:GEN], generation[I,T,t,g] <= Pmax_GEN[g]*UnitSize_GEN[g]*commit_GEN[I,T,t,g])
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2G], P2G_dispatch[I,T,t,d] >= Pmin_P2G[d]*UnitSize_P2G[d]*commit_P2G[I,T,t,d])
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2G], P2G_dispatch[I,T,t,d] <= Pmax_P2G[d]*UnitSize_P2G[d]*commit_P2G[I,T,t,d])
+### RONDO EDIT
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], P2H_dispatch[I,T,t,d] >= Pmin_P2H[d]*UnitSize_P2H[d]*commit_P2H[I,T,t,d])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, d = 1:P2H], P2H_dispatch[I,T,t,d] <= Pmax_P2H[d]*UnitSize_P2H[d]*commit_P2H[I,T,t,d])
+### RONDO EDIT
+
 
 ### Constraints on fixed profile generation resources
 # See Eq. 2.22d in Von Wald thesis
@@ -138,6 +157,21 @@ end
 @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops-1, s = 1:STORAGE_GAS], discharging_GAS[I,T,t,s] == discharging_GAS[I,T,t+1,s])
 
 
+### RONDO EDIT
+@variable(m, storedEnergy_HEAT[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops+1, s = 1:STORAGE_HEAT] >= 0)       # [MWh]
+@variable(m, charging_HEAT[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT] >= 0)             # [MW]
+@variable(m, discharging_HEAT[I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT] >= 0)          # [MW]
+
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], storedEnergy_HEAT[I,T,t+1,s] == storedEnergy_HEAT[I,T,t,s] + eta_charging_HEAT[s]*charging_HEAT[I,T,t,s] - (1/eta_discharging_HEAT[s])*discharging_HEAT[I,T,t,s]-eta_loss_HEAT[s]*storedEnergy_HEAT[I,T,t,s])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops+1, s = 1:STORAGE_HEAT], storedEnergy_HEAT[I,T,t,s] <= UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], charging_HEAT[I,T,t,s] <= (1/eta_charging_HEAT[s]) * maxCharge_HEAT[s] * (NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], charging_HEAT[I,T,t,s] <= UnitSize_STORAGE_HEAT[s] * (NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)) - storedEnergy_HEAT[I,T,t,s])
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], discharging_HEAT[I,T,t,s] <= eta_discharging_HEAT[s] * maxDischarge_HEAT[s] * (NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], discharging_HEAT[I,T,t,s] <= storedEnergy_HEAT[I,T,t,s])
+### RONDO EDIT
+
+
+
 ### Constraints for linking energy storage across representative periods
 # See Eq. 2.56-2.59 in Von Wald thesis
 ################################################################################
@@ -189,4 +223,28 @@ if LINKED_PERIODS_STORAGE == 1
 
     # electric: start at zero or at max capacity
     @constraint(m, [I = 1:T_inv, s = 1:STORAGE_ELEC], SOCTracked_ELEC[I,Int(Periods_Per_Year),s] == SOC_fraction*UnitSize_STORAGE_ELEC[s]*(NumUnits_STORAGE_ELEC[s]+sum(unitsbuilt_STORAGE_ELEC[i,s] - unitsretired_STORAGE_ELEC[i,s] for i = 1:I))*duration_ELEC[s])
+
+    
+    ### RONDO EDIT
+    # HEAT
+    @variable(m, MinSOC_HEAT[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_HEAT] >= 0)
+    @variable(m, MaxSOC_HEAT[I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_HEAT] >= 0)
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_HEAT], MinSOC_HEAT[I,T,s] <= UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, s = 1:STORAGE_HEAT], MaxSOC_HEAT[I,T,s] <= UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+    @variable(m, SOCTracked_HEAT[I = 1:T_inv, d = 1:Int(Periods_Per_Year), s = 1:STORAGE_HEAT] >= 0)
+    @constraint(m, [I = 1:T_inv, d = 1:Int(Periods_Per_Year), s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,d,s] <= UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], MinSOC_HEAT[I,T,s] <= storedEnergy_HEAT[I,T,t,s])
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], MaxSOC_HEAT[I,T,s] >= storedEnergy_HEAT[I,T,t,s])
+    for i = 1:Int(Periods_Per_Year)
+        @constraint(m, [I = 1:T_inv, s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,i,s] == storedEnergy_HEAT[I,Int(RepDays[I,1]),1,s] + sum(storedEnergy_HEAT[I,Int(RepDays[I,t]),t_ops+1,s] - storedEnergy_HEAT[I,Int(RepDays[I,t]),1,s] for t = 1:i))
+        if i < Periods_Per_Year
+            @constraint(m, [I = 1:T_inv, s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,i,s] + (MaxSOC_HEAT[I,Int(RepDays[I,i+1]),s] - storedEnergy_HEAT[I,Int(RepDays[I,i+1]),1,s]) <=  UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i0,s] - unitsretired_STORAGE_HEAT[i0,s] for i0 = 1:I)))
+            @constraint(m, [I = 1:T_inv, s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,i,s] - (storedEnergy_HEAT[I,Int(RepDays[I,i+1]),1,s] - MinSOC_HEAT[I,Int(RepDays[I,i+1]),s]) >= 0)
+        end
+    end
+    @constraint(m, [I = 1:T_inv, s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,Int(Periods_Per_Year),s] == storedEnergy_HEAT[I,Int(RepDays[I,1]),1,s])
+    
+    # heat: start at half capacity
+    # @constraint(m, [I = 1:T_inv, s = 1:STORAGE_HEAT], SOCTracked_HEAT[I,Int(Periods_Per_Year),s] == SOC_fraction*UnitSize_STORAGE_HEAT[s]*(NumUnits_STORAGE_HEAT[s]+sum(unitsbuilt_STORAGE_HEAT[i,s] - unitsretired_STORAGE_HEAT[i,s] for i = 1:I)))
+    ### RONDO EDIT
 end

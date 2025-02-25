@@ -42,7 +42,15 @@ end
 ### Energy Balance for electricity grid
 # See Eq. 2.19 in Von Wald thesis
 ###############################################################################
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], sum(GEN_NodalLoc_ELEC[n,g]*generation[I,T,t,g] for g = 1:GEN) + sum(-1*A_ELEC[n,e]*Flows_Elec[I,T,t,e] for e = 1:EDGES_ELEC) - sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) - Demand_ELEC[I,T,t,n] - sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) >= 0)
+### RONDO EDIT
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_ELEC], sum(GEN_NodalLoc_ELEC[n,g]*generation[I,T,t,g] for g = 1:GEN) 
+                                                                        + sum(-1*A_ELEC[n,e]*Flows_Elec[I,T,t,e] for e = 1:EDGES_ELEC) 
+                                                                        - sum(STORAGE_ELEC_NodalLoc_ELEC[n,s]*(charging_ELEC[I,T,t,s]-discharging_ELEC[I,T,t,s]) for s = 1:STORAGE_ELEC) 
+                                                                        - Demand_ELEC[I,T,t,n] 
+                                                                        - sum(P2G_NodalLoc_ELEC[n,d]*P2G_dispatch[I,T,t,d]*(1-ISBIOMETHANE[d]) for d = 1:P2G) 
+                                                                        - sum(P2H_NodalLoc_ELEC[n,d]*P2H_dispatch[I,T,t,d] for d = 1:P2H)
+                                                                        - sum(STORAGE_HEAT_NodalLoc_HEAT[n,s] * charging_HEAT[I,T,t,s] for s = 1:STORAGE_HEAT) >= 0)
+### RONDO EDIT
 
 
 ###############################################################################
@@ -130,7 +138,37 @@ end
 ## Energy balance
 # See Eq. 2.47 in Von Wald thesis
 ###############################################################################
-@constraint(m, [I = 1:T_inv, T = 1:T_ops, n = 1:NODES_GAS], sum(sum(-1*A_GAS[n,e]*LHV[g]*MolarMass[g]*NominalGasFlows[I,T,e,g] for e = 1:EDGES_GAS) for g = 1:GAS_COMPONENTS) + SUPPLY_GAS_slack[I,T,n]  - sum(sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,t,s]-discharging_GAS[I,T,t,s]) for s = 1:STORAGE_GAS) for t = 1:t_ops)/t_ops - sum(Demand_GAS[I,T,t,n] + sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) - sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G) for t = 1:t_ops)/t_ops == 0)
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, n = 1:NODES_GAS], sum(sum(-1*A_GAS[n,e]*LHV[g]*MolarMass[g]*NominalGasFlows[I,T,e,g] for e = 1:EDGES_GAS) for g = 1:GAS_COMPONENTS) 
+                                                            + SUPPLY_GAS_slack[I,T,n] 
+                                                            - sum(sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,t,s]-discharging_GAS[I,T,t,s]) for s = 1:STORAGE_GAS) for t = 1:t_ops)/t_ops 
+                                                            - sum(Demand_GAS[I,T,t,n] + sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) - sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G) for t = 1:t_ops)/t_ops == 0)
+
+
+## Heat Energy Balance
+# See Eq. TBD, in Saad thesis
+###############################################################################
+### RONDO EDIT
+# this is where we incorporate BaselineDemand_fromDirectHeat in a heat energy balance for each node
+# here we add the index of t = 1:t_ops; no need to average over t_ops
+@constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n]
+                                                                         - sum( P2H_NodalLoc_ELEC[n,d] * P2H_dispatch[I,T,t,d] * eta_P2H[d] for d = 1:P2H)
+                                                                         - sum( STORAGE_HEAT_NodalLoc_HEAT[n,s] * discharging_HEAT[I,T,t,s] * eta_discharging_HEAT[s] for s = 1:STORAGE_HEAT) 
+                                                                         == 0 )
+# if simple electrification, set storage to zero
+if nonGasHeat_ON == 1
+    if simpleHeatElectrification_ON == 1
+        @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, s = 1:STORAGE_HEAT], discharging_HEAT[I,T,t,s] == 0 )
+        # Refer to cons_capacity.jl
+        @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n] <= fraction_electrifiableHeat * BaselineDemand_HEAT[I,T,t,n] )
+    end
+else
+    # toggle for non-gas heat:
+    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], BaselineDemand_fromDirectHeat[I,T,t,n] == 0)
+end
+
+### RONDO EDIT
+
+
 ## to track energy balances:
 # P2G
 @variable(m, GAS_energy_P2G[I = 1:T_inv, T = 1:T_ops])
@@ -254,8 +292,6 @@ if bounding_steady_states == 1
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, n = 1:NODES_GAS], SUPPLY_GAS_slack_Min[I,T,n] <= MAXSLACK[n])
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, n = 1:NODES_GAS], SUPPLY_GAS_slack_Max[I,T,n] <= MAXSLACK[n])
     
-#    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], NetGasDemands_Max[I,T,n] >= -1*sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,s]-discharging_GAS[I,T,s]) for s = 1:STORAGE_GAS) - Demand_GAS[I,T,t,n] - sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) + sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G))
-#    @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], NetGasDemands_Min[I,T,n] <= -1*sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,s]-discharging_GAS[I,T,s]) for s = 1:STORAGE_GAS) - Demand_GAS[I,T,t,n] - sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) + sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G))
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], NetGasDemands_Max[I,T,n] >= -1*sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,t,s]-discharging_GAS[I,T,t,s]) for s = 1:STORAGE_GAS) - Demand_GAS[I,T,t,n] - sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) + sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G))
     @constraint(m, [I = 1:T_inv, T = 1:T_ops, t = 1:t_ops, n = 1:NODES_GAS], NetGasDemands_Min[I,T,n] <= -1*sum(STORAGE_GAS_NodalLoc_GAS[n,s]*(charging_GAS[I,T,t,s]-discharging_GAS[I,T,t,s]) for s = 1:STORAGE_GAS) - Demand_GAS[I,T,t,n] - sum(GEN_NodalLoc_GAS[n,g]*(generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*MWh_PER_MMBTU*NG_fueled[g] for g = 1:GEN) + sum(P2G_NodalLoc_GAS[n,d]*P2G_dispatch[I,T,t,d]*eta_P2G[d] for d = 1:P2G))
     

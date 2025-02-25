@@ -96,7 +96,7 @@ num = ""
 
 ### Biomethane
 biomethane = "Mid"
-max_biomethane_share = 0.1      # annual system-wide limitation on biomethane production (as a share of initial core gas demands)
+max_biomethane_share = 0.065      # annual system-wide limitation on biomethane production (as a share of initial core gas demands)
 if biomethane == "High"
     global max_biomethane_share = 0.50
 end
@@ -136,7 +136,7 @@ if costScenario_FeAir == "Low"
     global cost_FeAir_multiplier = 0.75
 end
 if costScenario_FeAir == "High"
-    global cost_FeAir_multiplier = 21.5/14  # comparing both white papers from Form Energy
+    global cost_FeAir_multiplier = 2 #21.5/14  # comparing both white papers from Form Energy
 end
 # Hydrogen
 costScenario_HydrogenStorage = "Mid"
@@ -161,8 +161,8 @@ maxOffsets_gas = 0.0*ones(T_inv)
 maxOffsets = 0.05*ones(T_inv)
 initialEmissions = 115*1e6                    # tCO2
 
-# offsets_Cost = [650, 550, 450, 350, 250]                        # $/tCO2e
-offsets_Cost = [650, 600, 550, 500, 450]  
+offsets_Cost = [650, 600, 550, 500, 450]                        # $/tCO2e
+
 
 GasQuality = "Nodal" # "Annual", "No"
 
@@ -180,7 +180,10 @@ EITrajectory = "MidEI"
 # For reference, a natural gas-fired generator will yield ~500kg/MWh elec.; coal-fired generators will yield ~1000kg/MWh elec.; fossil natural gas delivered for direct-use will release ~181kg/MWh thermal
 EI_ElecSector = [200,150,100,50,0]   # kg/MWh electricity generated
 EI_GasSector = [200,150,100,50,0]   # kg/MWh gas delivered (to core customers)
+#
 TotalEmissions_Allowed = [115, 80, 60, 30, 0]   # total MMTCO2 from electricity generated AND gas delivered (to core customers)
+
+
 if EITrajectory == "SlowEI"
     global EI_ElecSector = [500,500,250,250,0]  # kg/MWh electricity generated
     global EI_GasSector = [200,200,90,90,0.0]   # kg/MWh gas delivered (to core customers)
@@ -303,6 +306,8 @@ end
 techScenario_OffshoreWind = "Yes Offshore" # "No Offshore" activates restriction
 techScenario_NGCC = "No" # if "No" restricts to no new build of NG CC,CT,CC-CCS
 
+
+
 ################################################################################
 #### STORAGE OPTIONS ####
 
@@ -313,6 +318,21 @@ H2Storage_allowed = 1
 # starting SOC
 SOC_fraction = 0.5
 
+
+### Heat Storage and nonGasHeat_ON
+nonGasHeat_ON = 1
+#
+fraction_electrifiableHeat = 70 / 100
+simpleHeatElectrification_ON = 1   # simple == without heat storage
+#
+methaneLeak_ON = 1 
+if methaneLeak_ON == 1
+    methane_leakage = 2.17 / 100 # 2 % methane leak
+else
+    methane_leakage = 0 / 100
+end
+GWP100_methane = 28
+EnergyContent_methane = 55 / 3600 * 1e3 # MJ/kg --> MWh / t, ~15 MWh/t
 
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
@@ -380,5 +400,15 @@ println("Li-ion Cost Multiplier: ", cost_LiIon_multiplier)
 println("Fe-Air Cost Multiplier: ", cost_FeAir_multiplier)
 println("H2 Storage Cost Multiplier: ", cost_HydrogenStorage_multiplier)
 println("")
+
+### RONDO EDIT
+println("Non-gas Heat Allowed: ", nonGasHeat_ON)
+println("Simple Heat Electrification: ", simpleHeatElectrification_ON)
+println("Fraction of Simple Heat Electrification: ", fraction_electrifiableHeat)
+println("Tracking Methane Leakage: ", if methaneLeak_ON == 1 "Yes with a $(methane_leakage*100) % leakage" else "No" end)
+println("")
+println("")
+#
+### RONDO EDIT
 
 println("Starting SOC: ", SOC_fraction)
