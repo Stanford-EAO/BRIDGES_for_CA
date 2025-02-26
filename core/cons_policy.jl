@@ -10,6 +10,15 @@ else
     excess_refEmissions = zeros(T_inv)
 end
 
+if methaneLeak_ON == 1
+    @variable(m, excess_fugitiveMethaneEmissions[I = 1:T_inv] >= 0)
+    @variable(m, methaneEmissions[I = 1:T_inv] >= 0)
+    @constraint(m, [I = 1:T_inv], methaneEmissions[I] == sum(weights[I,T]*8760/t_ops*sum(SUPPLY_GAS_slack[I,T,n]*t_ops for n = 1:NODES_GAS) for T = 1:T_ops) * methane_leakage / EnergyContent_methane * GWP100_methane)
+else
+    methaneEmissions = zeros(T_inv)
+    excess_fugitiveMethaneEmissions = zeros(T_inv)
+end
+
 ### Nominal allocation of net-zero emissions gas consumption to each sector, 
 # not to exceed the amount of gaseous energy consumed by that sector
 # See Eq. 2.62 in Von Wald thesis
@@ -30,7 +39,7 @@ end
 @variable(m, excess_powerEmissions[I = 1:T_inv] >= 0)
 @variable(m, excess_gasEmissions[I = 1:T_inv] >= 0)
 if allsector_emissions_constraint == 1
-    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] <= maxOffsets[I]*initialEmissions)
+    @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] + excess_fugitiveMethaneEmissions[I] <= maxOffsets[I]*initialEmissions)
 else
     @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] <= maxOffsets_elec[I]*(sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)))
     @constraint(m, [I = 1:T_inv], excess_gasEmissions[I] <= maxOffsets_gas[I]*(sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)))
@@ -43,10 +52,13 @@ if allsector_emissions_constraint == 1
     @variable(m, powerEmissions[I = 1:T_inv] >= 0)          # MMTCO2
     @variable(m, gasEmissions[I = 1:T_inv] >= 0)            # MMTCO2
     @variable(m, appEmissions[I = 1:T_inv] >= 0)            # MMTCO2
-    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] <= TotalEmissions_Allowed[I])     # MMTCO2
+    @variable(m, fugitiveMethaneEmissions[I = 1:T_inv] >= 0) 
+    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] + fugitiveMethaneEmissions[I] <= TotalEmissions_Allowed[I])     # MMTCO2
     @constraint(m, [I = 1:T_inv], sum(appliance_leak[I,a] for a = 1:APPLIANCES)*1e6 <= appEmissions[I]*1e6 + excess_refEmissions[I])     # MMTCO2
-    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]   <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
+    @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I] <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])    
+    @constraint(m, [I = 1:T_inv], methaneEmissions[I] <= fugitiveMethaneEmissions[I]*1e6 + excess_fugitiveMethaneEmissions[I])     # MMTCO2
+
 else
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
