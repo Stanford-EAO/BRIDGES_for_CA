@@ -35,7 +35,7 @@ else
     @constraint(m, [I = 1:T_inv], excess_powerEmissions[I] <= maxOffsets_elec[I]*(sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)))
     @constraint(m, [I = 1:T_inv], excess_gasEmissions[I] <= maxOffsets_gas[I]*(sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops)))
 end
-### Constraints on the emissions intensity of the electric and gas sectors.
+### Constraints on the emissions intensity of the electric, gas, andd transport sectors.
 # Here, some emissions from gaseous fuel consumption are offset by the nominal allocation of net-zero emission gas to each sector.
 # See Eq. 2.60 in Von Wald thesis
 ################################################################################
@@ -43,16 +43,27 @@ if allsector_emissions_constraint == 1
     @variable(m, powerEmissions[I = 1:T_inv] >= 0)          # MMTCO2
     @variable(m, gasEmissions[I = 1:T_inv] >= 0)            # MMTCO2
     @variable(m, appEmissions[I = 1:T_inv] >= 0)            # MMTCO2
-    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] <= TotalEmissions_Allowed[I])     # MMTCO2
+    @variable(m, transportEmissions[I = 1:T_inv] >= 0)      # MMTCO2
+    @constraint(m, [I = 1:T_inv], powerEmissions[I] + gasEmissions[I] + appEmissions[I] + transportEmissions[I] <= TotalEmissions_Allowed[I])     # MMTCO2
     @constraint(m, [I = 1:T_inv], sum(appliance_leak[I,a] for a = 1:APPLIANCES)*1e6 <= appEmissions[I]*1e6 + excess_refEmissions[I])     # MMTCO2
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]   <= powerEmissions[I]*1e6 + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= gasEmissions[I]*1e6 + excess_gasEmissions[I])    
+    # Transport emissions:
+    # The transport sector causes direct emissions from vehicles with combustion engines and indirect emissions from the generation of zero-emission fuels (electricity and hydrogen). Here, compute all direct emissions and those from hydrogen production for fuel use. Indirect emissions of EVs are considered through the emission of electricity generation.
+    # Units:                                                    cars                                  mi/car/yr                  MJ/mile                                  kgCO2/MJ                                           (1e9 makes it MMtCO2/mile)
+    @constraint(m, [I = 1:T_inv], transportEmissions[I] == sum(unitsremaining_TRANSPORT[I,tr]*1000 * VMT[tr,string(Years[I])] * VehicleFuelEconomy[tr,string(Years[I])] * CarbonIntensity_TransportFuel[tr,string(Years[I])]/1e9 for tr = 1:TRANSPORTS))
 else
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*sum(sum((generation[I,T,t,g]*HeatRate[g] + startup_GEN[I,T,t,g]*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[I]  <= EI_ElecSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(generation[I,T,t,g0] for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + excess_powerEmissions[I])
     @constraint(m, [I = 1:T_inv], sum(weights[I,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[I] <= EI_GasSector[I]/1000*sum(weights[I,T]*8760/t_ops*sum(sum(Demand_GAS[I,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + excess_gasEmissions[I])
+    
+    # Transport emissions:
+    @variable(m, transportEmissions[I = 1:T_inv] >= 0)      # MMTCO2
+    # The transport sector causes direct emissions from vehicles with combustion engines and indirect emissions from the generation of zero-emission fuels (electricity and hydrogen). Here, compute all direct emissions and those from hydrogen production for fuel use. Indirect emissions of EVs are considered through the emission of electricity generation.
+    # Units:                                                    cars                                  mi/car/yr                  MJ/mile                                   kgCO2/MJ                                          (1e9 makes it MMtCO2/mile)
+    @constraint(m, [I = 1:T_inv], transportEmissions[I] == sum(unitsremaining_TRANSPORT[I,tr]*1000 * VMT[tr,string(Years[I])] * VehicleFuelEconomy[tr,string(Years[I])] * CarbonIntensity_TransportFuel[tr,string(Years[I])]/1e9 for tr = 1:TRANSPORTS))
+    # Transport sector (emission constraint in MMt_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 103e6 t = 103 MMTCO2))
+    @constraint(m, [I = 1:T_inv], transportEmissions[I] <= EC_TransportSector[I])
 end
-# Transport sector (emission constraint in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t))
-@constraint(m, [I = 1:T_inv], transport_emissions[I] <= EC_TransportSector[I])
 
 ### Maximum biomethane production and use of sustainable bio-energy. 
 # Total bio-energy constraint is included in the case where net-zero emissions fuel production units can be used to generate methane or LPG fuel

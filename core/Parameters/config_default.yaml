@@ -194,11 +194,11 @@ params:
         MidEI: [200,150,100,50,0]               # kg/MWh gas delivered (to core customers) #[200,150,50,15,0]
         SlowEI: [200,200,90,90,0.0]             # kg/MWh gas delivered (to core customers)
         FastEI: [200,100,20,2,0.0]              # kg/MWh gas delivered (to core customers)
-    TotalEmissions_Allowed: [115, 80, 60, 30, 0]   # total MMTCO2 from electricity generated AND gas delivered (to core customers)
+    TotalEmissions_Allowed: [218, 155, 110, 55, 0]   # total MMTCO2 from electricity generated AND gas delivered (to core customers) AND non-electric passenger vehicles. For only electricity and gas: [115, 80, 60, 30, 0]
     EC_TransportSector_scenarios:
-        MidEI: [100000000,75000000,50000000,25000000,0]     # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
-        SlowEI: [100000000,100000000,75000000,30000000,0]   # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
-        FastEI: [100000000,50000000,25000000,10000000,0]    # emission constraint for transport sector in t_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 100e6 t)
+        MidEI: [103,75,50,25,0]     # emission constraint for transport sector in MMt_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 103e6 t)
+        SlowEI: [103,100,75,30,0]   # emission constraint for transport sector in MMt_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 103e6 t)
+        FastEI: [103,50,25,10,0]    # emission constraint for transport sector in MMt_CO2 emitted annually by non-electric passenger vehicles (2022 in CA: 103e6 t)
 
     H2molfrac_max: 0.0
     ADDITIONAL_SLACK_NODE: 18

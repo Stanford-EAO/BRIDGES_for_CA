@@ -250,13 +250,6 @@ else
     println("ATTENTION - Unrecognized transport scenario!")
 end
 
-# Transport emissions
-# The transport sector causes direct emissions from vehicles with combustion engines and indirect emissions from the generation of zero-emission fuels (electricity and hydrogen).
-# Here, compute all direct emissions and those from hydrogen production for fuel use. Indirect emissions of EVs are considered through the emission of electricity generation.
-@variable(m, transport_emissions[I = 1:T_inv] >= 0)
-# Units:                                                    cars                                  mi/car/yr                  MJ/mile                                   kgCO2/MJ                                           (1000 makes it tCO2/mile)
-@constraint(m, [I = 1:T_inv], transport_emissions[I] == sum(unitsremaining_TRANSPORT[I,tr]*1000 * VMT[tr,string(Years[I])] * VehicleFuelEconomy[tr,string(Years[I])] * CarbonIntensity_TransportFuel[tr,string(Years[I])]/1000 for tr = 1:TRANSPORTS))
-
 ###############################################################################
 ### Addition of appliances' and transport's incremental demand to baselines
 # See Eq. 2.16 in Von Wald thesis
