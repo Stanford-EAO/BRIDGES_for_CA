@@ -2,13 +2,13 @@
 
 #SBATCH --job-name=BRIDGES
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=your_username@stanford.edu
+#SBATCH --mail-user=mheyer@stanford.edu
 
-#SBATCH --time=2:00:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=150GB
-#SBATCH --cpus-per-task=46
+#SBATCH --mem=50GB
+#SBATCH --cpus-per-task=32
 #SBATCH --partition=serc
 #SBATCH -o Output/SLURM/slurm-%j.out
 
