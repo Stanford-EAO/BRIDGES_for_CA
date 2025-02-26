@@ -112,7 +112,7 @@ for i = 1:T_inv
     # EmissionsAndCosts[21,i] = sum(weights[i,T]*8760/t_ops*sum(StartupFuel[g]*emissions_factors[g]*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g])*HeatRate[g]*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[i]
     EmissionsAndCosts[21,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*(JuMP.value.(CleanGas_powersector[i]))
     EmissionsAndCosts[22,i] = sum(weights[i,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[i]
-    EmissionsAndCosts[33,i] = JuMP.value.(transportEmissions[i])
+    EmissionsAndCosts[33,i] = JuMP.value.(transportEmissions[i])*1e6
 
     # Slack variables that allow constraint violation if permissible according to configuration file:
     EmissionsAndCosts[23,i] = JuMP.value.(excess_powerEmissions[i])
