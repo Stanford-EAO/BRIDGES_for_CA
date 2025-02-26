@@ -1339,127 +1339,125 @@ process_genUnitsOutput(invCapacity_Ret_CZ_GEN, outputName)
 
 
 
+if allsector_emissions_constraint == 1
+    ##########################################################################
+    ########################### COSTS & EMISSIONS ############################
+    ##########################################################################
+    #
+    # output emissions and costs over investment periods
+    #
+    output_costEmissions = Dict{String, Vector}()
+    #
+    ## emissions
+    key = "Emissions"
+    emissions_invPeriod = JuMP.value.(powerEmissions + gasEmissions + appEmissions)
+    output_costEmissions[key] = emissions_invPeriod
+
+    ## gen
+    key = "Cost_Generation_Capital"
+    genCost_capital   = JuMP.value.(costs_GENcapital)
+    output_costEmissions[key] = genCost_capital
+    #
+    key = "Cost_Generation_Operating"
+    genCost_operating = JuMP.value.(costs_GENoperating)
+    output_costEmissions[key] = genCost_operating
 
 
+    ## elec storage
+    key = "Cost_ElecStorage_Capital"
+    elecStorageCost_capital   = JuMP.value.(costs_ELECSTORAGEcapital)
+    output_costEmissions[key] = elecStorageCost_capital
+    #
+    key = "Cost_ElecStorage_Operating"
+    elecStorageCost_operating = JuMP.value.(costs_ELECSTORAGEoperating)
+    output_costEmissions[key] = elecStorageCost_operating
 
-##########################################################################
-########################### COSTS & EMISSIONS ############################
-##########################################################################
-#
-# output emissions and costs over investment periods
-#
-output_costEmissions = Dict{String, Vector}()
-#
-## emissions
-key = "Emissions"
-emissions_invPeriod = JuMP.value.(powerEmissions + gasEmissions + appEmissions)
-output_costEmissions[key] = emissions_invPeriod
-
-## gen
-key = "Cost_Generation_Capital"
-genCost_capital   = JuMP.value.(costs_GENcapital)
-output_costEmissions[key] = genCost_capital
-#
-key = "Cost_Generation_Operating"
-genCost_operating = JuMP.value.(costs_GENoperating)
-output_costEmissions[key] = genCost_operating
+    ## heat storage
+    key = "Cost_HeatStorage_Capital"
+    heatStorageCost_capital   = JuMP.value.(costs_HEATSTORAGEcapital)
+    output_costEmissions[key] = heatStorageCost_capital
+    #
+    key = "Cost_HeatStorage_Operating"
+    heatStorageCost_operating = JuMP.value.(costs_HEATSTORAGEoperating)
+    output_costEmissions[key] = heatStorageCost_operating
 
 
-## elec storage
-key = "Cost_ElecStorage_Capital"
-elecStorageCost_capital   = JuMP.value.(costs_ELECSTORAGEcapital)
-output_costEmissions[key] = elecStorageCost_capital
-#
-key = "Cost_ElecStorage_Operating"
-elecStorageCost_operating = JuMP.value.(costs_ELECSTORAGEoperating)
-output_costEmissions[key] = elecStorageCost_operating
-
-## heat storage
-key = "Cost_HeatStorage_Capital"
-heatStorageCost_capital   = JuMP.value.(costs_HEATSTORAGEcapital)
-output_costEmissions[key] = heatStorageCost_capital
-#
-key = "Cost_HeatStorage_Operating"
-heatStorageCost_operating = JuMP.value.(costs_HEATSTORAGEoperating)
-output_costEmissions[key] = heatStorageCost_operating
+    ## appliances
+    key = "Cost_Appliances"
+    appliancesCost = JuMP.value.(costs_appliances)
+    output_costEmissions[key] = appliancesCost
 
 
-## appliances
-key = "Cost_Appliances"
-appliancesCost = JuMP.value.(costs_appliances)
-output_costEmissions[key] = appliancesCost
+    ## P2G
+    key = "Cost_P2G_Capital"
+    P2GCost_capital   = JuMP.value.(costs_P2Gcapital)
+    output_costEmissions[key] = P2GCost_capital
+    #
+    key = "Cost_P2G_Operating"
+    P2GCost_operating = JuMP.value.(costs_P2Goperating)
+    output_costEmissions[key] = P2GCost_operating
+
+    ## P2H
+    key = "Cost_P2H_Capital"
+    P2HCost_capital   = JuMP.value.(costs_P2Hcapital)
+    output_costEmissions[key] = P2HCost_capital
+    #
+    key = "Cost_P2H_Operating"
+    P2HCost_operating = JuMP.value.(costs_P2Hoperating)
+    output_costEmissions[key] = P2HCost_operating
 
 
-## P2G
-key = "Cost_P2G_Capital"
-P2GCost_capital   = JuMP.value.(costs_P2Gcapital)
-output_costEmissions[key] = P2GCost_capital
-#
-key = "Cost_P2G_Operating"
-P2GCost_operating = JuMP.value.(costs_P2Goperating)
-output_costEmissions[key] = P2GCost_operating
-
-## P2H
-key = "Cost_P2H_Capital"
-P2HCost_capital   = JuMP.value.(costs_P2Hcapital)
-output_costEmissions[key] = P2HCost_capital
-#
-key = "Cost_P2H_Operating"
-P2HCost_operating = JuMP.value.(costs_P2Hoperating)
-output_costEmissions[key] = P2HCost_operating
+    ## gas storage
+    key = "Cost_GasStorage_Capital"
+    gasStorageCost_capital   = JuMP.value.(costs_GASSTORAGEcapital)
+    output_costEmissions[key] = gasStorageCost_capital
+    #
+    key = "Cost_GasStorage_Operating"
+    gasStorageCost_operating = JuMP.value.(costs_GASSTORAGEoperating)
+    output_costEmissions[key] = gasStorageCost_operating
 
 
-## gas storage
-key = "Cost_GasStorage_Capital"
-gasStorageCost_capital   = JuMP.value.(costs_GASSTORAGEcapital)
-output_costEmissions[key] = gasStorageCost_capital
-#
-key = "Cost_GasStorage_Operating"
-gasStorageCost_operating = JuMP.value.(costs_GASSTORAGEoperating)
-output_costEmissions[key] = gasStorageCost_operating
+    ## distribution
+    key = "Cost_Distribution"
+    distributionCost = JuMP.value.(costs_distribution)
+    output_costEmissions[key] = distributionCost
 
 
-## distribution
-key = "Cost_Distribution"
-distributionCost = JuMP.value.(costs_distribution)
-output_costEmissions[key] = distributionCost
+    ## gas imports and storage
+    key = "Cost_GasImportsStorage"
+    gasImportsStorageCost = JuMP.value.(costs_NGimports + costs_gasStorage)
+    output_costEmissions[key] = gasImportsStorageCost
 
 
-## gas imports and storage
-key = "Cost_GasImportsStorage"
-gasImportsStorageCost = JuMP.value.(costs_NGimports + costs_gasStorage)
-output_costEmissions[key] = gasImportsStorageCost
+    ## CO2 offsets
+    key = "Cost_CO2offsets"
+    CO2offsetsCost = JuMP.value.(costs_CO2offsets)
+    output_costEmissions[key] = CO2offsetsCost
 
 
-## CO2 offsets
-key = "Cost_CO2offsets"
-CO2offsetsCost = JuMP.value.(costs_CO2offsets)
-output_costEmissions[key] = CO2offsetsCost
+    ## elec transmission costs
+    key = "Cost_ElecTransmission"
+    elecTransmissionCost = JuMP.value.(costs_transmission)
+    output_costEmissions[key] = elecTransmissionCost
 
 
-## elec transmission costs
-key = "Cost_ElecTransmission"
-elecTransmissionCost = JuMP.value.(costs_transmission)
-output_costEmissions[key] = elecTransmissionCost
+    ## gas transmission costs
+    key = "Cost_GasTransmission"
+    gasTransmissionCost = JuMP.value.(gasdistsyst_Cost)
+    output_costEmissions[key] = gasTransmissionCost
 
 
-## gas transmission costs
-key = "Cost_GasTransmission"
-gasTransmissionCost = JuMP.value.(gasdistsyst_Cost)
-output_costEmissions[key] = gasTransmissionCost
+    # Create a DataFrame with column names
+    df = DataFrame(output_costEmissions)
 
+    # naming
+    resultName   = "$(top_dir)/CostsAndEmissions"
+    #
+    outputName = string(resultName, ".csv")
 
-# Create a DataFrame with column names
-df = DataFrame(output_costEmissions)
-
-# naming
-resultName   = "$(top_dir)/CostsAndEmissions"
-#
-outputName = string(resultName, ".csv")
-
-# Save the DataFrame to a CSV file
-CSV.write(outputName, df)
-
+    # Save the DataFrame to a CSV file
+    CSV.write(outputName, df)
+end
 
 
 
