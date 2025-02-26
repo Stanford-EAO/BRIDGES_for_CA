@@ -254,3 +254,13 @@ params:
     nonGasHeat_ON: 1
     fraction_electrifiableHeat: 0.7       # 70 / 100
     simpleHeatElectrification_ON: 1   # simple == without heat storage
+
+    ################################################################################
+    #### METHANE LEAK ####
+
+    GWP100_methane: 28
+    EnergyContent_methane: 15.28 # # MJ/kg --> MWh / t, ~15 MWh/t
+    methaneLeak_ON: 1
+    methaneLeak_scenarios:
+        Off: 0
+        On: 0.0217 # 2 % methane leak

@@ -12,7 +12,7 @@
 @constraint(m, [I = 1:T_inv], costs_gasStorage[I] == sum(weights[I,T]*8760/t_ops*sum(costOfGasStorage/1000*sum(charging_GAS[I,T,t,s] for s = 1:STORAGE_GAS) for t = 1:t_ops) for T = 1:T_ops) )
 # CO2 offsets costs
 @variable(m, costs_CO2offsets[I = 1:T_inv])
-@constraint(m, [I = 1:T_inv], costs_CO2offsets[I] == offsets_Cost[I]/1000*(excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I]) )
+@constraint(m, [I = 1:T_inv], costs_CO2offsets[I] == offsets_Cost[I]/1000*(excess_powerEmissions[I] + excess_gasEmissions[I] + excess_refEmissions[I] + excess_fugitiveMethaneEmissions[I]))
 # imported natgas costs
 @variable(m, costs_NGimports[I = 1:T_inv])
 @constraint(m, [I = 1:T_inv], costs_NGimports[I] == sum(weights[I,T]*8760*CommodityCost_NG[I,T]/1000*sum(SUPPLY_GAS_slack[I,T,n] for n = 1:NODES_GAS) for T = 1:T_ops) )

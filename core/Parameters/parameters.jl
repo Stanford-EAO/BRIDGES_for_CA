@@ -287,6 +287,16 @@ nonGasHeat_ON = config["params"]["nonGasHeat_ON"]
 fraction_electrifiableHeat = config["params"]["fraction_electrifiableHeat"]
 simpleHeatElectrification_ON = config["params"]["simpleHeatElectrification_ON"]   # simple == without heat storage
 
+
+GWP100_methane = config["params"]["GWP100_methane"]
+EnergyContent_methane = config["params"]["EnergyContent_methane"]
+methaneLeak_ON = config["params"]["methaneLeak_ON"]
+if methaneLeak_ON == 1
+    methane_leakage = config["params"]["methaneLeak_scenarios"]["On"]
+else
+    methane_leakage = config["params"]["methaneLeak_scenarios"]["Off"]
+end
+
 ################################################################################
 #### PRINT OUT CASE SCENARIOS ####
 
@@ -354,10 +364,14 @@ println("Fe-Air Cost Multiplier: ", cost_FeAir_multiplier)
 println("H2 Storage Cost Multiplier: ", cost_HydrogenStorage_multiplier)
 println("")
 
+### RONDO EDIT
 println("Non-gas Heat Allowed: ", nonGasHeat_ON)
 println("Simple Heat Electrification: ", simpleHeatElectrification_ON)
 println("Fraction of Simple Heat Electrification: ", fraction_electrifiableHeat)
+println("Tracking Methane Leakage: ", if methaneLeak_ON == 1 "Yes with a $(methane_leakage*100) % leakage" else "No" end)
 println("")
 println("")
+#
+### RONDO EDIT
 
 println("Starting SOC: ", SOC_fraction)
