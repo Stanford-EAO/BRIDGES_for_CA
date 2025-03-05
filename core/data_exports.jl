@@ -207,12 +207,14 @@ for i = 1:T_inv
     ApplianceDecisions[count+2,:] = JuMP.value.(unitsremaining_APPS[i,:])
 end
 
-TransportDecisions = zeros(3*T_inv,TRANSPORTS)
+TransportDecisions = zeros(5*T_inv,TRANSPORTS)
 for i = 1:T_inv
-    count = (3*i-2)
+    count = (5*i-2)
     TransportDecisions[count,:] = unitsbuilt_TRANSPORT[i,:]
     TransportDecisions[count+1,:] = JuMP.value.(unitsretired_TRANSPORT[i,:])
     TransportDecisions[count+2,:] = JuMP.value.(unitsremaining_TRANSPORT[i,:])
+    TransportDecisions[count+3,:] = (unitsremaining_Transport_historical[I-1,tr] - unitsremaining_Transport_historical[I,tr]) # legacy units failing
+    TransportDecisions[count+4,:] = (sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*JuMP.value.(unitsbuilt_TRANSPORT[v,tr]) for v = 1:I) - sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*JuMP.value.(unitsbuilt_TRANSPORT[v,tr]) for v = 1:I-1)) # vehicles build in previous periods and failing in I. Assuming they were not already retired voluntarily. So it's max number failing.
 end
 println(JuMP.value.(unitsbuilt_TRANSPORT_total[:]))
 println(JuMP.value.(unitsbuilt_TRANSPORT_zev[:]))
