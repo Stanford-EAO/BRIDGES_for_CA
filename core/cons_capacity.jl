@@ -185,7 +185,8 @@ if T_inv > 1
     # Eq. 2.5d
     @constraint(m, [I = 2:T_inv, tr = 1:TRANSPORTS], unitsretired_TRANSPORT[I,tr] <= InitialTransportPopulation[tr]/1000 + sum(unitsbuilt_TRANSPORT[i0,tr] - unitsretired_TRANSPORT[i0,tr]  for i0 = 1:I-1))
     # Eq. 2.6:                                       retiring vehicles            >= retiring legacy vehicles                                                                  + vehicles build in previous periods and failing in I                                                                                                                                                               - total number of vehicles retiring
-    @constraint(m, [I = 2:T_inv, tr = 1:TRANSPORTS], unitsretired_TRANSPORT[I,tr] >= (unitsremaining_Transport_historical[I-1,tr] - unitsremaining_Transport_historical[I,tr]) + (sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I) - sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I-1)) - sum(unitsretired_TRANSPORT[i0,tr] for i0 = 1:I-1))
+    #@constraint(m, [I = 2:T_inv, tr = 1:TRANSPORTS], unitsretired_TRANSPORT[I,tr] >= (unitsremaining_Transport_historical[I-1,tr] - unitsremaining_Transport_historical[I,tr]) + (sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I) - sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I-1)) - sum(unitsretired_TRANSPORT[i0,tr] for i0 = 1:I-1))
+    @constraint(m, [I = 2:T_inv, tr = 1:TRANSPORTS], unitsretired_TRANSPORT[I,tr] >= (unitsremaining_Transport_historical[I-1,tr] - unitsremaining_Transport_historical[I,tr]) + (sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I) - sum(round(cumulativefailurefrac_Transport[tr,v,I],digits = 4)*unitsbuilt_TRANSPORT[v,tr] for v = 1:I-1)))
 end
 
 # Eq. 2.5e
