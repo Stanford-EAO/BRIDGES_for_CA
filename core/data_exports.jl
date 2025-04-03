@@ -16,6 +16,10 @@ unitsretired_TRANS_GAS = JuMP.value.(unitsretired_TRANS_GAS)
 unitsbuilt_TRANS_ELEC = JuMP.value.(unitsbuilt_TRANS_ELEC)
 unitsretired_TRANS_ELEC = JuMP.value.(unitsretired_TRANS_ELEC)
 addflow_TRANS_ELEC = JuMP.value.(addflow_TRANS_ELEC)
+unitsbuilt_P2H = JuMP.value.(unitsbuilt_P2H)
+unitsretired_P2H = JuMP.value.(unitsretired_P2H)
+BaselineDemand_fromGAS = JuMP.value.(BaselineDemand_fromGAS)
+BaselineDemand_fromDirectHeat = JuMP.value.(BaselineDemand_fromDirectHeat)
 
 Demand_GAS = JuMP.value.(Demand_GAS)
 Demand_ELEC = JuMP.value.(Demand_ELEC)
@@ -29,7 +33,7 @@ CleanGas_powersector = JuMP.value.(CleanGas_powersector)
 unitsbuilt_APPS= JuMP.value.(unitsbuilt_APPS)
 unitsbuilt_TRANSPORT = JuMP.value.(unitsbuilt_TRANSPORT)
 
-EmissionsAndCosts = zeros(37,T_inv)
+EmissionsAndCosts = zeros(41,T_inv)
 for i = 1:T_inv
     
     ### RATES
@@ -94,13 +98,13 @@ for i = 1:T_inv
     EmissionsAndCosts[14,i] = offsets_Cost[i]*(JuMP.value.(excess_powerEmissions[i]) + JuMP.value.(excess_gasEmissions[i]))
     
     # Transport costs total (costs are cummulitive to year i)
-    EmissionsAndCosts[29,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(CAPEX_TRANSPORT[i0,tr]*unitsbuilt_TRANSPORT[i0,tr]*1000 + JuMP.value.(transportInfrastructureCosts[i0,tr]) + JuMP.value.(nonElectricFuelCost[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
+    EmissionsAndCosts[33,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(CAPEX_TRANSPORT[i0,tr]*unitsbuilt_TRANSPORT[i0,tr]*1000 + JuMP.value.(transportInfrastructureCosts[i0,tr]) + JuMP.value.(nonElectricFuelCost[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
     # Transport costs: only CAPEX (vehicles bought)
-    EmissionsAndCosts[30,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(CAPEX_TRANSPORT[i0,tr]*unitsbuilt_TRANSPORT[i0,tr]*1000) for i0 =1:i) for tr = 1:TRANSPORTS) 
+    EmissionsAndCosts[34,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(CAPEX_TRANSPORT[i0,tr]*unitsbuilt_TRANSPORT[i0,tr]*1000) for i0 =1:i) for tr = 1:TRANSPORTS) 
     # Transport costs: only charging infrastructure cost
-    EmissionsAndCosts[31,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(JuMP.value.(transportInfrastructureCosts[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
+    EmissionsAndCosts[35,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(JuMP.value.(transportInfrastructureCosts[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
     # Transport costs: only non-electric fuel cost
-    EmissionsAndCosts[32,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(JuMP.value.(nonElectricFuelCost[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
+    EmissionsAndCosts[36,i] = sum(sum(CRF_TRANSPORT[tr]*max(min((Years[i0]+TransportLifetime[tr])-Years[i],1),0)*(JuMP.value.(nonElectricFuelCost[i0,tr])) for i0 =1:i) for tr = 1:TRANSPORTS)
 
 
     ### EMISSIONS
@@ -112,25 +116,34 @@ for i = 1:T_inv
     # EmissionsAndCosts[21,i] = sum(weights[i,T]*8760/t_ops*sum(StartupFuel[g]*emissions_factors[g]*sum(JuMP.value.(startup_GEN[i,T,t,g]) for t = 1:t_ops)  for g = 1:GEN) for T = 1:T_ops) + sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g])*HeatRate[g]*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_powersector[i]
     EmissionsAndCosts[21,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*(JuMP.value.(CleanGas_powersector[i]))
     EmissionsAndCosts[22,i] = sum(weights[i,T]*8760/t_ops*EF_NG*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) - EF_NG*CleanGas_gassector[i]
-    EmissionsAndCosts[33,i] = JuMP.value.(transportEmissions[i])*1e6
+    EmissionsAndCosts[37,i] = JuMP.value.(transportEmissions[i])*1e6
 
     # Slack variables that allow constraint violation if permissible according to configuration file:
     EmissionsAndCosts[23,i] = JuMP.value.(excess_powerEmissions[i])
     EmissionsAndCosts[24,i] = JuMP.value.(excess_gasEmissions[i])
 
+    if consider_refrigerants >= 1
+        EmissionsAndCosts[26,i] = JuMP.value.(excess_refEmissions[i])
+        EmissionsAndCosts[27,i] = sum(JuMP.value.(appliance_leak[i,a] for a = 1:APPLIANCES))
+    end
+    if methaneLeak_ON == 1
+        EmissionsAndCosts[28,i] = JuMP.value.(excess_fugitiveMethaneEmissions[i])
+        EmissionsAndCosts[29,i] = JuMP.value.(fugitiveMethaneEmissions[i])
+    end
+
     # Emission constraints
     # Electricity in absolute emissions
-    EmissionsAndCosts[26,i] = EI_ElecSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g0]) for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_powerEmissions[i])
-    EmissionsAndCosts[27,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
-    EmissionsAndCosts[28,i] = EF_NG*(JuMP.value.(CleanGas_powersector[i]))
+    EmissionsAndCosts[30,i] = EI_ElecSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(JuMP.value.(generation[i,T,t,g0]) for g0 = 1:GEN) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_powerEmissions[i])
+    EmissionsAndCosts[31,i] = sum(weights[i,T]*8760/t_ops*sum(sum((JuMP.value.(generation[i,T,t,g])*HeatRate[g] + JuMP.value.(startup_GEN[i,T,t,g])*StartupFuel[g])*emissions_factors[g] for g = 1:GEN) for t = 1:t_ops) for T = 1:T_ops)
+    EmissionsAndCosts[32,i] = EF_NG*(JuMP.value.(CleanGas_powersector[i]))
     # Electricity in EI
-    EmissionsAndCosts[34,i] = EI_ElecSector[i]/1000
+    EmissionsAndCosts[38,i] = EI_ElecSector[i]/1000
     # Gas in absolute emissions
-    EmissionsAndCosts[35,i] = EI_GasSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_gasEmissions[i])
+    EmissionsAndCosts[39,i] = EI_GasSector[i]/1000*sum(weights[i,T]*8760/t_ops*sum(sum(Demand_GAS[i,T,t,n] for n = 1:NODES_GAS) for t = 1:t_ops) for T = 1:T_ops) + JuMP.value.(excess_gasEmissions[i])
     # Gas in EI
-    EmissionsAndCosts[36,i] = EI_GasSector[i]/1000
+    EmissionsAndCosts[40,i] = EI_GasSector[i]/1000
     # Transport in absolute emissions
-    EmissionsAndCosts[37,i] = EC_TransportSector[i]
+    EmissionsAndCosts[41,i] = EC_TransportSector[i]
 
 end
 
@@ -230,13 +243,13 @@ ExcessPowerEmissions = JuMP.value.(excess_powerEmissions[:])
 
 function mk_output_dir()
     timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
-    dir_name = joinpath(@__DIR__, "Output", "$timestamp")
+    dir_name = joinpath(@__DIR__, "Output", case_name)
     @assert !ispath(dir_name) "File name already taken"
     mkpath(dir_name)
-    return dir_name
+    return dir_name,timestamp
 end
-top_dir = mk_output_dir()
-println("Saving to: ",last(top_dir, 15))
+top_dir,ts = mk_output_dir()
+println("Saving to: ", case_name, " completed at ", ts)
 
 CSV.write("$(top_dir)/APPLIANCE_DECISIONS.csv",Tables.table(ApplianceDecisions'), writeheader = true)
 CSV.write("$(top_dir)/TRANSPORT_DECISIONS.csv",Tables.table(TransportDecisions'), writeheader = true)
@@ -262,12 +275,6 @@ CSV.write("$(top_dir)/PEAKDEMANDINC.csv",Tables.table(JuMP.value.(PeakDistDemand
 if gasdistretirement_allowed == 1
     CSV.write("$(top_dir)/DISTRETIRE.csv",Tables.table(JuMP.value.(distSysRetirement_GAS)), writeheader = true)
 end
-
-
-
-
-
-
 
 
 

@@ -269,3 +269,13 @@ params:
     transport_scenario_fuelcarbonintensity: "LCFS_current" # "EMFAC", "LCFS_current", "LCFS_proposed", "LCFS_alternative1", "LCFS_alternative2"
     transport_scenario_fueleconomy: "EMFAC" # "EMFAC"
     # In addition, the vehicle cost scenarios have to be changed in: CostScenarios.csv. Available: High, Mid, Low. For EVs in addition: ParityWithGas2030, ParityWithGas2035
+
+    ################################################################################
+    #### METHANE LEAK ####
+
+    GWP100_methane: 28
+    EnergyContent_methane: 15.28 # # MJ/kg --> MWh / t, ~15 MWh/t
+    methaneLeak_ON: 1
+    methaneLeak_scenarios:
+        Off: 0
+        On: 0.0217 # 2 % methane leak
