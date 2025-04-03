@@ -1,8 +1,10 @@
 site_name: BRIDGES Documentation
 nav: # determines order of pages
   - Home: index.md
+  - BRIDGES' model structure: modelstructure.md
   - Access and Contributing: contributing.md
-  - BRIDGES' structure: projectstructure.md
+  - BRIDGES' code structure: projectstructure.md
+  - How we use GitHub: usinggithub.md
   - Running BRIDGES: runningbridges.md
   - Introduction to Snakemake: snakemake101.md
   - Introduction to Sherlock: sherlock101.md

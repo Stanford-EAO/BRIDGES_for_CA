@@ -1,6 +1,6 @@
 # Running BRIDGES
 
-The goal of this section is to provide **instructions on running BRIDGES**. BRIDGES can be run on your **local machine** or on a **high-performance computing cluster**. For running the full optimization model at a high temporal resolution (e.g., > 3 investment periods, > 3 representative days) we strongly recommend using a computing cluster. Moreover, we distinguish between running the **data preprocessing pipeline**, i.e., the Snakemake workflow that generates the input data for the optimization model, and running the **julia optimization model** (see section "Project structure").
+The goal of this section is to provide **instructions on running BRIDGES**. BRIDGES can be run on your **local machine** or on a **high-performance computing cluster**. For running the full optimization model at a high temporal resolution (e.g., > 3 investment periods, > 3 representative days) we strongly recommend using a computing cluster. Moreover, we distinguish between running the **data preprocessing pipeline**, i.e., the Snakemake workflow that generates the input data for the optimization model, and running the **julia optimization model** (see section "BRIDGES' code structure").
 
 !!! note
 
