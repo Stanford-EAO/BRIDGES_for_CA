@@ -6,7 +6,7 @@ The BRIDGES model consists of two modules as depicted in Figure 1. The **data pr
 
 <figure markdown>
   ![Image title](images/BRIDGES_pipeline.png){ width="800" }
-  <figcaption>Figure 1: Structure of BRIDGES</figcaption>
+  <figcaption>Figure 1: Structure and data flow of the BRIDGES codebase</figcaption>
 </figure>
 
 Let's discuss each of these building blocks see how this structure is reflected in the code.
