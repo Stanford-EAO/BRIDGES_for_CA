@@ -1,18 +1,25 @@
 import Pkg
-Pkg.add("DataFrames")
-Pkg.add("CSV")
-Pkg.add("Clustering")
-Pkg.add("Distances")
-Pkg.add("Gurobi")
-Pkg.add(Pkg.PackageSpec(;name="Gurobi", version="1.1.0"))
-Pkg.add("Tables")
-Pkg.add("DelimitedFiles")
-Pkg.add("Dates")
-Pkg.add("Grisu")
-Pkg.add("Random")
-Pkg.add("JuMP")
-Pkg.add(Pkg.PackageSpec(;name="JuMP", version="1.7.0"))
-Pkg.add("YAML")
+# List of packages to add
+packages = [
+    "DataFrames",
+    "CSV",
+    "Clustering",
+    "Distances",
+    "Gurobi",
+    "Tables",
+    "DelimitedFiles",
+    "Dates",
+    "Grisu",
+    "Random",
+    "JuMP",
+    "YAML"
+]
+
+# Add packages
+for pkg in packages
+    Pkg.add(pkg)
+end
+
 # Pkg.add("NBInclude")
 # Pkg.add("Plots")
 
